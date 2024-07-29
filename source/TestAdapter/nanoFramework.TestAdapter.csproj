@@ -22,7 +22,5 @@
     </PackageReference>
      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
-
-  <Import Project="..\TestFrameworkShared\TestFrameworkShared.projitems" Label="Shared" />
   
 </Project>
