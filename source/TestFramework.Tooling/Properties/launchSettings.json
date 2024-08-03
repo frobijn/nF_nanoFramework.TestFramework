@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "nanoFramework.TestFramework.Tooling": {
+      "commandName": "Project"
+    }
+  }
+}

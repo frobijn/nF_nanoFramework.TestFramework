@@ -12,7 +12,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
     public static class TestsConstants
     {
         /// <summary>
-        /// Executor name for nanoFrmaework
+        /// Executor name for nanoFramework
         /// </summary>
         public const string NanoExecutor = "executor://nanoFrameworkTestExecutor";
 

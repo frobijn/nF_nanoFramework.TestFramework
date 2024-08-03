@@ -1,8 +1,5 @@
-﻿//
-// Copyright (c) .NET Foundation and Contributors
-// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
-// See LICENSE file in the project root for full license information.
-//
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 
@@ -12,7 +9,12 @@ namespace nanoFramework.TestFramework
     /// Data row attribute. Used for passing multiple parameters into same test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DataRowAttribute : Attribute
+#if REFERENCED_IN_NFUNITMETADATA
+    internal
+#else
+    public
+#endif
+        class DataRowAttribute : Attribute, IDataRow
     {
         /// <summary>
         /// Array containing all passed parameters

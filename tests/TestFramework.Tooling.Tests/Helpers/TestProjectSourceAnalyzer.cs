@@ -1,0 +1,102 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework.Tooling;
+
+namespace TestFramework.Tooling.Tests.Helpers
+{
+    /// <summary>
+    /// Helper class to read the source code of one of the test projects
+    /// </summary>
+    internal static class TestProjectSourceAnalyzer
+    {
+        /// <summary>
+        /// Read the source files from one of the test projects and return the declaration of a class that must exist in the source
+        /// </summary>
+        /// <param name="classType">The type of the class to get the declaration of</param>
+        /// <param name="projectName">Name of the project to find; pass <c>null</c> for the source of this project</param>
+        /// <param name="failOnError">The test should fail if the source cannot be read; otherwise it should be marked as inconclusive</param>
+        /// <returns>The class declaration</returns>
+        internal static ProjectSourceInventory.ClassDeclaration FindClassDeclaration(Type classType, string projectName = null, bool failOnError = false)
+        {
+            (ProjectSourceInventory source, string projectFilePrefix) = FindAndCreateProjectSource(projectName, failOnError);
+            var result = source.TryGet(classType.FullName);
+            if (result is null)
+            {
+                Assert.Inconclusive($"Cannot find the class '{classType.FullName}' in the source of the test project '{projectName}'");
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Read the source files from one of the test projects and return the declaration of a class that must exist in the source
+        /// </summary>
+        /// <param name="projectName">Name of the project to find; pass <c>null</c> for the source of this project</param>
+        /// <param name="failOnError">The test should fail if the source cannot be read; otherwise it should be marked as inconclusive</param>
+        /// <returns>The class declaration</returns>
+        internal static ProjectSourceInventory.MethodDeclaration FindMethodDeclaration(Type classType, string methodName, string projectName = null, bool failOnError = false)
+        {
+            var classDeclaration = FindClassDeclaration(classType, projectName, failOnError);
+            var result = (from m in classDeclaration.Methods
+                          where m.Name == methodName
+                          select m).FirstOrDefault();
+            if (result is null)
+            {
+                Assert.Inconclusive($"Cannot find the method '{methodName}' of class '{classType.FullName}' in the source of the test project '{projectName}'");
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Read the source files from one of the test projects
+        /// </summary>
+        /// <param name="projectName">Name of the project to find; pass <c>null</c> for the source of this project</param>
+        /// <param name="failOnError">The test should fail if the source cannot be read; otherwise it should be marked as inconclusive</param>
+        /// <returns>The project source, and the directory it resides in</returns>
+        internal static (ProjectSourceInventory actual, string projectFilePrefix) FindAndCreateProjectSource(string projectName = null, bool failOnError = false)
+        {
+            if (projectName is null)
+            {
+                projectName = "TestFramework.Tooling.Tests";
+            }
+
+            var sharedRoot = Path.GetDirectoryName(typeof(TestProjectSourceAnalyzer).Assembly.Location);
+            while (true)
+            {
+                var projectFilePath = Path.Combine(sharedRoot, projectName, $"{projectName}.nfproj");
+                if (!File.Exists(projectFilePath))
+                {
+                    projectFilePath = Path.Combine(sharedRoot, projectName, $"{projectName}.csproj");
+                }
+                if (File.Exists(projectFilePath))
+                {
+                    var logger = new LogMessengerMock();
+                    var actual = new ProjectSourceInventory(projectFilePath, logger);
+
+                    if (failOnError)
+                    {
+                        Assert.AreEqual(0, logger.Messages.Count);
+                        Assert.IsNotNull(actual);
+                    }
+                    else if (logger.Messages.Count > 0)
+                    {
+                        Assert.Inconclusive($"Cannot read the source of the test project '{projectName}':\n{string.Join("\n", from m in logger.Messages select $"{m.level}: {m.message}")}");
+                    }
+
+                    return (actual, Path.Combine(sharedRoot, projectName) + Path.DirectorySeparatorChar);
+                }
+
+                var newRoot = Path.GetDirectoryName(sharedRoot);
+                if (string.IsNullOrEmpty(newRoot) || newRoot == sharedRoot)
+                {
+                    Assert.Inconclusive($"Cannot find the source of the test project '{projectName}'");
+                }
+                sharedRoot = newRoot;
+            }
+        }
+    }
+}

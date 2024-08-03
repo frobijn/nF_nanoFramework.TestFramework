@@ -1,18 +1,20 @@
-﻿//
-// Copyright (c) .NET Foundation and Contributors
-// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
+﻿// Copyright (c) .NET Foundation and Contributors.
 // See LICENSE file in the project root for full license information.
-//
 
 using System;
 
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// The test method attribute.
+    /// The attribute marks a method as being a test method. The attribute can be omitted
+    /// if any of the other test-related attributes is present.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class TestMethodAttribute : Attribute
+    public sealed class TestMethodAttribute : Attribute, ITestMethod
     {
+        #region ITestMethod implementation
+        bool ITestMethod.CanBeRun
+            => true;
+        #endregion
     }
 }

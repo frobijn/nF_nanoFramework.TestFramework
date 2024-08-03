@@ -4,12 +4,11 @@
 // See LICENSE file in the project root for full license information.
 //
 
+using nanoFramework.TestFramework;
+using NFUnitTest.Mock;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using nanoFramework.TestFramework;
-using NFUnitTest.Mock;
-using TestFrameworkShared;
 
 namespace NFUnitTest
 {
@@ -26,6 +25,12 @@ namespace NFUnitTest
         public void Cleanup()
         {
             Console.WriteLine("Methods with [Cleanup] will run after tests.");
+        }
+
+        [TestMethod]
+        [Trait("New")]
+        public void NewTest()
+        {
         }
 
         [TestMethod]
@@ -167,7 +172,7 @@ namespace NFUnitTest
             Console.WriteLine("Test null, not null");
 
             // Arrange
-            var nullObject = (object) null;
+            var nullObject = (object)null;
             var notNullObject = new object();
 
             // Assert

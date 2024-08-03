@@ -42,29 +42,40 @@
       <DependentUpon>Assert.cs</DependentUpon>
     </Compile>
     <Compile Include="AssertFailedException.cs" />
+    <Compile Include="AssertFailedException.Obsolete.cs">
+      <DependentUpon>AssertFailedException.cs</DependentUpon>
+    </Compile>
     <Compile Include="CallerArgumentExpressionAttribute.cs" />
     <Compile Include="CleanupAttribute.cs" />
     <Compile Include="CollectionAssert.cs" />
     <Compile Include="DataRowAttribute.cs" />
-    <Compile Include="ITestCategories.cs" />
+    <Compile Include="DoNotRunInParallelAttribute.cs" />
+    <Compile Include="IDataRow.cs" />
+    <Compile Include="InconclusiveException.cs" />
+    <Compile Include="IRunInParallel.cs" />
+    <Compile Include="ITestClass.cs" />
+    <Compile Include="ITestOnVirtualDevice.cs" />
+    <Compile Include="ITestMethod.cs" />
+    <Compile Include="ITestOnRealHardware.cs" />
+    <Compile Include="ITraits.cs" />
     <Compile Include="ITestDevice.cs" />
-    <Compile Include="ITestOnDevice.cs" />
     <Compile Include="NullableAttributes.cs" />
     <Compile Include="OutputHelper.cs" />
+    <Compile Include="RunInParallel.cs" />
     <Compile Include="SetupAttribute.cs" />
+    <Compile Include="SkipTestAttribute.cs" />
     <Compile Include="SkipTestException.cs" />
-    <Compile Include="TestCategoryAttribute.cs" />
     <Compile Include="TestClassAttribute.cs" />
+    <Compile Include="TestFrameworkException.cs" />
+    <Compile Include="CleanupFailedException.cs" />
+    <Compile Include="Tools\TestDeviceProxy.cs" />
     <Compile Include="TestExtensions.cs" />
-    <Compile Include="TestForPlatformAttribute.cs" />
-    <Compile Include="TestForTargetAttribute.cs" />
-    <Compile Include="TestForVirtualDeviceAttribute.cs" />
-    <Compile Include="TestMethodAttribute.cs" />
     <Compile Include="TestOnPlatformAttribute.cs" />
-    <Compile Include="TestOnRealHardwareAttribute.cs" />
+    <Compile Include="TestOnRealHardware.cs" />
     <Compile Include="TestOnTargetAttribute.cs" />
     <Compile Include="TestOnVirtualDeviceAttribute.cs" />
-    <Compile Include="TestRunner.cs" />
+    <Compile Include="TestMethodAttribute.cs" />
+    <Compile Include="TraitAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

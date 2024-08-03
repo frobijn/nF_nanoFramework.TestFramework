@@ -1,0 +1,84 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net4.8</TargetFramework>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <LangVersion>8.0</LangVersion>
+    <RestoreLockedMode Condition="'$(TF_BUILD)' == 'True' or '$(ContinuousIntegrationBuild)' == 'True'">true</RestoreLockedMode>
+	<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>$(DefineConstants);REFERENCED_IN_NFUNITMETADATA</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>$(DefineConstants);REFERENCED_IN_NFUNITMETADATA</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
+     <PackageReference Include="Nerdbank.GitVersioning">
+      <Version>3.6.139</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+	<Compile Include="../TestFramework/CleanupAttribute.cs">
+		<Link>TestFramework/CleanupAttribute.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/IDataRow.cs">
+		<Link>TestFramework/IDataRow.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/IRunInParallel.cs">
+		<Link>TestFramework/IRunInParallel.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestClass.cs">
+		<Link>TestFramework/ITestClass.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestDevice.cs">
+		<Link>TestFramework/ITestDevice.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestMethod.cs">
+		<Link>TestFramework/ITestMethod.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestOnRealHardware.cs">
+		<Link>TestFramework/ITestOnRealHardware.cs</Link>
+	</Compile>
+    <Compile Include="../TestFramework/ITestOnVirtualDevice.cs">
+      <Link>TestFramework/ITestOnVirtualDevice.cs</Link>
+    </Compile>
+	<Compile Include="../TestFramework/ITraits.cs">
+		<Link>TestFramework/ITraits.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/SetupAttribute.cs">
+		<Link>TestFramework/SetupAttribute.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/Tools/TestDeviceProxy.cs">
+		<Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
+	</Compile>
+	<Compile Include="ProjectSourceInventory.cs" />
+	<Compile Include="TestCase.cs" />
+	<Compile Include="TestCaseGroup.cs" />
+	<Compile Include="TestFrameworkProxy\AttributeProxy.cs" />
+	<Compile Include="TestFrameworkProxy\CleanupProxy.cs" />
+	<Compile Include="TestFrameworkProxy\DataRowProxy.cs" />
+	<Compile Include="TestFrameworkProxy\FrameworkMismatchException.cs" />
+	<Compile Include="LogMessenger.cs" />
+	<Compile Include="TestFrameworkProxy\RunInParallelProxy.cs" />
+	<Compile Include="TestFrameworkProxy\SetupProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestClassProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestDeviceProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestOnVirtualDeviceProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestOnRealHardwareProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestMethodProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TraitsProxy.cs" />
+	<Compile Include="AssemblyAnalyzer.cs" />
+  </ItemGroup>
+  
+</Project>

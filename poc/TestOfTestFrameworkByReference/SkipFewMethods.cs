@@ -53,7 +53,7 @@ namespace NFUnitTest
 
 
         [TestMethod]
-        public void MethodWillSkippIfFloatingPointSupportNotOK()
+        public void MethodWillSkipIfFloatingPointSupportNotOK()
         {
             var sysInfoFloat = SystemInfo.FloatingPointSupport;
             if ((sysInfoFloat != FloatingPoint.DoublePrecisionHardware) && (sysInfoFloat != FloatingPoint.DoublePrecisionSoftware))
@@ -68,7 +68,7 @@ namespace NFUnitTest
         }
 
         [TestMethod]
-        public void MethodWillSkippIfRunningInWin32()
+        public void MethodWillSkipIfRunningInWin32()
         {
             var sysInfoPlatform = SystemInfo.Platform;
             if (sysInfoPlatform == "WIN32")
@@ -79,7 +79,7 @@ namespace NFUnitTest
 
 
         [TestMethod]
-        public void MethodWillSkippIfRunningOnTargetOtherThanWin32()
+        public void MethodWillSkipIfRunningOnTargetOtherThanWin32()
         {
             var sysInfoPlatform = SystemInfo.Platform;
             if (sysInfoPlatform != "WIN32")

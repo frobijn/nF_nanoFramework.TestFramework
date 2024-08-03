@@ -1,17 +1,16 @@
-﻿////
-// Copyright (c) .NET Foundation and Contributors
-// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
-// See LICENSE file in the project root for full license information.
-////
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 
-namespace TestFrameworkShared
+namespace nanoFramework.TestFramework
 {
     /// <summary>
     /// <see cref="AssertFailedException"/> class. Used to indicate failure for a test case.
     /// </summary>
-    public class AssertFailedException : Exception
+#pragma warning disable CS0618 // Type or member is obsolete
+    public class AssertFailedException : TestFrameworkShared.AssertFailedException
+#pragma warning restore CS0618 // Type or member is obsolete
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AssertFailedException"/> class.
@@ -39,3 +38,5 @@ namespace TestFrameworkShared
         }
     }
 }
+
+
