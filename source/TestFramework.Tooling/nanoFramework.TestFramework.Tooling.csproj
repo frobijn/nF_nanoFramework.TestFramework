@@ -83,6 +83,7 @@
 	<Compile Include="TestFrameworkProxy\TestMethodProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TraitsProxy.cs" />
 	<Compile Include="TestCaseCollection.cs" />
+	<Compile Include="TestFrameworkConfiguration.cs" />
   </ItemGroup>
   
 </Project>

@@ -14,8 +14,15 @@ namespace TestFramework.Tooling.Tests.Helpers
 
         public static implicit operator LogMessenger(LogMessengerMock mock)
         {
-            return (level, message) =>
-                    mock._messages.Add((level, message));
+            if (mock is null)
+            {
+                return null;
+            }
+            else
+            {
+                return (level, message) =>
+                        mock._messages.Add((level, message));
+            }
         }
     }
 }

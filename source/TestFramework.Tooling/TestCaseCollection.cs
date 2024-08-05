@@ -32,7 +32,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="testAssemblyFilePath">Path of the assembly (*.dll) that may contain tests that use the nanoFramework test framework.</param>
         /// <param name="projectFilePath">Path of the project file that produced the assembly. If <c>null</c>
         /// is passed, the <see cref="TestCase"/> does not have the locations of tests in the source code. See also <see cref="ProjectSourceInventory.FindProjectFilePath"/>.</param>
-        /// <param name="allowTestOnRealHardware">Indicates whether to include test cases that run on real hardware.</param>
+        /// <param name="allowTestOnRealHardware">Indicates whether to include test cases that run on real hardware.
+        /// See also <see cref="TestFrameworkConfiguration.AllowRealHardware"/>.</param>
         /// <param name="logger">Method to pass information about the discovery process to the caller.</param>
         /// <remarks>
         /// If this method is used to discover test cases just before they are executed and the test cases originate from multiple
@@ -52,7 +53,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// is passed for this argument or <c>null</c> is returned from the function, the <see cref="TestCase"/>s from that assembly do not provide
         /// the locations of tests in the source code. See also <see cref="ProjectSourceInventory.FindProjectFilePath"/>.</param>
         /// <param name="allowTestOnRealHardware">Indicates whether a test case for which no information is available on what device it should be run,
-        /// is allowed to be executed on real hardware.</param>
+        /// is allowed to be executed on real hardware.
+        /// See also <see cref="TestFrameworkConfiguration.AllowRealHardware"/>.</param>
         /// <param name="logger">Method to pass information about the discovery process to the caller.</param>
         /// <returns>A description of the tests in the assemblies, or <c>null</c> if the assembly does not contain tests.</returns>
         public TestCaseCollection(IEnumerable<string> testAssemblyFilePaths, Func<string, string> getProjectFilePath, bool allowTestOnRealHardware, LogMessenger logger)
@@ -102,7 +104,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// the locations of tests in the source code. See also <see cref="ProjectSourceInventory.FindProjectFilePath"/>.</param>
         /// <param name="allowTestOnRealHardware">Indicates whether a test case for which no information is available on what device it should be run,
         /// is allowed to be executed on real hardware. The value of the parameter may be different from the value used to collect the
-        /// test cases previously.</param>
+        /// test cases previously. 
+        /// See also <see cref="TestFrameworkConfiguration.AllowRealHardware"/>.</param>
         /// <param name="logger">Method to pass information about the discovery process to the caller.</param>
         public TestCaseCollection(
             IEnumerable<(string testAssemblyPath, string testCaseDisplayName, string testCaseFullyQualifiedName)> testCaseSelection,

@@ -8,6 +8,8 @@ namespace nanoFramework.TestFramework.Tooling
     /// </summary>
     public enum LoggingLevel
     {
+        None = 0,
+
         Detailed = 1,
 
         Verbose = 2,

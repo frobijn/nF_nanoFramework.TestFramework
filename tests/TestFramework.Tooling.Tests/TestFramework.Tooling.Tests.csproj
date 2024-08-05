@@ -49,6 +49,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../source/TestFramework/ICleanup.cs">
@@ -84,6 +85,7 @@
     <Compile Include="TestCaseCollectionTest.cs" />
     <Compile Include="Helpers\TestProjectHelper.cs" />
     <Compile Include="ProjectSourceInventoryTest.cs" />
+    <Compile Include="TestFrameworkConfigurationTest.cs" />
     <Compile Include="TestFrameworkProxy\CleanupProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\DataRowProxyTest.cs" />
     <Compile Include="Helpers\LogMessengerMock.cs" />
