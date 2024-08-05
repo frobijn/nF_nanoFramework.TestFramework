@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 
@@ -16,95 +15,8 @@ namespace nanoFramework.TestFramework.Tooling
         #endregion
 
         #region Construction
-        /// <summary>
-        /// Create the test case(s) based on the description of the method
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="group"></param>
-        /// <param name="attributes"></param>
-        /// <param name="testClassTestOnVirtualDevice"></param>
-        /// <param name="testClassTestOnRealHardwareProxy"></param>
-        /// <param name="testClassRunInParallel"></param>
-        /// <param name="methodSourceLocation"></param>
-        /// <param name="testIndex"></param>
-        /// <param name="logger">Method to pass a message to the caller</param>
-        /// <returns></returns>
-        internal static List<TestCase> Create(MethodInfo method,
-            TestCaseGroup group,
-            List<AttributeProxy> attributes,
-            bool testClassTestOnVirtualDevice,
-            Dictionary<string, List<TestOnRealHardwareProxy>> testClassTestOnRealHardwareProxy,
-            bool testClassRunInParallel,
-            ProjectSourceInventory.ElementDeclaration methodSourceLocation,
-            ref int testIndex,
-            LogMessenger logger)
-        {
-            var result = new List<TestCase>();
-
-            var traits = new HashSet<string>();
-            foreach (TraitsProxy attribute in attributes.OfType<TraitsProxy>())
-            {
-                traits.UnionWith(attribute.Traits);
-            }
-
-            bool runInIsolation = !RunInParallelProxy.RunInParallel(attributes.OfType<RunInParallelProxy>(), testClassRunInParallel);
-
-            bool testOnVirtualDevice = testClassTestOnVirtualDevice || attributes.OfType<TestOnVirtualDeviceProxy>().Any();
-            Dictionary<string, List<TestOnRealHardwareProxy>> testOnRealHardware = TestOnRealHardwareProxy.Collect(testClassTestOnRealHardwareProxy, attributes.OfType<TestOnRealHardwareProxy>());
-            int deviceTypeCount = (testOnRealHardware?.Count ?? 0) + (testOnVirtualDevice ? 1 : 0);
-            if (deviceTypeCount == 0)
-            {
-                string methodInSource = methodSourceLocation is null
-                    ? $"{method.ReflectedType.Assembly.GetName().Name}:{method.ReflectedType.FullName}.{method.Name}"
-                    : methodSourceLocation.ForMessage();
-                logger?.Invoke(LoggingLevel.Error, $"{methodInSource}: method, class and assembly have no attributes to indicate on what device the test should be run.");
-            }
-            else
-            {
-                var dataRowParameters = (from dataRow in attributes.OfType<DataRowProxy>()
-                                         select (dataRow.Source, dataRow.MethodParametersAsString)).ToList();
-                if (dataRowParameters.Count == 0)
-                {
-                    dataRowParameters.Add((methodSourceLocation, ""));
-                }
-                foreach ((ProjectSourceInventory.ElementDeclaration Source, string MethodParametersAsString) in dataRowParameters)
-                {
-                    if (testOnVirtualDevice)
-                    {
-                        result.Add(new TestCase(
-                            ref testIndex,
-                            group,
-                            method, $"{method.Name}{Source}{(deviceTypeCount > 1 ? " [Virtual Device]" : "")}",
-                            methodSourceLocation,
-                            true, null,
-                            runInIsolation,
-                            traits, "@Virtual Device"
-                        ));
-                    }
-                    if (!(testOnRealHardware is null))
-                    {
-                        foreach (KeyValuePair<string, List<TestOnRealHardwareProxy>> device in testOnRealHardware)
-                        {
-                            string deviceTypeName = testOnRealHardware.Keys.First();
-                            result.Add(new TestCase(
-                                ref testIndex,
-                                group,
-                                method, $"{method.Name}{Source}{(deviceTypeCount > 1 ? $" [{deviceTypeName}]" : "")}",
-                                methodSourceLocation,
-                                false, device.Value,
-                                runInIsolation,
-                                traits, $"@{deviceTypeName}"
-                            ));
-                        }
-                    }
-                    testIndex++;
-                }
-            }
-
-            return result;
-        }
-
-        private TestCase(ref int testIndex,
+        internal TestCase(int testIndex,
+            string assemblyFilePath,
             TestCaseGroup group,
             MethodInfo method, string displayName,
             ProjectSourceInventory.ElementDeclaration location,
@@ -113,7 +25,8 @@ namespace nanoFramework.TestFramework.Tooling
             bool runInIsolation,
             HashSet<string> traits, string extraTrait)
         {
-            TestIndex = ++testIndex;
+            AssemblyFilePath = assemblyFilePath;
+            TestIndex = testIndex;
             DisplayName = displayName;
             FullyQualifiedName = $"{method.ReflectedType.FullName}.{method.Name}";
             TestMethodSourceCodeLocation = location;
@@ -132,6 +45,14 @@ namespace nanoFramework.TestFramework.Tooling
         #endregion
 
         #region Properties
+        /// <summary>
+        /// Get the assembly the test case resides in
+        /// </summary>
+        public string AssemblyFilePath
+        {
+            get;
+        }
+
         /// <summary>
         /// Name of the test method to view in, e.g., the Test Explorer
         /// </summary>

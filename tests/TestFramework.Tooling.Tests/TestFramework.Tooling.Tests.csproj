@@ -51,14 +51,17 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../../source/TestFramework/CleanupAttribute.cs">
-      <Link>TestFramework/CleanupAttribute.cs</Link>
+    <Compile Include="../../source/TestFramework/ICleanup.cs">
+      <Link>TestFramework/ICleanup.cs</Link>
     </Compile>
     <Compile Include="../../source/TestFramework/IDataRow.cs">
       <Link>TestFramework/IDataRow.cs</Link>
     </Compile>
     <Compile Include="../../source/TestFramework/IRunInParallel.cs">
       <Link>TestFramework/IRunInParallel.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ISetup.cs">
+      <Link>TestFramework/ISetup.cs</Link>
     </Compile>
     <Compile Include="../../source/TestFramework/ITestClass.cs">
       <Link>TestFramework/ITestClass.cs</Link>
@@ -75,13 +78,11 @@
     <Compile Include="../../source/TestFramework/ITraits.cs">
       <Link>TestFramework/ITraits.cs</Link>
     </Compile>
-    <Compile Include="../../source/TestFramework/SetupAttribute.cs">
-      <Link>TestFramework/SetupAttribute.cs</Link>
-    </Compile>
     <Compile Include="../../source/TestFramework/Tools/TestDeviceProxy.cs">
       <Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
     </Compile>
-    <Compile Include="Helpers\TestProjectSourceAnalyzer.cs" />
+    <Compile Include="TestCaseCollectionTest.cs" />
+    <Compile Include="Helpers\TestProjectHelper.cs" />
     <Compile Include="ProjectSourceInventoryTest.cs" />
     <Compile Include="TestFrameworkProxy\CleanupProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\DataRowProxyTest.cs" />
@@ -98,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="ProjectSourceInventoryTest\InvalidProject.nfproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\source\TestFramework.Tooling\nanoFramework.TestFramework.Tooling.csproj">

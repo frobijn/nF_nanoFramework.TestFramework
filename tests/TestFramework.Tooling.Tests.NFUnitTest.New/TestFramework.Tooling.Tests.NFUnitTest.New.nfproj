@@ -33,6 +33,8 @@
     <Compile Include="TestClassVariants.cs" />
     <Compile Include="TestFrameworkExtensions\BrokenAfterRefactoringAttribute.cs" />
     <Compile Include="TestFrameworkExtensions\TestOnDoublePrecisionDeviceAttribute.cs" />
+    <Compile Include="TestRunInParallel.cs" />
+    <Compile Include="TestWithALotOfErrors.cs" />
     <Compile Include="TestWithFrameworkExtensions.cs" />
     <Compile Include="TestWithMethods.cs" />
     <Compile Include="TestWithNewTestMethodsAttributes.cs" />

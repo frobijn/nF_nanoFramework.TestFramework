@@ -35,6 +35,11 @@ namespace nanoFramework.TestFramework
     /// <see cref="ITestOnVirtualDevice"/>) consists of more than one name, a test case is created for each
     /// name. The test framework also adds a trait to test case to make it selectable.
     /// </para>
+    /// <para>
+    /// If a test method has no (inherited) attributes that implement either <see cref="ITestOnRealHardware"/>
+    /// or <see cref="ITestOnVirtualDevice"/>, the test can be executed on the Virtual Device by default and,
+    /// if execution on real hardware is allowed, on a single real hardware device.
+    /// </para>
     /// </summary>
 #if REFERENCED_IN_NFUNITMETADATA
     internal

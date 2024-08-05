@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Reflection;
 using System.Text;
-using nanoFramework.TestFramework;
 
 namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
 {
@@ -15,7 +13,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
     {
         #region Fields
         private readonly Attribute _attribute;
-        private static PropertyInfo s_methodParameters;
+        private readonly TestFrameworkImplementation _framework;
         #endregion
 
         #region Construction
@@ -23,18 +21,20 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Create the proxy
         /// </summary>
         /// <param name="attribute">Matching attribute of the nanoCLR platform</param>
+        /// <param name="framework">Information about the implementation of the test framework</param>
         /// <param name="interfaceType">Matching interface for the nanoCLR platform</param>
-        internal DataRowProxy(Attribute attribute, Type interfaceType)
+        internal DataRowProxy(Attribute attribute, TestFrameworkImplementation framework, Type interfaceType)
         {
             _attribute = attribute;
+            _framework = framework;
 
-            if (s_methodParameters is null)
+            if (_framework._property_IDataRow_MethodParameters is null)
             {
-                s_methodParameters = interfaceType.GetProperty(nameof(IDataRow.MethodParameters));
-                if (s_methodParameters is null
-                    || s_methodParameters.PropertyType != typeof(object[]))
+                _framework._property_IDataRow_MethodParameters = interfaceType.GetProperty(nameof(IDataRow.MethodParameters));
+                if (_framework._property_IDataRow_MethodParameters is null
+                    || _framework._property_IDataRow_MethodParameters.PropertyType != typeof(object[]))
                 {
-                    s_methodParameters = null;
+                    _framework._property_IDataRow_MethodParameters = null;
                     throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(IDataRow)}.${nameof(IDataRow.MethodParameters)}");
                 }
             }
@@ -46,7 +46,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Array containing all passed parameters
         /// </summary>
         public object[] MethodParameters
-            => (object[])s_methodParameters.GetValue(_attribute, null);
+            => (object[])_framework._property_IDataRow_MethodParameters.GetValue(_attribute, null);
 
         /// <summary>
         /// Presents the <see cref="MethodParameters"/> as a string "(..,..,..)"

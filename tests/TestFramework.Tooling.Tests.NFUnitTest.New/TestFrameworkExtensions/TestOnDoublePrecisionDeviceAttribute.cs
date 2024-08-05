@@ -8,12 +8,12 @@ using nanoFramework.TestFramework;
 namespace TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions
 {
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-    public class TestOnDoublePrecisionDeviceAttribute : Attribute, ITestOnDevice, ITraits
+    public class TestOnDoublePrecisionDeviceAttribute : Attribute, ITestOnRealHardware
     {
-        public string[] Traits
-            => new string[] { "On: double precision device" };
+        public string Description
+            => "DoublePrecisionDevice";
 
-        public bool CanTestOnDevice(ITestDevice testDevice)
+        public bool ShouldTestOnDevice(ITestDevice testDevice)
         {
             if (testDevice.IsRemoteDevice())
             {
@@ -28,5 +28,8 @@ namespace TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions
                     || sysInfoFloat == SystemInfo.FloatingPoint.DoublePrecisionSoftware;
             }
         }
+
+        public bool TestOnAllDevices
+            => true;
     }
 }

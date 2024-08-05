@@ -27,7 +27,7 @@ namespace nanoFramework.TestFramework
         /// for each test method, rather than once for all test methods defined by this class.
         /// If the class is static, it will never be instantiated.</param>
         /// <remarks>
-        /// If the test methods cannot be run in parallel with other test methods (as expressed by <see cref="DoNotRunInParallelAttribute"/>
+        /// If the test methods cannot be run in parallel with other test methods (as expressed by <see cref="RunInIsolationAttribute"/>
         /// or an implementation of <see cref="IRunInParallel"/>), <paramref name="runClassMethodsInParallel"/> is ignored.
         /// </remarks>
         public TestClassAttribute(bool runClassMethodsInParallel = false, bool instantiatePerMethod = false)

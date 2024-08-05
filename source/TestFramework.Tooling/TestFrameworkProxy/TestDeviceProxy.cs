@@ -1,9 +1,9 @@
-﻿// Copyright (c) .NET Foundation and Contributors.
-// See LICENSE file in the project root for full license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using nanoFramework.TestFramework;
 
 namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
 {
@@ -15,24 +15,23 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
     public class TestDeviceProxy
     {
         #region Fields
-        /// <summary>
-        /// The <see cref="nanoFramework.TestFramework.Tools.TestDeviceProxy"/> type as known in the test assembly,
-        /// on the nanoCLR platform.
-        /// </summary>
-        private static Type s_testDeviceProxyType;
+        private readonly ITestDevice _device;
+        private readonly Dictionary<TestFrameworkImplementation, object> _proxies = new Dictionary<TestFrameworkImplementation, object>();
         #endregion
 
         #region Construction / initialisation
         /// <summary>
-        /// This method has to be called by an attribute proxy that accepts a <see cref="nanoFramework.TestFramework.ITestDevice"/>
-        /// as argument. It is used to find the matching <see cref="nanoFramework.TestFramework.Tools.TestDeviceProxy"/> type.
+        /// This method has to be called by code that discovers an interface from the test framework.
+        /// It is used to find the <see cref="nanoFramework.TestFramework.Tools.TestDeviceProxy"/> type
+        /// in the assembly that implements the test framework.
         /// </summary>
-        /// <param name="interfaceType"></param>
-        internal static void FoundITestDevice(Type interfaceType)
+        /// <param name="framework">Information about the implementation of the test framework</param>
+        /// <param name="interfaceType">One of the interface types defined in the test framework</param>
+        internal static void FoundTestFrameworkInterface(TestFrameworkImplementation framework, Type interfaceType)
         {
-            s_testDeviceProxyType ??= (from type in interfaceType.Assembly.GetTypes()
-                                       where type.FullName == typeof(nanoFramework.TestFramework.Tools.TestDeviceProxy).FullName
-                                       select type).FirstOrDefault();
+            framework._type_TestDeviceProxy ??= (from type in interfaceType.Assembly.GetTypes()
+                                                 where type.FullName == typeof(nanoFramework.TestFramework.Tools.TestDeviceProxy).FullName
+                                                 select type).FirstOrDefault();
         }
 
         /// <summary>
@@ -49,37 +48,43 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
             {
                 throw new ArgumentNullException(nameof(testDevice));
             }
-            if (s_testDeviceProxyType is null)
-            {
-                throw new FrameworkMismatchException($"{nameof(TestDeviceProxy)} is not found in the nanoFramework assembly");
-            }
-            try
-            {
-                ITestDeviceProxy = Activator.CreateInstance(s_testDeviceProxyType, testDevice, typeof(ITestDevice));
-            }
-            catch (Exception ex)
-            {
-                if (ex.GetType().FullName == typeof(ArgumentException).FullName)
-                {
-                    // The proxy cannot find the ITestDevice properties/methods
-                    throw new FrameworkMismatchException($"The definition of {nameof(ITestDevice)} in this application does not match the one in the nanoFramework assembly.");
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _device = testDevice;
         }
         #endregion
 
-        #region Properties
+        #region Methods
         /// <summary>
         /// Get the instance that implements the <see cref="ITestDevice"/> interface on the nanoCLR
         /// platform and that passes method calls to the <see cref="ITestDevice"/> implementation on the .NET platform.
         /// </summary>
-        internal object ITestDeviceProxy
+        /// <param name="framework">Information about the implementation of the test framework</param>
+        internal object ITestDeviceProxy(TestFrameworkImplementation framework)
         {
-            get;
+            if (!_proxies.TryGetValue(framework, out object proxy))
+            {
+                if (framework._type_TestDeviceProxy is null)
+                {
+                    throw new FrameworkMismatchException($"{nameof(TestDeviceProxy)} is not found in the nanoFramework assembly");
+                }
+                try
+                {
+                    proxy = Activator.CreateInstance(framework._type_TestDeviceProxy, _device, typeof(ITestDevice));
+                }
+                catch (Exception ex)
+                {
+                    if (ex.GetType().FullName == typeof(ArgumentException).FullName)
+                    {
+                        // The proxy cannot find the ITestDevice properties/methods
+                        throw new FrameworkMismatchException($"The definition of {nameof(ITestDevice)} in this application does not match the one in the nanoFramework assembly.");
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                _proxies[framework] = proxy;
+            }
+            return proxy;
         }
         #endregion
     }

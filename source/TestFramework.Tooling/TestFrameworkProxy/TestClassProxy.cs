@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Reflection;
-using nanoFramework.TestFramework;
 
 namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
 {
@@ -13,8 +11,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
     public sealed class TestClassProxy : AttributeProxy
     {
         #region Fields
-        private static PropertyInfo s_instantiatePerMethod;
-        private static PropertyInfo s_runClassMethodsInParallel;
+        private readonly TestFrameworkImplementation _framework;
         #endregion
 
         #region Construction
@@ -23,27 +20,29 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// </summary>
         /// <param name="testClass">Test class type for the nanoCLR platform</param>
         /// <param name="attribute">Matching attribute of the nanoCLR platform</param>
+        /// <param name="framework">Information about the implementation of the test framework</param>
         /// <param name="interfaceType">Matching interface for the nanoCLR platform</param>
-        internal TestClassProxy(Type testClass, Attribute attribute, Type interfaceType)
+        internal TestClassProxy(Type testClass, Attribute attribute, TestFrameworkImplementation framework, Type interfaceType)
         {
-            if (s_instantiatePerMethod is null)
+            _framework = framework;
+            if (_framework._property_ITestClass_InstantiatePerMethod is null)
             {
-                s_instantiatePerMethod = interfaceType.GetProperty(nameof(ITestClass.InstantiatePerMethod));
-                if (s_instantiatePerMethod is null
-                    || s_instantiatePerMethod.PropertyType != typeof(bool))
+                _framework._property_ITestClass_InstantiatePerMethod = interfaceType.GetProperty(nameof(ITestClass.InstantiatePerMethod));
+                if (_framework._property_ITestClass_InstantiatePerMethod is null
+                    || _framework._property_ITestClass_InstantiatePerMethod.PropertyType != typeof(bool))
                 {
-                    s_instantiatePerMethod = null;
+                    _framework._property_ITestClass_InstantiatePerMethod = null;
                     throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestClass)}.${nameof(ITestClass.InstantiatePerMethod)}");
                 }
             }
 
-            if (s_runClassMethodsInParallel is null)
+            if (_framework._property_ITestClass_RunClassMethodsInParallel is null)
             {
-                s_runClassMethodsInParallel = interfaceType.GetProperty(nameof(ITestClass.RunClassMethodsInParallel));
-                if (s_runClassMethodsInParallel is null
-                    || s_runClassMethodsInParallel.PropertyType != typeof(bool))
+                _framework._property_ITestClass_RunClassMethodsInParallel = interfaceType.GetProperty(nameof(ITestClass.RunClassMethodsInParallel));
+                if (_framework._property_ITestClass_RunClassMethodsInParallel is null
+                    || _framework._property_ITestClass_RunClassMethodsInParallel.PropertyType != typeof(bool))
                 {
-                    s_runClassMethodsInParallel = null;
+                    _framework._property_ITestClass_RunClassMethodsInParallel = null;
                     throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestClass)}.${nameof(ITestClass.RunClassMethodsInParallel)}");
                 }
             }
@@ -56,10 +55,10 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
             else
             {
                 Instantiation =
-                    (bool)s_instantiatePerMethod.GetValue(attribute, null) ? TestClassInstantiation.PerMethod
+                    (bool)_framework._property_ITestClass_InstantiatePerMethod.GetValue(attribute, null) ? TestClassInstantiation.PerMethod
                     : TestClassInstantiation.PerClass;
             }
-            RunTestMethodsOneAfterTheOther = (bool)s_runClassMethodsInParallel.GetValue(attribute, null);
+            RunTestMethodsOneAfterTheOther = !(bool)_framework._property_ITestClass_RunClassMethodsInParallel.GetValue(attribute, null);
         }
         #endregion
 

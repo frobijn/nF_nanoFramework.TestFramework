@@ -49,10 +49,12 @@
     <Compile Include="CleanupAttribute.cs" />
     <Compile Include="CollectionAssert.cs" />
     <Compile Include="DataRowAttribute.cs" />
-    <Compile Include="DoNotRunInParallelAttribute.cs" />
+    <Compile Include="RunInIsolationAttribute.cs" />
+    <Compile Include="ICleanup.cs" />
     <Compile Include="IDataRow.cs" />
     <Compile Include="InconclusiveException.cs" />
     <Compile Include="IRunInParallel.cs" />
+    <Compile Include="ISetup.cs" />
     <Compile Include="ITestClass.cs" />
     <Compile Include="ITestOnVirtualDevice.cs" />
     <Compile Include="ITestMethod.cs" />
@@ -71,7 +73,7 @@
     <Compile Include="Tools\TestDeviceProxy.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestOnPlatformAttribute.cs" />
-    <Compile Include="TestOnRealHardware.cs" />
+    <Compile Include="TestOnRealHardwareAttribute.cs" />
     <Compile Include="TestOnTargetAttribute.cs" />
     <Compile Include="TestOnVirtualDeviceAttribute.cs" />
     <Compile Include="TestMethodAttribute.cs" />

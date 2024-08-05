@@ -12,7 +12,7 @@ namespace nanoFramework.TestFramework
     /// that are based on the specified platform.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
-    public sealed class TestOnPlatformAttribute : Attribute, ITestOnRealHardware, ITraits
+    public sealed class TestOnPlatformAttribute : Attribute, ITestOnRealHardware
     {
         #region Fields
         private readonly string _platform;
@@ -42,11 +42,6 @@ namespace nanoFramework.TestFramework
 
         bool ITestOnRealHardware.TestOnAllDevices
             => _runOnEveryDevice;
-        #endregion
-
-        #region ITrait implementation
-        string[] ITraits.Traits
-            => new string[] { $"For: platform {_platform}" };
         #endregion
     }
 }

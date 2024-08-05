@@ -1,20 +1,18 @@
-﻿// Copyright (c) .NET Foundation and Contributors
-// See LICENSE file in the project root for full license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// Clean up attribute typically used to clean up after the tests, it will always been called the last after all the Test Method run.
+    /// Mark a method that should be called to clean up after the tests.
+    /// The <see cref="ITestClass"/>/<see cref="TestClassAttribute"/> determines whether
+    /// a cleanup is done after each test method or once all test methods have been executed.
+    /// A test class can have at most one cleanup method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-#if REFERENCED_IN_NFUNITMETADATA
-    internal
-#else
-    public
-#endif
-    sealed class CleanupAttribute : Attribute
+    public sealed class CleanupAttribute : Attribute, ICleanup
     {
     }
 }

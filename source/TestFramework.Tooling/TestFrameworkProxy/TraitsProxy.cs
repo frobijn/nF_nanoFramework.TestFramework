@@ -1,9 +1,7 @@
-﻿// Copyright (c) .NET Foundation and Contributors.
-// See LICENSE file in the project root for full license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Reflection;
-using nanoFramework.TestFramework;
 
 namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
 {
@@ -14,7 +12,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
     {
         #region Fields
         private readonly Attribute _attribute;
-        private static PropertyInfo s_traits;
+        private readonly TestFrameworkImplementation _framework;
         #endregion
 
         #region Construction
@@ -22,18 +20,19 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Create the proxy
         /// </summary>
         /// <param name="attribute">Matching attribute of the nanoCLR platform</param>
+        /// <param name="framework">Information about the implementation of the test framework</param>
         /// <param name="interfaceType">Matching interface for the nanoCLR platform</param>
-        internal TraitsProxy(Attribute attribute, Type interfaceType)
+        internal TraitsProxy(Attribute attribute, TestFrameworkImplementation framework, Type interfaceType)
         {
-            TestDeviceProxy.FoundITestDevice(interfaceType);
             _attribute = attribute;
-            if (s_traits is null)
+            _framework = framework;
+            if (_framework._property_ITraits_Traits is null)
             {
-                s_traits = interfaceType.GetProperty(nameof(ITraits.Traits));
-                if (s_traits is null
-                    || s_traits.PropertyType != typeof(string[]))
+                _framework._property_ITraits_Traits = interfaceType.GetProperty(nameof(ITraits.Traits));
+                if (_framework._property_ITraits_Traits is null
+                    || _framework._property_ITraits_Traits.PropertyType != typeof(string[]))
                 {
-                    s_traits = null;
+                    _framework._property_ITraits_Traits = null;
                     throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITraits)}.${nameof(ITraits.Traits)}");
                 }
             }
@@ -45,7 +44,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Get the traits or categories that are assigned to the test
         /// </summary>
         public string[] Traits
-            => (string[])s_traits.GetValue(_attribute, null);
+            => (string[])_framework._property_ITraits_Traits.GetValue(_attribute, null);
         #endregion
     }
 }

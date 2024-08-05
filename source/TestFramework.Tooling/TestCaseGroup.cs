@@ -12,12 +12,10 @@ namespace nanoFramework.TestFramework.Tooling
         /// Create the instance
         /// </summary>
         /// <param name="testGroupIndex"></param>
-        /// <param name="runInParallel"></param>
         /// <param name="runOneAfterTheOther"></param>
-        internal TestCaseGroup(int testGroupIndex, bool runInParallel, bool runOneAfterTheOther)
+        internal TestCaseGroup(int testGroupIndex, bool runOneAfterTheOther)
         {
             TestGroupIndex = testGroupIndex;
-            RunInParallel = runInParallel;
             RunOneAfterTheOther = runOneAfterTheOther;
         }
         #endregion
@@ -63,15 +61,6 @@ namespace nanoFramework.TestFramework.Tooling
         {
             get;
             internal set;
-        }
-
-        /// <summary>
-        /// Indicates whether the tests from this group can be run in parallel with tests from other groups,
-        /// provided the device the tests are running on can provide that feature.
-        /// </summary>
-        public bool RunInParallel
-        {
-            get;
         }
 
         /// <summary>

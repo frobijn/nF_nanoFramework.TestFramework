@@ -128,7 +128,7 @@ namespace nanoFramework.TestFramework.Tooling
                     foreach (MethodDeclarationSyntax methodInSource in classInSource.ChildNodes().OfType<MethodDeclarationSyntax>())
                     {
                         string methodName = methodInSource.Identifier.ValueText;
-                        var methodDeclaration = new MethodDeclaration(methodName, sourceFilePath, methodInSource.GetLocation());
+                        var methodDeclaration = new MethodDeclaration(methodName, sourceFilePath, methodInSource.Identifier.GetLocation());
                         classDeclaration._methods.Add(methodDeclaration);
 
                         foreach (AttributeListSyntax list in methodInSource.AttributeLists)
@@ -308,43 +308,46 @@ namespace nanoFramework.TestFramework.Tooling
             string candidateDirectoryPath = Path.GetDirectoryName(assemblyFilePath);
             while (true)
             {
-                // Check the nanoFramework projects first
-                foreach (string projectFilePath in Directory.EnumerateFiles(candidateDirectoryPath, "*.nfproj"))
+                if (Directory.Exists(candidateDirectoryPath))
                 {
-                    try
+                    // Check the nanoFramework projects first
+                    foreach (string projectFilePath in Directory.EnumerateFiles(candidateDirectoryPath, "*.nfproj"))
                     {
-                        var projectRoot = XDocument.Load(projectFilePath);
-                        if (!(projectRoot.Root is null))
+                        try
                         {
-                            foreach (XElement propertyGroup in projectRoot.Root.Elements(projectRoot.Root.Name.Namespace + "PropertyGroup"))
+                            var projectRoot = XDocument.Load(projectFilePath);
+                            if (!(projectRoot.Root is null))
                             {
-                                if ((from property in projectRoot.Root.Elements(projectRoot.Root.Name.Namespace + "AssemblyName")
-                                     where property.Value == assemblyName
-                                     select property).Any())
+                                foreach (XElement propertyGroup in projectRoot.Root.Elements(projectRoot.Root.Name.Namespace + "PropertyGroup"))
                                 {
-                                    return projectFilePath;
+                                    if ((from property in propertyGroup.Elements(projectRoot.Root.Name.Namespace + "AssemblyName")
+                                         where property.Value == assemblyName
+                                         select property).Any())
+                                    {
+                                        return projectFilePath;
+                                    }
                                 }
                             }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger?.Invoke(LoggingLevel.Detailed, $"Cannot read the XML for the project '{projectFilePath}': {ex.Message}");
+                        catch (Exception ex)
+                        {
+                            logger?.Invoke(LoggingLevel.Detailed, $"Cannot read the XML for the project '{projectFilePath}': {ex.Message}");
+                        }
+
+                        // The default for the assembly name is based on the project file name
+                        if (Path.GetFileNameWithoutExtension(projectFilePath) == assemblyName)
+                        {
+                            return projectFilePath;
+                        }
                     }
 
-                    // The default for the assembly name is based on the project file name
-                    if (Path.GetFileNameWithoutExtension(projectFilePath) == assemblyName)
+                    foreach (string projectFilePath in Directory.EnumerateFiles(candidateDirectoryPath))
                     {
-                        return projectFilePath;
-                    }
-                }
-
-                foreach (string projectFilePath in Directory.EnumerateFiles(candidateDirectoryPath))
-                {
-                    if (Path.GetExtension(projectFilePath)?.EndsWith("proj") ?? false)
-                    {
-                        // Assume that the assembly is part of another type of project, and the source code is not available
-                        return null;
+                        if (Path.GetExtension(projectFilePath)?.EndsWith("proj") ?? false)
+                        {
+                            // Assume that the assembly is part of another type of project, and the source code is not available
+                            return null;
+                        }
                     }
                 }
 
@@ -381,7 +384,7 @@ namespace nanoFramework.TestFramework.Tooling
                     continue;
                 }
 
-                ClassDeclaration classDeclaration = sourceInventory.TryGet(classType.FullName);
+                ClassDeclaration classDeclaration = sourceInventory?.TryGet(classType.FullName);
                 yield return (
                     classType,
                     classDeclaration,

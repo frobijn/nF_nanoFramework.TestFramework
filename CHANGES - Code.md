@@ -66,3 +66,7 @@ Changes to implement the new features:
 	- All framework exceptions derive from TestFrameworkException, and the replacement of null chars is now in TestFrameworkException. You may need this in special situations where the test code monitors for exceptions. Like in the framework:
 	
 	- Assert.ThrowsException modified. If an exception occurs that is a framework exception and the expected exception is not a framework exception, the framework exception is re-thrown. This is possible in code that checks if an action leads to an non-framework exception, and within the action the user wants to verify some values via Assert, and one of those values are incorrect.	But if the user is testing for a framework exception (e.g., when testing a framework extension), occurence of a different framework extension is a test failure.
+	
+## Unit test runner
+
+- Instantiation of classes

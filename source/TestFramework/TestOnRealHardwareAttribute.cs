@@ -11,14 +11,26 @@ namespace nanoFramework.TestFramework
     /// of the available devices that are not the Virtual Device.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class TestOnRealHardwareAttribute : Attribute, ITestOnRealHardware, ITraits
+#if REFERENCED_IN_NFUNITMETADATA
+    internal
+#else
+    public
+#endif
+        sealed class TestOnRealHardwareAttribute : Attribute, ITestOnRealHardware
     {
+        #region Fields
+        private readonly bool _runOnEveryDevice;
+        #endregion
+
         #region Construction
         /// <summary>
         /// Inform the test runner that the test should be run on the virtual nanoDevice.
         /// </summary>
-        public TestOnRealHardwareAttribute()
+        /// <param name="runOnEveryDevice">Indicates whether to run the test on every available hardware device,
+        /// rather than just one of the devices.</param>
+        public TestOnRealHardwareAttribute(bool runOnEveryDevice)
         {
+            _runOnEveryDevice = runOnEveryDevice;
         }
         #endregion
 
@@ -30,12 +42,7 @@ namespace nanoFramework.TestFramework
             => true;
 
         bool ITestOnRealHardware.TestOnAllDevices
-            => false;
-        #endregion
-
-        #region ITrait implementation
-        string[] ITraits.Traits
-            => new string[] { "For: Real hardware" };
+            => _runOnEveryDevice;
         #endregion
     }
 }

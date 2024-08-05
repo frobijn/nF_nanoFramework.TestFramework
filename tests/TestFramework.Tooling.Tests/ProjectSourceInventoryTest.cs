@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
@@ -32,11 +33,10 @@ namespace TestFramework.Tooling.Tests
     [TestClass]
     public sealed class ProjectSourceInventoryTest
     {
-
         #region Test for parsing source code
         [TestMethod]
         [TestCategory("Source code")]
-        public void Parse_SingleTestClass()
+        public void Parse_SomeTestClasses()
         {
             #region Source code
             string sourceCode1 = @"using nanoFramework.TestFramework;
@@ -47,7 +47,7 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
     public static class SomeTest
     {
         [TestMethod]
-        public void Method2 ()
+        public void Method1 ()
         {
         }
 
@@ -63,7 +63,7 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
         [TestMethod]
         [Trait(""trait 1"")]
         [Trait(""trait 2"")]
-        public void Method2 ()
+        public void Method3 ()
         {
         }
     }
@@ -80,7 +80,7 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
         // Some comments for good measure
         [TestForVirtualDevice, myNamespace.Special]
         [RunInParallel]
-        public void Method2 ()
+        public void Method4 ()
         {
         }
     }
@@ -99,106 +99,115 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
 
             // All classes
             Assert.AreEqual(
-                "ProjectSourceTest.TestFramework.Tooling.Tests.SomeTest in SomeTestClasses.cs(4,4)" + "\n" +
-                "ProjectSourceTest.TestFramework.Tooling.Tests.SomeOtherTest in SomeTestClasses.cs(19,4)",
+@"ProjectSourceTest.TestFramework.Tooling.Tests.SomeTest in SomeTestClasses.cs(4,4)
+ProjectSourceTest.TestFramework.Tooling.Tests.SomeOtherTest in SomeTestClasses.cs(19,4)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from c in actual.ClassDeclarations
                     select $"{c.Name} in {c.SourceFilePath}({c.LineNumber},{c.Position})"
-                )
+                ) + '\n'
             );
 
             // SomeTest : attributes
             Assert.AreEqual(
-                "TestClass in SomeTestClasses.cs(4,5)",
+@"TestClass in SomeTestClasses.cs(4,5)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from a in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeTest").Attributes
                     select $"{a.Name} in {a.SourceFilePath}({a.LineNumber},{a.Position})"
-                )
+                ) + '\n'
             );
 
             // SomeTest : methods
             Assert.AreEqual(
-                "Method2 in SomeTestClasses.cs(7,8)" + "\n" +
-                "Method2 in SomeTestClasses.cs(12,8)",
+@"Method1 in SomeTestClasses.cs(8,20)
+Method2 in SomeTestClasses.cs(14,20)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from m in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeTest").Methods
                     select $"{m.Name} in {m.SourceFilePath}({m.LineNumber},{m.Position})"
-                )
+                ) + '\n'
             );
 
             // SomeTest, Method2: attributes
             Assert.AreEqual(
-                "TestMethod in SomeTestClasses.cs(7,9)",
+@"TestMethod in SomeTestClasses.cs(7,9)
+".Replace("\r\n", "\n"),
+                string.Join("\n",
+                    from a in
+                        (from m in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeTest").Methods
+                         where m.Name == "Method1"
+                         select m).First().Attributes
+                    select $"{a.Name} in {a.SourceFilePath}({a.LineNumber},{a.Position})"
+                ) + '\n'
+            );
+
+            // SomeTest, Method2: attributes
+            Assert.AreEqual(
+@"DataRow in SomeTestClasses.cs(12,9)
+DataRow in SomeTestClasses.cs(13,9)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from a in
                         (from m in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeTest").Methods
                          where m.Name == "Method2"
                          select m).First().Attributes
                     select $"{a.Name} in {a.SourceFilePath}({a.LineNumber},{a.Position})"
-                )
-            );
-
-            // SomeTest, Method2: attributes
-            Assert.AreEqual(
-                "DataRow in SomeTestClasses.cs(12,9)" + "\n" +
-                "DataRow in SomeTestClasses.cs(13,9)",
-                string.Join("\n",
-                    from a in
-                        (from m in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeTest").Methods
-                         where m.Name == "Method2"
-                         select m).First().Attributes
-                    select $"{a.Name} in {a.SourceFilePath}({a.LineNumber},{a.Position})"
-                )
+                ) + '\n'
             );
 
             // SomeOtherTest : attributes
             Assert.AreEqual(
-                "SpecialTestClass in SomeOtherTest.cs(4,5)",
+@"SpecialTestClass in SomeOtherTest.cs(4,5)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from a in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeOtherTest").Attributes
                     select $"{a.Name} in {a.SourceFilePath}({a.LineNumber},{a.Position})"
-                )
+                ) + '\n'
             );
 
             // SomeOtherTest : methods
             Assert.AreEqual(
-                "Method2 in SomeTestClasses.cs(21,8)" + "\n" +
-                "Method2 in SomeOtherTest.cs(7,8)",
+@"Method3 in SomeTestClasses.cs(24,20)
+Method4 in SomeOtherTest.cs(11,20)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from m in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeOtherTest").Methods
                     select $"{m.Name} in {m.SourceFilePath}({m.LineNumber},{m.Position})"
-                 )
+                 ) + '\n'
             );
 
             // SomeOtherTest, Method2: attributes
             Assert.AreEqual(
-                "TestMethod in SomeTestClasses.cs(21,9)" + "\n" +
-                "Trait in SomeTestClasses.cs(22,9)" + "\n" +
-                "Trait in SomeTestClasses.cs(23,9)",
+@"TestMethod in SomeTestClasses.cs(21,9)
+Trait in SomeTestClasses.cs(22,9)
+Trait in SomeTestClasses.cs(23,9)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from a in
                         (from m in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeOtherTest").Methods
-                         where m.Name == "Method2"
+                         where m.Name == "Method3"
                          select m).First().Attributes
                     select $"{a.Name} in {a.SourceFilePath}({a.LineNumber},{a.Position})"
-                )
+                ) + '\n'
             );
 
 
 
             // SomeOtherTest, Method2: attributes
             Assert.AreEqual(
-                "TestMethod in SomeOtherTest.cs(7,9)" + "\n" +
-                "TestForVirtualDevice in SomeOtherTest.cs(9,9)" + "\n" +
-                "Special in SomeOtherTest.cs(9,31)" + "\n" +
-                "RunInParallel in SomeOtherTest.cs(10,9)",
+@"TestMethod in SomeOtherTest.cs(7,9)
+TestForVirtualDevice in SomeOtherTest.cs(9,9)
+Special in SomeOtherTest.cs(9,31)
+RunInParallel in SomeOtherTest.cs(10,9)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from a in
                         (from m in actual.TryGet("ProjectSourceTest.TestFramework.Tooling.Tests.SomeOtherTest").Methods
-                         where m.Name == "Method2"
+                         where m.Name == "Method4"
                          select m).First().Attributes
                     select $"{a.Name} in {a.SourceFilePath}({a.LineNumber},{a.Position})"
-                )
+                ) + '\n'
             );
         }
         #endregion
@@ -208,15 +217,16 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
         [TestCategory("Source code")]
         public void Parse_TestFramework_Tooling_Tests_NFUnitTest()
         {
-            (ProjectSourceInventory actual, string pathPrefix) = TestProjectSourceAnalyzer.FindAndCreateProjectSource("TestFramework.Tooling.Tests.NFUnitTest", true);
+            (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.NFUnitTest", true);
 
             Assert.AreEqual(
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes in {pathPrefix}TestAllCurrentAttributes.cs(8,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMethods.cs(4,4)",
+$@"TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes in {pathPrefix}TestAllCurrentAttributes.cs(8,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMethods.cs(4,4)
+".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from c in actual.ClassDeclarations
                     select $"{c.Name} in {c.SourceFilePath}({c.LineNumber},{c.Position})"
-                )
+                ) + '\n'
             );
         }
 
@@ -224,26 +234,60 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
         [TestCategory("Source code")]
         public void Parse_TestFramework_Tooling_Tests_NFUnitTest_New()
         {
-            (ProjectSourceInventory actual, string pathPrefix) = TestProjectSourceAnalyzer.FindAndCreateProjectSource("TestFramework.Tooling.Tests.NFUnitTest.New", true);
+            (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.NFUnitTest.New", true);
 
             Assert.AreEqual(
-                $"TestFramework.Tooling.Tests.NFUnitTest.StaticTestClassRunInParallel in {pathPrefix}TestClassVariants.cs(18,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.StaticTestClassRunOneByOne in {pathPrefix}TestClassVariants.cs(7,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes in {pathPrefix}TestAllCurrentAttributes.cs(8,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiateOnceForAllMethodsRunOneByOne in {pathPrefix}TestClassVariants.cs(29,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel in {pathPrefix}TestClassVariants.cs(65,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunOneByOne in {pathPrefix}TestClassVariants.cs(47,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.BrokenAfterRefactoringAttribute in {pathPrefix}TestFrameworkExtensions\\BrokenAfterRefactoringAttribute.cs(8,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.TestOnDoublePrecisionDeviceAttribute in {pathPrefix}TestFrameworkExtensions\\TestOnDoublePrecisionDeviceAttribute.cs(9,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions in {pathPrefix}TestWithFrameworkExtensions.cs(8,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMethods.cs(8,4)" + "\n" +
-                $"TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes in {pathPrefix}TestWithNewTestMethodsAttributes.cs(7,4)",
+$@"TestFramework.Tooling.Tests.NFUnitTest.StaticTestClassRunInParallel in {pathPrefix}TestClassVariants.cs(18,4)
+TestFramework.Tooling.Tests.NFUnitTest.StaticTestClassRunOneByOne in {pathPrefix}TestClassVariants.cs(7,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes in {pathPrefix}TestAllCurrentAttributes.cs(8,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiateOnceForAllMethodsRunOneByOne in {pathPrefix}TestClassVariants.cs(30,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel in {pathPrefix}TestClassVariants.cs(78,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunOneByOne in {pathPrefix}TestClassVariants.cs(55,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.BrokenAfterRefactoringAttribute in {pathPrefix}TestFrameworkExtensions\BrokenAfterRefactoringAttribute.cs(8,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.TestOnDoublePrecisionDeviceAttribute in {pathPrefix}TestFrameworkExtensions\TestOnDoublePrecisionDeviceAttribute.cs(9,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestRunInParallel in {pathPrefix}TestRunInParallel.cs(21,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestRunInParallelButNotItsMethods in {pathPrefix}TestRunInParallel.cs(36,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestRunInParallelOverruled in {pathPrefix}TestRunInParallel.cs(7,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestWithALotOfErrors in {pathPrefix}TestWithALotOfErrors.cs(8,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions in {pathPrefix}TestWithFrameworkExtensions.cs(8,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMethods.cs(8,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes in {pathPrefix}TestWithNewTestMethodsAttributes.cs(7,4)
+".Replace("\r\n", "\n"),
             string.Join("\n",
-            from c in actual.ClassDeclarations
-            orderby c.Name
-            select $"{c.Name} in {c.SourceFilePath}({c.LineNumber},{c.Position})"
-                )
+                    from c in actual.ClassDeclarations
+                    orderby c.Name
+                    select $"{c.Name} in {c.SourceFilePath}({c.LineNumber},{c.Position})"
+                ) + '\n'
             );
+        }
+        #endregion
+
+        #region Helper test
+        [TestMethod]
+        [TestCategory("Source code")]
+        public void FindProjectFilePathTest()
+        {
+            string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.NFUnitTest");
+            var logger = new LogMessengerMock();
+            string actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", "Release", "NFUnitTest.dll"), logger);
+            Assert.AreEqual(0, logger.Messages.Count);
+            Assert.AreEqual(projectFilePath, actual);
+
+            projectFilePath = TestProjectHelper.FindProjectFilePath();
+            logger = new LogMessengerMock();
+            actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", "Debug", "net48", Path.ChangeExtension(projectFilePath, ".dll")), logger);
+            Assert.AreEqual(0, logger.Messages.Count);
+            Assert.IsNull(actual);
+
+            // Project directory with invalid project file
+            logger = new LogMessengerMock();
+            actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), GetType().Name, "bin", "NFUnitTest.dll"), logger);
+            Assert.AreEqual(1, logger.Messages.Count);
+            Assert.IsNull(actual);
+
+            // Same without logger
+            actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), GetType().Name, "bin", "NFUnitTest.dll"), null);
+            Assert.IsNull(actual);
         }
         #endregion
     }

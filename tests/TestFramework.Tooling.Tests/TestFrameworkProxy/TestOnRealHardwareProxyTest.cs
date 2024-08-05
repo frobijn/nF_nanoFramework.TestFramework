@@ -23,7 +23,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestOnRealHardwareProxyCreatedForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { },
@@ -45,7 +45,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestOnRealHardwareProxyCreatedForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
@@ -62,9 +62,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [TestCategory("Source code")]
         public void TestOnRealHardwareProxyCreatedForClassWithSource()
         {
-            ProjectSourceInventory.ClassDeclaration source = TestProjectSourceAnalyzer.FindClassDeclaration(GetType());
+            ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
@@ -85,9 +85,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestOnRealHardwareProxyCreatedForMethodWithSource()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            ProjectSourceInventory.MethodDeclaration source = TestProjectSourceAnalyzer.FindMethodDeclaration(GetType(), thisMethod.Name);
+            ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
@@ -118,7 +118,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);

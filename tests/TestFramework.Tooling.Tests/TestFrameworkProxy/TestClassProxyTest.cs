@@ -23,7 +23,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestClassProxyCreatedForClassInstantiatePerMethod()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMockPerMethod), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMockPerMethod), new TestFrameworkImplementation(), null, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
@@ -32,7 +32,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             var proxy = actual[0] as TestClassProxy;
             Assert.AreEqual(TestClassProxy.TestClassInstantiation.PerMethod, proxy.Instantiation);
-            Assert.AreEqual(true, proxy.RunTestMethodsOneAfterTheOther);
+            Assert.AreEqual(false, proxy.RunTestMethodsOneAfterTheOther);
         }
         [TestClassMock(true, true)]
         private class NonStaticTestClassMockPerMethod
@@ -44,7 +44,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestClassProxyCreatedForClassInstantiatePerClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMockPerClass), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMockPerClass), new TestFrameworkImplementation(), null, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
@@ -53,7 +53,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             var proxy = actual[0] as TestClassProxy;
             Assert.AreEqual(TestClassProxy.TestClassInstantiation.PerClass, proxy.Instantiation);
-            Assert.AreEqual(false, proxy.RunTestMethodsOneAfterTheOther);
+            Assert.AreEqual(true, proxy.RunTestMethodsOneAfterTheOther);
         }
         [TestClassMock(false, false)]
         private class NonStaticTestClassMockPerClass
@@ -65,9 +65,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [TestCategory("Source code")]
         public void TestClassProxyCreatedForStaticClassWithSource()
         {
-            ProjectSourceInventory.ClassDeclaration source = TestProjectSourceAnalyzer.FindClassDeclaration(typeof(StaticTestClassMock));
+            ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(typeof(StaticTestClassMock));
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(StaticTestClassMock), source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(StaticTestClassMock), new TestFrameworkImplementation(), source.Attributes, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
@@ -76,7 +76,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             var proxy = actual[0] as TestClassProxy;
             Assert.AreEqual(TestClassProxy.TestClassInstantiation.Never, proxy.Instantiation);
-            Assert.AreEqual(true, proxy.RunTestMethodsOneAfterTheOther);
+            Assert.AreEqual(false, proxy.RunTestMethodsOneAfterTheOther);
             Assert.IsNotNull(proxy.Source);
             Assert.AreEqual("TestClassMock", proxy.Source.Name);
         }
@@ -88,7 +88,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestClassProxyNotCreatedForAbstractClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(AbstractTestClassMock), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(AbstractTestClassMock), new TestFrameworkImplementation(), null, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.AreEqual(0, actual?.Count ?? -1);
@@ -104,7 +104,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestClassProxyNotCreatedForGenericTemplate()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(TestClassMock<>), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(TestClassMock<>), new TestFrameworkImplementation(), null, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.AreEqual(0, actual?.Count ?? -1);
@@ -120,7 +120,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestClassProxyErrorForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { LoggingLevel.Error },
@@ -138,7 +138,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             CollectionAssert.AreEqual(
                 new object[] { LoggingLevel.Error },

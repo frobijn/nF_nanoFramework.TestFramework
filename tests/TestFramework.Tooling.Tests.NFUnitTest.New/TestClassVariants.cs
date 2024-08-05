@@ -17,6 +17,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     }
 
     [TestClass(true, true /*this value is ignored as the class is static*/)]
+    [RunInParallel]
     public static class StaticTestClassRunInParallel
     {
         [TestMethod]
@@ -30,6 +31,13 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     [TestClass(false, false)]
     public static class TestClassInstantiateOnceForAllMethodsRunOneByOne
     {
+        [Cleanup]
+        [Setup]
+        public static void SetupAndCleanup()
+        {
+        }
+
+
         [TestMethod]
         [Trait("TestClass demonstration")]
         public static void Method1()
@@ -48,6 +56,11 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     [TestClass(false, true)]
     public static class TestClassInstantiatePerMethodRunOneByOne
     {
+        [Setup]
+        public static void Setup()
+        {
+        }
+
         [TestMethod]
         [Trait("TestClass demonstration")]
         public static void Method1()
@@ -64,6 +77,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     }
 
     [TestClass(true, true)]
+    [RunInParallel]
     public static class TestClassInstantiatePerMethodRunInParallel
     {
         [TestMethod]
@@ -78,6 +92,11 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         public static void Method2()
         {
 
+        }
+
+        [Cleanup]
+        public static void Cleanup()
+        {
         }
     }
 }

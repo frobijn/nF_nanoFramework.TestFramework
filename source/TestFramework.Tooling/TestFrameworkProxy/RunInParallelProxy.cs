@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
 {
@@ -14,8 +13,8 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
     public sealed class RunInParallelProxy : AttributeProxy
     {
         #region Fields
-        private static PropertyInfo s_canRunInParallel;
         private readonly Attribute _attribute;
+        private readonly TestFrameworkImplementation _framework;
         #endregion
 
         #region Construction
@@ -23,18 +22,20 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Create the proxy
         /// </summary>
         /// <param name="attribute">Matching attribute of the nanoCLR platform</param>
+        /// <param name="framework">Information about the implementation of the test framework</param>
         /// <param name="interfaceType">Matching interface for the nanoCLR platform</param>
-        internal RunInParallelProxy(Attribute attribute, Type interfaceType)
+        internal RunInParallelProxy(Attribute attribute, TestFrameworkImplementation framework, Type interfaceType)
         {
             _attribute = attribute;
+            _framework = framework;
 
-            if (s_canRunInParallel is null)
+            if (_framework._property_IRunInParallel_CanRunInParallel is null)
             {
-                s_canRunInParallel = interfaceType.GetProperty(nameof(IRunInParallel.CanRunInParallel));
-                if (s_canRunInParallel is null
-                    || s_canRunInParallel.PropertyType != typeof(bool))
+                _framework._property_IRunInParallel_CanRunInParallel = interfaceType.GetProperty(nameof(IRunInParallel.CanRunInParallel));
+                if (_framework._property_IRunInParallel_CanRunInParallel is null
+                    || _framework._property_IRunInParallel_CanRunInParallel.PropertyType != typeof(bool))
                 {
-                    s_canRunInParallel = null;
+                    _framework._property_IRunInParallel_CanRunInParallel = null;
                     throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(IRunInParallel)}.${nameof(IRunInParallel.CanRunInParallel)}");
                 }
             }
@@ -49,7 +50,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <c>false</c> for any of the attributes.
         /// </summary>
         public bool CanRunInParallel
-            => (bool)s_canRunInParallel.GetValue(_attribute, null);
+            => (bool)_framework._property_IRunInParallel_CanRunInParallel.GetValue(_attribute, null);
         #endregion
 
         #region Helper methods
@@ -59,7 +60,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="attributes">The attributes that determine whether or not to run a test in parallel with other tests</param>
         /// <param name="defaultValue">The default value</param>
         /// <returns>The resulting value that indicates whether tests can be run in parallel</returns>
-        public static bool RunInParallel(IEnumerable<RunInParallelProxy> attributes, bool defaultValue = true)
+        public static bool? RunInParallel(IEnumerable<RunInParallelProxy> attributes, bool? defaultValue = null)
         {
             if (attributes.Any())
             {

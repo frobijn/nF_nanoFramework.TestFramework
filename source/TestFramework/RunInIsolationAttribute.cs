@@ -6,13 +6,13 @@ using System;
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// The attribute marks a test method as not being capable to be run in parallel
+    /// The attribute marks a test method should be run while no other tests are running, as it is not being capable to be run in parallel
     /// with other test methods. When applied to a class is the default for its test methods, and can be overridden
     /// by applying <see cref="RunInParallelAttribute"/> to a test method. When applied to an assembly,
     /// it provides the default for the test classes in the assembly.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class DoNotRunInParallelAttribute : Attribute, IRunInParallel
+    public sealed class RunInIsolationAttribute : Attribute, IRunInParallel
     {
         #region Construction
         /// <summary>
@@ -21,7 +21,7 @@ namespace nanoFramework.TestFramework
         /// unless that is overridden by a test method attribute that implements <see cref="IRunInParallel"/>,
         /// e.g., <see cref="RunParallelAttribute"/>.
         /// </summary>
-        public DoNotRunInParallelAttribute()
+        public RunInIsolationAttribute()
         {
         }
         #endregion

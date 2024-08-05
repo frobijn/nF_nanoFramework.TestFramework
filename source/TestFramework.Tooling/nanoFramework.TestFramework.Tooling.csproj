@@ -29,14 +29,17 @@
   </ItemGroup>
   
   <ItemGroup>
-	<Compile Include="../TestFramework/CleanupAttribute.cs">
-		<Link>TestFramework/CleanupAttribute.cs</Link>
+	<Compile Include="../TestFramework/ICleanup.cs">
+		<Link>TestFramework/ICleanup.cs</Link>
 	</Compile>
 	<Compile Include="../TestFramework/IDataRow.cs">
 		<Link>TestFramework/IDataRow.cs</Link>
 	</Compile>
 	<Compile Include="../TestFramework/IRunInParallel.cs">
 		<Link>TestFramework/IRunInParallel.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ISetup.cs">
+		<Link>TestFramework/ISetup.cs</Link>
 	</Compile>
 	<Compile Include="../TestFramework/ITestClass.cs">
 		<Link>TestFramework/ITestClass.cs</Link>
@@ -56,8 +59,8 @@
 	<Compile Include="../TestFramework/ITraits.cs">
 		<Link>TestFramework/ITraits.cs</Link>
 	</Compile>
-	<Compile Include="../TestFramework/SetupAttribute.cs">
-		<Link>TestFramework/SetupAttribute.cs</Link>
+	<Compile Include="../TestFramework/TestOnRealHardwareAttribute.cs">
+		<Link>TestFramework/TestOnRealHardwareAttribute.cs</Link>
 	</Compile>
 	<Compile Include="../TestFramework/Tools/TestDeviceProxy.cs">
 		<Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
@@ -74,11 +77,12 @@
 	<Compile Include="TestFrameworkProxy\SetupProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestClassProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestDeviceProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestFrameworkImplementation.cs" />
 	<Compile Include="TestFrameworkProxy\TestOnVirtualDeviceProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestOnRealHardwareProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestMethodProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TraitsProxy.cs" />
-	<Compile Include="AssemblyAnalyzer.cs" />
+	<Compile Include="TestCaseCollection.cs" />
   </ItemGroup>
   
 </Project>

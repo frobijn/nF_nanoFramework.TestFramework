@@ -8,7 +8,7 @@ namespace nanoFramework.TestFramework
     /// <summary>
     /// The attribute marks a test method as being capable to be run in parallel
     /// with other test methods. When applied to a class is the default for its test methods, and can be overridden
-    /// by applying <see cref="DoNotRunInParallelAttribute"/> to a test method.
+    /// by applying <see cref="RunInIsolationAttribute"/> to a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
     public sealed class RunInParallelAttribute : Attribute, IRunInParallel

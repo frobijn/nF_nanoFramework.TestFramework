@@ -26,9 +26,9 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="assembly">The assembly to get the proxies for</param>
         /// <param name="logger">Method to pass a message to the caller</param>
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes</returns>
-        public static List<AttributeProxy> GetAttributeProxies(Assembly assembly, LogMessenger logger)
+        public static List<AttributeProxy> GetAttributeProxies(Assembly assembly, TestFrameworkImplementation framework, LogMessenger logger)
         {
-            return GetAttributeProxies(assembly.GetName().Name, assembly, null, logger);
+            return GetAttributeProxies(assembly.GetName().Name, assembly, framework, null, logger);
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes. Returns an empty list if the <paramref name="candidateTestClass"/>
         /// is not suitable to be a test class (e.g., is an abstract non-static class).
         /// </returns>
-        public static List<AttributeProxy> GetAttributeProxies(Type candidateTestClass, IEnumerable<ProjectSourceInventory.ElementDeclaration> sourceAttributes, LogMessenger logger)
+        public static List<AttributeProxy> GetAttributeProxies(Type candidateTestClass, TestFrameworkImplementation framework, IEnumerable<ProjectSourceInventory.ElementDeclaration> sourceAttributes, LogMessenger logger)
         {
             if (!candidateTestClass.IsClass
                 || (candidateTestClass.IsAbstract && !candidateTestClass.IsSealed) // abstract & sealed = static class
@@ -51,7 +51,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
             }
             else
             {
-                return GetAttributeProxies($"{candidateTestClass.Assembly.GetName().Name}:{candidateTestClass.FullName}", candidateTestClass, sourceAttributes, logger);
+                return GetAttributeProxies($"{candidateTestClass.Assembly.GetName().Name}:{candidateTestClass.FullName}", candidateTestClass, framework, sourceAttributes, logger);
             }
         }
 
@@ -62,9 +62,9 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="sourceAttributes">Source positions for the attributes; can be <c>null</c></param>
         /// <param name="logger">Method to pass a message to the caller</param>
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes</returns>
-        public static List<AttributeProxy> GetAttributeProxies(MethodBase candidateTestMethod, IEnumerable<ProjectSourceInventory.ElementDeclaration> sourceAttributes, LogMessenger logger)
+        public static List<AttributeProxy> GetAttributeProxies(MethodBase candidateTestMethod, TestFrameworkImplementation framework, IEnumerable<ProjectSourceInventory.ElementDeclaration> sourceAttributes, LogMessenger logger)
         {
-            return GetAttributeProxies($"{candidateTestMethod.ReflectedType.Assembly.GetName().Name}:{candidateTestMethod.ReflectedType.FullName}.{candidateTestMethod.Name}", candidateTestMethod, sourceAttributes, logger);
+            return GetAttributeProxies($"{candidateTestMethod.ReflectedType.Assembly.GetName().Name}:{candidateTestMethod.ReflectedType.FullName}.{candidateTestMethod.Name}", candidateTestMethod, framework, sourceAttributes, logger);
         }
 
         /// <summary>
@@ -74,33 +74,32 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="sourceAttributes">Source positions for the attributes; can be <c>null</c></param>
         /// <param name="logger">Method to pass a message to the caller</param>
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes</returns>
-        private static List<AttributeProxy> GetAttributeProxies(string pathToElement, ICustomAttributeProvider element, IEnumerable<ProjectSourceInventory.ElementDeclaration> sourceAttributes, LogMessenger logger)
+        private static List<AttributeProxy> GetAttributeProxies(string pathToElement, ICustomAttributeProvider element, TestFrameworkImplementation framework, IEnumerable<ProjectSourceInventory.ElementDeclaration> sourceAttributes, LogMessenger logger)
         {
             var result = new List<AttributeProxy>();
 
             #region Asserts
-            bool AssertElementIsClass(string attributeOrInterfaceName, ProjectSourceInventory.ElementDeclaration attributeInSource)
+            bool AssertElementIsClass(string interfaceName, ProjectSourceInventory.ElementDeclaration attributeInSource)
             {
                 if (!(element is Type))
                 {
-                    logger?.Invoke(LoggingLevel.Error, $"{attributeInSource?.ForMessage() ?? pathToElement}: {attributeOrInterfaceName} can only be applied to a class. Attribute is ignored.");
+                    logger?.Invoke(LoggingLevel.Error, $"{attributeInSource?.ForMessage() ?? pathToElement}: Attribute implementing '{interfaceName}' can only be applied to a class. Attribute is ignored.");
                     return false;
                 }
                 return true;
             }
 
-            bool AssertElementIsMethod(string attributeOrInterfaceName, ProjectSourceInventory.ElementDeclaration attributeInSource)
+            bool AssertElementIsMethod(string interfaceName, ProjectSourceInventory.ElementDeclaration attributeInSource)
             {
                 if (!(element is MethodBase))
                 {
-                    logger?.Invoke(LoggingLevel.Error, $"{attributeInSource?.ForMessage() ?? pathToElement}: {attributeOrInterfaceName} can only be applied to a method. Attribute is ignored.");
+                    logger?.Invoke(LoggingLevel.Error, $"{attributeInSource?.ForMessage() ?? pathToElement}: Attribute implementing '{interfaceName}' can only be applied to a method. Attribute is ignored.");
                     return false;
                 }
                 return true;
             }
             #endregion
 
-            int numITestClassAttributes = 0;
             foreach ((Attribute attribute, ProjectSourceInventory.ElementDeclaration attributeInSource) in ProjectSourceInventory.EnumerateCustomAttributes(element, sourceAttributes))
             {
                 string fullName = attribute.GetType().FullName;
@@ -111,45 +110,29 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                     if (reportMissingSourceAttribute)
                     {
                         reportMissingSourceAttribute = false;
-                        logger?.Invoke(LoggingLevel.Detailed, $"{pathToElement}: location of attribute '{fullName}' in the source code cannot be determined.");
+                        logger?.Invoke(LoggingLevel.Detailed, $"{pathToElement}: Location of attribute '{fullName}' in the source code cannot be determined.");
                     }
                 }
 
-                #region Fixed-name attributes
-                if (fullName == typeof(CleanupAttribute).FullName)
-                {
-                    if (AssertElementIsMethod($"'{nameof(CleanupAttribute)}'", attributeInSource))
-                    {
-                        result.Add(new CleanupProxy()
-                        {
-                            Source = attributeInSource
-                        });
-                    }
-                    ReportMissingSourceAttribute();
-                    continue;
-                }
-                else if (fullName == typeof(SetupAttribute).FullName)
-                {
-                    if (AssertElementIsMethod($"'{nameof(SetupAttribute)}'", attributeInSource))
-                    {
-                        result.Add(new SetupProxy()
-                        {
-                            Source = attributeInSource
-                        });
-                    }
-                    ReportMissingSourceAttribute();
-                    continue;
-                }
-                #endregion
-
-                #region Interfaces implemented by attributes
+                #region Enumerate the interfaces implemented by the attribute
                 foreach (Type attributeInterface in attribute.GetType().GetInterfaces())
                 {
-                    if (attributeInterface.FullName == typeof(IDataRow).FullName)
+                    if (attributeInterface.FullName == typeof(ICleanup).FullName)
                     {
-                        if (AssertElementIsMethod($"attribute implementing '{nameof(IDataRow)}'", attributeInSource))
+                        if (AssertElementIsMethod(nameof(ICleanup), attributeInSource))
                         {
-                            result.Add(new DataRowProxy(attribute, attributeInterface)
+                            result.Add(new CleanupProxy()
+                            {
+                                Source = attributeInSource
+                            });
+                            ReportMissingSourceAttribute();
+                        }
+                    }
+                    else if (attributeInterface.FullName == typeof(IDataRow).FullName)
+                    {
+                        if (AssertElementIsMethod(nameof(IDataRow), attributeInSource))
+                        {
+                            result.Add(new DataRowProxy(attribute, framework, attributeInterface)
                             {
                                 Source = attributeInSource
                             });
@@ -158,36 +141,39 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                     }
                     else if (attributeInterface.FullName == typeof(IRunInParallel).FullName)
                     {
-                        result.Add(new RunInParallelProxy(attribute, attributeInterface)
+                        result.Add(new RunInParallelProxy(attribute, framework, attributeInterface)
                         {
                             Source = attributeInSource
                         });
                         ReportMissingSourceAttribute();
                     }
+                    else if (attributeInterface.FullName == typeof(ISetup).FullName)
+                    {
+                        if (AssertElementIsMethod(nameof(ISetup), attributeInSource))
+                        {
+                            result.Add(new SetupProxy()
+                            {
+                                Source = attributeInSource
+                            });
+                            ReportMissingSourceAttribute();
+                        }
+                    }
                     else if (attributeInterface.FullName == typeof(ITestClass).FullName)
                     {
-                        if (AssertElementIsClass($"attribute implementing '{nameof(ITestClass)}'", attributeInSource))
+                        if (AssertElementIsClass(nameof(ITestClass), attributeInSource))
                         {
-                            if (numITestClassAttributes == 0)
+                            result.Add(new TestClassProxy(element as Type, attribute, framework, attributeInterface)
                             {
-                                result.Add(new TestClassProxy(element as Type, attribute, attributeInterface)
-                                {
-                                    Source = attributeInSource
-                                });
-                                ReportMissingSourceAttribute();
-                            }
-                            else if (numITestClassAttributes == 1)
-                            {
-                                logger?.Invoke(LoggingLevel.Error, $"{pathToElement}: only one attribute implementing '{nameof(ITestClass)}' is allowed. Subsequent attributes are ignored.");
-                            }
-                            numITestClassAttributes++;
+                                Source = attributeInSource
+                            });
+                            ReportMissingSourceAttribute();
                         }
                     }
                     else if (attributeInterface.FullName == typeof(ITestMethod).FullName)
                     {
-                        if (AssertElementIsMethod($"attribute implementing '{nameof(ITestMethod)}'", attributeInSource))
+                        if (AssertElementIsMethod(nameof(ITestMethod), attributeInSource))
                         {
-                            result.Add(new TestMethodProxy(attribute, attributeInterface)
+                            result.Add(new TestMethodProxy(attribute, framework, attributeInterface)
                             {
                                 Source = attributeInSource
                             });
@@ -196,7 +182,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                     }
                     else if (attributeInterface.FullName == typeof(ITestOnRealHardware).FullName)
                     {
-                        var proxy = new TestOnRealHardwareProxy(attribute, attributeInterface)
+                        var proxy = new TestOnRealHardwareProxy(attribute, framework, attributeInterface)
                         {
                             Source = attributeInSource
                         };
@@ -221,9 +207,9 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                     }
                     else if (attributeInterface.FullName == typeof(ITraits).FullName)
                     {
-                        if (AssertElementIsMethod($"attribute implementing '{nameof(ITraits)}'", attributeInSource))
+                        if (AssertElementIsMethod(nameof(ITraits), attributeInSource))
                         {
-                            result.Add(new TraitsProxy(attribute, attributeInterface)
+                            result.Add(new TraitsProxy(attribute, framework, attributeInterface)
                             {
                                 Source = attributeInSource
                             });
