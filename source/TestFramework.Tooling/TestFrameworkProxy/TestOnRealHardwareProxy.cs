@@ -110,7 +110,9 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                 return inherited;
             }
 
-            Dictionary<string, List<TestOnRealHardwareProxy>> result = inherited is null ? null : new Dictionary<string, List<TestOnRealHardwareProxy>>(inherited);
+            Dictionary<string, List<TestOnRealHardwareProxy>> result =
+                inherited?.ToDictionary(rh => rh.Key, rh => new List<TestOnRealHardwareProxy>(rh.Value)); // Deep copy required!
+
             foreach (TestOnRealHardwareProxy testOnRealHardware in attributes)
             {
                 result ??= new Dictionary<string, List<TestOnRealHardwareProxy>>();

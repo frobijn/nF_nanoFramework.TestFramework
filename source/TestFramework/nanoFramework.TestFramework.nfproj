@@ -49,11 +49,9 @@
     <Compile Include="CleanupAttribute.cs" />
     <Compile Include="CollectionAssert.cs" />
     <Compile Include="DataRowAttribute.cs" />
-    <Compile Include="RunInIsolationAttribute.cs" />
     <Compile Include="ICleanup.cs" />
     <Compile Include="IDataRow.cs" />
     <Compile Include="InconclusiveException.cs" />
-    <Compile Include="IRunInParallel.cs" />
     <Compile Include="ISetup.cs" />
     <Compile Include="ITestClass.cs" />
     <Compile Include="ITestOnVirtualDevice.cs" />
@@ -63,7 +61,6 @@
     <Compile Include="ITestDevice.cs" />
     <Compile Include="NullableAttributes.cs" />
     <Compile Include="OutputHelper.cs" />
-    <Compile Include="RunInParallel.cs" />
     <Compile Include="SetupAttribute.cs" />
     <Compile Include="SkipTestAttribute.cs" />
     <Compile Include="SkipTestException.cs" />

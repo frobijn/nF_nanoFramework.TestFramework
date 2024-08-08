@@ -95,7 +95,14 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
                 ("SomeOtherTest.cs", sourceCode2)
             }, logger);
 
-            Assert.AreEqual(0, logger.Messages.Count);
+            Assert.AreEqual(
+$@"
+".Replace("\r\n", "\n"),
+                string.Join("\n",
+                        from m in logger.Messages
+                        select $"{m.level}: {m.message}"
+                    ) + '\n'
+            );
 
             // All classes
             Assert.AreEqual(
@@ -215,9 +222,9 @@ RunInParallel in SomeOtherTest.cs(10,9)
         #region Test for reading project and sanity check
         [TestMethod]
         [TestCategory("Source code")]
-        public void Parse_TestFramework_Tooling_Tests_NFUnitTest()
+        public void Parse_Discovery_v2()
         {
-            (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.NFUnitTest", true);
+            (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.Discovery.v2", true);
 
             Assert.AreEqual(
 $@"TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes in {pathPrefix}TestAllCurrentAttributes.cs(8,4)
@@ -232,22 +239,16 @@ TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMe
 
         [TestMethod]
         [TestCategory("Source code")]
-        public void Parse_TestFramework_Tooling_Tests_NFUnitTest_New()
+        public void Parse_Discovery_v3()
         {
-            (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.NFUnitTest.New", true);
+            (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.Discovery.v3", true);
 
             Assert.AreEqual(
-$@"TestFramework.Tooling.Tests.NFUnitTest.StaticTestClassRunInParallel in {pathPrefix}TestClassVariants.cs(18,4)
-TestFramework.Tooling.Tests.NFUnitTest.StaticTestClassRunOneByOne in {pathPrefix}TestClassVariants.cs(7,4)
+$@"TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass in {pathPrefix}TestClassVariants.cs(27,4)
+TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass in {pathPrefix}TestClassVariants.cs(7,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes in {pathPrefix}TestAllCurrentAttributes.cs(8,4)
-TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiateOnceForAllMethodsRunOneByOne in {pathPrefix}TestClassVariants.cs(30,4)
-TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel in {pathPrefix}TestClassVariants.cs(78,4)
-TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunOneByOne in {pathPrefix}TestClassVariants.cs(55,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.BrokenAfterRefactoringAttribute in {pathPrefix}TestFrameworkExtensions\BrokenAfterRefactoringAttribute.cs(8,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.TestOnDoublePrecisionDeviceAttribute in {pathPrefix}TestFrameworkExtensions\TestOnDoublePrecisionDeviceAttribute.cs(9,4)
-TestFramework.Tooling.Tests.NFUnitTest.TestRunInParallel in {pathPrefix}TestRunInParallel.cs(21,4)
-TestFramework.Tooling.Tests.NFUnitTest.TestRunInParallelButNotItsMethods in {pathPrefix}TestRunInParallel.cs(36,4)
-TestFramework.Tooling.Tests.NFUnitTest.TestRunInParallelOverruled in {pathPrefix}TestRunInParallel.cs(7,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestWithALotOfErrors in {pathPrefix}TestWithALotOfErrors.cs(8,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions in {pathPrefix}TestWithFrameworkExtensions.cs(8,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMethods.cs(8,4)
@@ -267,7 +268,7 @@ TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes in {path
         [TestCategory("Source code")]
         public void FindProjectFilePathTest()
         {
-            string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.NFUnitTest");
+            string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
             var logger = new LogMessengerMock();
             string actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", "Release", "NFUnitTest.dll"), logger);
             Assert.AreEqual(0, logger.Messages.Count);

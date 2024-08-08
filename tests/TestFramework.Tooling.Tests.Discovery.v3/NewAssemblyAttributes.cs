@@ -5,4 +5,3 @@ using nanoFramework.TestFramework;
 
 [assembly: TestOnTarget("test", false)]
 [assembly: TestOnVirtualDevice]
-[assembly: RunInIsolation]

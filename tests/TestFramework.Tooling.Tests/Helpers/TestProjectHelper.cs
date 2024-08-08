@@ -27,7 +27,7 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// <returns>The class declaration</returns>
         internal static ProjectSourceInventory.ClassDeclaration FindClassDeclaration(Type classType, string projectName = null, bool failOnError = false)
         {
-            (ProjectSourceInventory source, string projectFilePrefix) = FindAndCreateProjectSource(projectName, failOnError);
+            (ProjectSourceInventory source, string _) = FindAndCreateProjectSource(projectName, failOnError);
             ProjectSourceInventory.ClassDeclaration result = source.TryGet(classType.FullName);
             if (result is null)
             {
@@ -117,7 +117,14 @@ namespace TestFramework.Tooling.Tests.Helpers
 
             if (failOnError)
             {
-                Assert.AreEqual(0, logger.Messages.Count);
+                Assert.AreEqual(
+$@"
+".Replace("\r\n", "\n"),
+                string.Join("\n",
+                        from m in logger.Messages
+                        select $"{m.level}: {m.message}"
+                    ) + '\n'
+            );
                 Assert.IsNotNull(actual);
             }
             else if (logger.Messages.Count > 0)

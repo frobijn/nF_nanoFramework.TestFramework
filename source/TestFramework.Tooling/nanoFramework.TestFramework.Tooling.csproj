@@ -10,6 +10,7 @@
     <LangVersion>8.0</LangVersion>
     <RestoreLockedMode Condition="'$(TF_BUILD)' == 'True' or '$(ContinuousIntegrationBuild)' == 'True'">true</RestoreLockedMode>
 	<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+	<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -21,11 +22,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+     <PackageReference Include="CliWrap" Version="3.6.1" />
      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
      <PackageReference Include="Nerdbank.GitVersioning">
       <Version>3.6.139</Version>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   
   <ItemGroup>
@@ -34,9 +37,6 @@
 	</Compile>
 	<Compile Include="../TestFramework/IDataRow.cs">
 		<Link>TestFramework/IDataRow.cs</Link>
-	</Compile>
-	<Compile Include="../TestFramework/IRunInParallel.cs">
-		<Link>TestFramework/IRunInParallel.cs</Link>
 	</Compile>
 	<Compile Include="../TestFramework/ISetup.cs">
 		<Link>TestFramework/ISetup.cs</Link>
@@ -65,6 +65,7 @@
 	<Compile Include="../TestFramework/Tools/TestDeviceProxy.cs">
 		<Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
 	</Compile>
+	<Compile Include="NanoCLRHelper.cs" />
 	<Compile Include="ProjectSourceInventory.cs" />
 	<Compile Include="TestCase.cs" />
 	<Compile Include="TestCaseGroup.cs" />
@@ -73,7 +74,6 @@
 	<Compile Include="TestFrameworkProxy\DataRowProxy.cs" />
 	<Compile Include="TestFrameworkProxy\FrameworkMismatchException.cs" />
 	<Compile Include="LogMessenger.cs" />
-	<Compile Include="TestFrameworkProxy\RunInParallelProxy.cs" />
 	<Compile Include="TestFrameworkProxy\SetupProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestClassProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestDeviceProxy.cs" />
@@ -84,6 +84,8 @@
 	<Compile Include="TestFrameworkProxy\TraitsProxy.cs" />
 	<Compile Include="TestCaseCollection.cs" />
 	<Compile Include="TestFrameworkConfiguration.cs" />
+	<Compile Include="TestResult.cs" />
+	<Compile Include="TestRunner.cs" />
   </ItemGroup>
   
 </Project>

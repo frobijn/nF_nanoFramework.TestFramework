@@ -261,6 +261,22 @@ namespace nanoFramework.TestFramework
         }
 
         /// <summary>
+        /// Mark a test as failed. Use this method if there is no other <see cref="Assert"/> method
+        /// that can be used to easily verify the test results.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
+        /// <remarks>
+        /// Use <see cref="CleanupFailed"/> instead if the failure is detected after the test proper,
+        /// if the failure occurs while cleaning up.
+        /// </remarks>
+        [DoesNotReturn]
+        public static void Fail(string message = null, Exception innerException = null)
+        {
+            throw new AssertFailedException(message, innerException);
+        }
+
+        /// <summary>
         /// Indicate that a test has passed but an error occurred when cleaning up after the test.
         /// </summary>
         /// <param name="message"></param>

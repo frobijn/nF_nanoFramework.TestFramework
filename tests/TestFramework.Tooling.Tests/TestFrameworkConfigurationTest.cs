@@ -69,16 +69,9 @@ $@"
                     $@"<{TestFrameworkConfiguration.SettingsName}>
                         <AllowRealHardware>false</AllowRealHardware>
                         <RealHardwarePort>COM30;COM42</RealHardwarePort>
-                        <DeployToRealHardware>
-                            <TargetName>esp32</TargetName>
-                            <DeployAssembliesOneByOne>false</DeployAssembliesOneByOne>
-                        </DeployToRealHardware>
-                        <DeployToRealHardware>
-                            <DeployAssembliesOneByOne>true</DeployAssembliesOneByOne>
-                        </DeployToRealHardware>
                         <PathToLocalCLRInstance>{mockCLRInstanceFilePath}</PathToLocalCLRInstance>
                         <CLRVersion>1.2.3</CLRVersion>
-                        <AllowLocalCLRParallelExecution>false</AllowLocalCLRParallelExecution>
+                        <MaxVirtualDevices>1</MaxVirtualDevices>
                         <Logging>Verbose</Logging>
                     </{TestFrameworkConfiguration.SettingsName}>"
                 ));
@@ -86,21 +79,9 @@ $@"
             {
                 AllowRealHardware = false,
                 RealHardwarePort = new string[] { "COM30", "COM42" },
-                DeployToRealHardware = new TestFrameworkConfiguration.DeployToDeviceConfiguration[]
-                {
-                    new TestFrameworkConfiguration.DeployToDeviceConfiguration()
-                    {
-                        TargetName = "esp32",
-                        DeployAssembliesOneByOne = false
-                    },
-                    new TestFrameworkConfiguration.DeployToDeviceConfiguration()
-                    {
-                        DeployAssembliesOneByOne = true
-                    }
-                },
                 PathToLocalCLRInstance = mockCLRInstanceFilePath,
                 CLRVersion = "1.2.3",
-                AllowLocalCLRParallelExecution = false,
+                MaxVirtualDevices = 1,
                 Logging = LoggingLevel.Verbose
             }, actual);
 
@@ -343,16 +324,9 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                         <{TestFrameworkConfiguration.SettingsName}>
                             <AllowRealHardware>false</AllowRealHardware>
                             <RealHardwarePort>COM30;COM42</RealHardwarePort>
-                            <DeployToRealHardware>
-                                <TargetName>esp32</TargetName>
-                                <DeployAssembliesOneByOne>false</DeployAssembliesOneByOne>
-                            </DeployToRealHardware>
-                            <DeployToRealHardware>
-                                <DeployAssembliesOneByOne>true</DeployAssembliesOneByOne>
-                            </DeployToRealHardware>
                             <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
                             <CLRVersion>3.2.1</CLRVersion>
-                            <AllowLocalCLRParallelExecution>true</AllowLocalCLRParallelExecution>
+                            <MaxVirtualDevices>10</MaxVirtualDevices>
                             <Logging>Detailed</Logging>
                         </{TestFrameworkConfiguration.SettingsName}>
                     </RunSettings>",
@@ -368,21 +342,9 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
             {
                 AllowRealHardware = false,
                 RealHardwarePort = new string[] { "COM30", "COM42" },
-                DeployToRealHardware = new TestFrameworkConfiguration.DeployToDeviceConfiguration[]
-                {
-                    new TestFrameworkConfiguration.DeployToDeviceConfiguration()
-                    {
-                        TargetName = "esp32",
-                        DeployAssembliesOneByOne = false
-                    },
-                    new TestFrameworkConfiguration.DeployToDeviceConfiguration()
-                    {
-                        DeployAssembliesOneByOne = true
-                    }
-                },
                 PathToLocalCLRInstance = "New",
                 CLRVersion = "3.2.1",
-                AllowLocalCLRParallelExecution = true,
+                MaxVirtualDevices = 10,
                 Logging = LoggingLevel.Detailed
             }, actual);
 
@@ -401,17 +363,9 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
     <nanoFrameworkAdapter>
         <AllowRealHardware>false</AllowRealHardware>
         <RealHardwarePort>COM30;COM42</RealHardwarePort>
-        <DeployToRealHardware>
-            <TargetName>esp32</TargetName>
-            <DeployAssembliesOneByOne>false</DeployAssembliesOneByOne>
-        </DeployToRealHardware>
-        <DeployToRealHardware>
-            <TargetName>
-            </TargetName>
-            <DeployAssembliesOneByOne>true</DeployAssembliesOneByOne>
-        </DeployToRealHardware>
         <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
         <CLRVersion>3.2.1</CLRVersion>
+        <MaxVirtualDevices>10</MaxVirtualDevices>
         <Logging>Detailed</Logging>
     </nanoFrameworkAdapter>
 </RunSettings>
@@ -440,17 +394,9 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                         <{TestFrameworkConfiguration.SettingsName}>
                             <AllowRealHardware>false</AllowRealHardware>
                             <RealHardwarePort>COM30;COM42</RealHardwarePort>
-                            <DeployToRealHardware>
-                                <TargetName>esp32</TargetName>
-                                <DeployAssembliesOneByOne>false</DeployAssembliesOneByOne>
-                            </DeployToRealHardware>
-                            <DeployToRealHardware>
-                                <TargetName>other</TargetName>
-                                <DeployAssembliesOneByOne>false</DeployAssembliesOneByOne>
-                            </DeployToRealHardware>
                             <PathToLocalCLRInstance>Old</PathToLocalCLRInstance>
                             <CLRVersion>1.2.3</CLRVersion>
-                            <AllowLocalCLRParallelExecution>true</AllowLocalCLRParallelExecution>
+                            <MaxVirtualDevices>1</MaxVirtualDevices>
                             <Logging>Verbose</Logging>
                         </{TestFrameworkConfiguration.SettingsName}>
                     </RunSettings>",
@@ -472,16 +418,9 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                         <{TestFrameworkConfiguration.SettingsName}>
                             <AllowRealHardware>false</AllowRealHardware>
                             <RealHardwarePort>COM11;COM31</RealHardwarePort>
-                            <DeployToRealHardware>
-                                <TargetName>esp32</TargetName>
-                                <DeployAssembliesOneByOne>true</DeployAssembliesOneByOne>
-                            </DeployToRealHardware>
-                            <DeployToRealHardware>
-                                <DeployAssembliesOneByOne>true</DeployAssembliesOneByOne>
-                            </DeployToRealHardware>
                             <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
                             <CLRVersion>3.2.1</CLRVersion>
-                            <AllowLocalCLRParallelExecution>false</AllowLocalCLRParallelExecution>
+                            <MaxVirtualDevices>1</MaxVirtualDevices>
                             <Logging>Detailed</Logging>
                         </{TestFrameworkConfiguration.SettingsName}>
                     </RunSettings>",
@@ -510,22 +449,9 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
     <{TestFrameworkConfiguration.SettingsName}>
         <AllowRealHardware>false</AllowRealHardware>
         <RealHardwarePort>COM11;COM31</RealHardwarePort>
-        <DeployToRealHardware>
-            <TargetName>esp32</TargetName>
-            <DeployAssembliesOneByOne>true</DeployAssembliesOneByOne>
-        </DeployToRealHardware>
-        <DeployToRealHardware>
-            <TargetName>
-            </TargetName>
-            <DeployAssembliesOneByOne>true</DeployAssembliesOneByOne>
-        </DeployToRealHardware>
-        <DeployToRealHardware>
-            <TargetName>other</TargetName>
-            <DeployAssembliesOneByOne>false</DeployAssembliesOneByOne>
-        </DeployToRealHardware>
         <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
         <CLRVersion>3.2.1</CLRVersion>
-        <AllowLocalCLRParallelExecution>false</AllowLocalCLRParallelExecution>
+        <MaxVirtualDevices>1</MaxVirtualDevices>
         <Logging>Detailed</Logging>
     </{TestFrameworkConfiguration.SettingsName}>
 </RunSettings>
@@ -583,19 +509,9 @@ $@"Error: The .runsettings configuration is not valid XML: Data at the root leve
             Assert.IsNotNull(actual);
             Assert.AreEqual(expected.AllowRealHardware, actual.AllowRealHardware);
             Assert.AreEqual(string.Join(",", expected.RealHardwarePort), string.Join(",", actual.RealHardwarePort));
-            if (actual.DeployToRealHardware is null)
-            {
-                Assert.IsNull(expected.DeployToRealHardware);
-            }
-            else
-            {
-                Assert.AreEqual(
-                    string.Join(",", from d in expected.DeployToRealHardware select $"'{d.TargetName}:{d.DeployAssembliesOneByOne}'"),
-                    string.Join(",", from d in actual.DeployToRealHardware select $"'{d.TargetName}:{d.DeployAssembliesOneByOne}'"));
-            }
             Assert.AreEqual(expected.PathToLocalCLRInstance, actual.PathToLocalCLRInstance);
             Assert.AreEqual(expected.CLRVersion, actual.CLRVersion);
-            Assert.AreEqual(expected.AllowLocalCLRParallelExecution, actual.AllowLocalCLRParallelExecution);
+            Assert.AreEqual(expected.MaxVirtualDevices, actual.MaxVirtualDevices);
             Assert.AreEqual(expected.Logging, actual.Logging);
         }
 

@@ -23,6 +23,7 @@ namespace nanoFramework.TestFramework.Tooling
         private readonly List<string> _assemblyFilePaths = new List<string>();
         private readonly Dictionary<string, int> _assemblyTestMethods = new Dictionary<string, int>();
         private readonly List<TestCase> _testCases = new List<TestCase>();
+        private static readonly string s_realHardwareTrait = $"@{(new TestOnRealHardwareAttribute(false) as ITestOnRealHardware).Description}";
         #endregion
 
         #region Construction
@@ -343,7 +344,6 @@ namespace nanoFramework.TestFramework.Tooling
             Dictionary<string, List<TestOnRealHardwareProxy>> testAllOnRealHardware = allowTestOnRealHardware
                 ? TestOnRealHardwareProxy.Collect(null, assemblyAttributes.OfType<TestOnRealHardwareProxy>())
                 : null;
-            bool? runAllInParallel = RunInParallelProxy.RunInParallel(assemblyAttributes.OfType<RunInParallelProxy>());
 
             // Find the test classes
             foreach (
@@ -371,11 +371,10 @@ namespace nanoFramework.TestFramework.Tooling
 
                 bool testClassTestOnVirtualDevice = testAllOnVirtualDevice || classAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
                 Dictionary<string, List<TestOnRealHardwareProxy>> testClassTestOnRealHardware = allowTestOnRealHardware
-                    ? TestOnRealHardwareProxy.Collect(testAllOnRealHardware, assemblyAttributes.OfType<TestOnRealHardwareProxy>())
+                    ? TestOnRealHardwareProxy.Collect(testAllOnRealHardware, classAttributes.OfType<TestOnRealHardwareProxy>())
                     : null;
-                bool? testClassRunInParallel = RunInParallelProxy.RunInParallel(classAttributes.OfType<RunInParallelProxy>(), runAllInParallel);
 
-                var group = new TestCaseGroup(++testGroupIndex, testClassAttribute.RunTestMethodsOneAfterTheOther);
+                var group = new TestCaseGroup(++testGroupIndex);
                 #endregion
 
                 #region A method is turned into zero or more test cases
@@ -402,7 +401,6 @@ namespace nanoFramework.TestFramework.Tooling
                         {
                             hasSetup = true;
                             group.SetupSourceCodeLocation = setup.Source;
-                            group.SetupCleanupForEachTest = testClassAttribute.Instantiation == TestClassProxy.TestClassInstantiation.PerMethod;
                         }
                     }
                     CleanupProxy cleanup = methodAttributes.OfType<CleanupProxy>().FirstOrDefault();
@@ -416,7 +414,6 @@ namespace nanoFramework.TestFramework.Tooling
                         {
                             hasCleanup = true;
                             group.CleanupSourceCodeLocation = cleanup.Source;
-                            group.SetupCleanupForEachTest = testClassAttribute.Instantiation == TestClassProxy.TestClassInstantiation.PerMethod;
                         }
                     }
                     #endregion
@@ -429,8 +426,6 @@ namespace nanoFramework.TestFramework.Tooling
                         {
                             traits.UnionWith(attribute.Traits);
                         }
-
-                        bool? runInParallel = RunInParallelProxy.RunInParallel(methodAttributes.OfType<RunInParallelProxy>(), testClassRunInParallel);
 
                         bool testOnVirtualDevice = testClassTestOnVirtualDevice || methodAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
                         Dictionary<string, List<TestOnRealHardwareProxy>> testOnRealHardware = allowTestOnRealHardware
@@ -451,13 +446,7 @@ namespace nanoFramework.TestFramework.Tooling
                             {
                                 testOnRealHardware = TestOnRealHardwareProxy.Collect(null, new TestOnRealHardwareProxy[] { defaultRealHardwareProxy });
                             }
-                            runInParallel = false;
                             deviceTypeCount = (testOnRealHardware?.Count ?? 0) + (testOnVirtualDevice ? 1 : 0);
-                        }
-                        else
-                        {
-                            // The default: run in parallel if the unit tests have ITestOnXXX attributes.
-                            runInParallel ??= true;
                         }
 
                         var dataRowParameters = (from dataRow in methodAttributes.OfType<DataRowProxy>()
@@ -489,7 +478,6 @@ namespace nanoFramework.TestFramework.Tooling
                                     method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{VIRTUALDEVICE}]" : "")}",
                                     testCaseSource,
                                     true, null,
-                                    !runInParallel.Value,
                                     traits, $"@{VIRTUALDEVICE}"
                                 ));
                             }
@@ -504,8 +492,7 @@ namespace nanoFramework.TestFramework.Tooling
                                         method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{device.Key}]" : "")}",
                                         testCaseSource,
                                         false, device.Value,
-                                        !runInParallel.Value,
-                                        traits, $"@{device.Key}"
+                                        traits, $"@{device.Key}", s_realHardwareTrait
                                     ));
                                 }
                             }

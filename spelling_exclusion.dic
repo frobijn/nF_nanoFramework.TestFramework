@@ -6,3 +6,8 @@ nuget
 analyzer
 Cleanup'
 runsettings
+nanoclr
+dotnet
+nanoclr'
+clrversion
+csproj

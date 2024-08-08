@@ -20,6 +20,7 @@
     <TestProjectType>UnitTest</TestProjectType>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DefineConstants>$(DefineConstants);REFERENCED_IN_NFUNITMETADATA</DefineConstants>
@@ -58,9 +59,6 @@
     <Compile Include="../../source/TestFramework/IDataRow.cs">
       <Link>TestFramework/IDataRow.cs</Link>
     </Compile>
-    <Compile Include="../../source/TestFramework/IRunInParallel.cs">
-      <Link>TestFramework/IRunInParallel.cs</Link>
-    </Compile>
     <Compile Include="../../source/TestFramework/ISetup.cs">
       <Link>TestFramework/ISetup.cs</Link>
     </Compile>
@@ -82,6 +80,7 @@
     <Compile Include="../../source/TestFramework/Tools/TestDeviceProxy.cs">
       <Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
     </Compile>
+    <Compile Include="NanoCLRHelperTest.cs" />
     <Compile Include="TestCaseCollectionTest.cs" />
     <Compile Include="Helpers\TestProjectHelper.cs" />
     <Compile Include="ProjectSourceInventoryTest.cs" />
@@ -90,11 +89,11 @@
     <Compile Include="TestFrameworkProxy\DataRowProxyTest.cs" />
     <Compile Include="Helpers\LogMessengerMock.cs" />
     <Compile Include="Helpers\TestDeviceMock.cs" />
-    <Compile Include="TestFrameworkProxy\RunInParallelProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\SetupProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TestClassProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TestOnRealHardwareProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TestMethodProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\NFTestFramework_TestOnRealHardwareProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TestOnVirtualDeviceProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TraitsProxyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -109,6 +108,7 @@
       <Name>nanoFramework.TestFramework.Tooling</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

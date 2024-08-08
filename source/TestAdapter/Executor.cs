@@ -1,18 +1,6 @@
-﻿//
-// Copyright (c) .NET Foundation and Contributors
-// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
-// See LICENSE file in the project root for full license information.
-//
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
-using CliWrap;
-using CliWrap.Buffered;
-using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.CSharp;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using nanoFramework.TestAdapter;
-using nanoFramework.Tools.Debugger;
-using nanoFramework.Tools.Debugger.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,6 +11,15 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using CliWrap;
+using CliWrap.Buffered;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using nanoFramework.TestAdapter;
+using nanoFramework.Tools.Debugger;
+using nanoFramework.Tools.Debugger.Extensions;
 
 namespace nanoFramework.TestPlatform.TestAdapter
 {
@@ -77,6 +74,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
         /// <inheritdoc/>
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            // MessageBox.Show("RunTests (sources)" + Environment.NewLine + string.Join(Environment.NewLine, sources), Process.GetCurrentProcess().Id.ToString());
             try
             {
                 InitializeLogger(runContext, frameworkHandle);
@@ -97,6 +95,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
         /// <inheritdoc/>
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            // MessageBox.Show("RunTests (tests)" + Environment.NewLine + string.Join(Environment.NewLine, new HashSet<string>(from t in tests select t.Source)), Process.GetCurrentProcess().Id.ToString());
             try
             {
                 InitializeLogger(runContext, frameworkHandle);

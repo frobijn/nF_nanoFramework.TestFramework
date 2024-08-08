@@ -22,8 +22,7 @@ namespace nanoFramework.TestFramework.Tooling
             ProjectSourceInventory.ElementDeclaration location,
             bool shouldRunOnVirtualDevice,
             List<TestOnRealHardwareProxy> testOnRealHardware,
-            bool runInIsolation,
-            HashSet<string> traits, string extraTrait)
+            HashSet<string> traits, params string[] extraTraits)
         {
             AssemblyFilePath = assemblyFilePath;
             TestIndex = testIndex;
@@ -32,13 +31,15 @@ namespace nanoFramework.TestFramework.Tooling
             TestMethodSourceCodeLocation = location;
             ShouldRunOnVirtualDevice = shouldRunOnVirtualDevice;
             _testOnRealHardware = testOnRealHardware;
-            RunInIsolation = runInIsolation;
-            _traits = extraTrait is null
-                ? traits
-                : new HashSet<string>(traits)
-                    {
-                        extraTrait
-                    };
+            if (extraTraits.Length > 0)
+            {
+                _traits = new HashSet<string>(traits);
+                _traits.UnionWith(extraTraits);
+            }
+            else
+            {
+                _traits = traits;
+            }
             Group = group;
             Group._testCases.Add(this);
         }
@@ -113,16 +114,6 @@ namespace nanoFramework.TestFramework.Tooling
         /// Get the group of test cases this case is part of
         /// </summary>
         public TestCaseGroup Group
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Indicates whether the test should be executed in isolation and not run in parallel with other
-        /// tests, even if the device would allow for that. If this is <c>false</c>, the <see cref="Group"/>
-        /// specifies how the test should be executed.
-        /// </summary>
-        public bool RunInIsolation
         {
             get;
         }

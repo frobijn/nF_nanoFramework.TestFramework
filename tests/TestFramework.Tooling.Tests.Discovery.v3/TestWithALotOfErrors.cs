@@ -6,7 +6,7 @@ using nanoFramework.TestFramework;
 
 namespace TestFramework.Tooling.Tests.NFUnitTest
 {
-    [TestClass(true, false)]
+    [TestClass]
     [TestClass2]
     public class TestWithALotOfErrors
     {
@@ -47,9 +47,6 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         [AttributeUsage(AttributeTargets.Class)]
         private class TestClass2Attribute : Attribute, ITestClass
         {
-            bool ITestClass.InstantiatePerMethod => true;
-
-            bool ITestClass.RunClassMethodsInParallel => false;
         }
     }
 }

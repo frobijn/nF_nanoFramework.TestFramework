@@ -10,7 +10,7 @@ using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
 using nfTest = nanoFramework.TestFramework;
 
-[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TestClassProxyTest.TestClassMock(false, false)] // This is not correct!
+[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TestClassProxyTest.TestClassMock] // This is not correct!
 
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
@@ -20,31 +20,24 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
     {
         [TestMethod]
         [TestCategory("nF test attributes")]
-        public void TestClassProxyCreatedForClassInstantiatePerMethod()
+        public void TestClassProxyCreatedForNonStaticClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMockPerMethod), new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMock), new TestFrameworkImplementation(), null, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TestClassProxy), actual[0].GetType());
-
-            var proxy = actual[0] as TestClassProxy;
-            Assert.AreEqual(TestClassProxy.TestClassInstantiation.PerMethod, proxy.Instantiation);
-            Assert.AreEqual(false, proxy.RunTestMethodsOneAfterTheOther);
-        }
-        [TestClassMock(true, true)]
-        private class NonStaticTestClassMockPerMethod
-        {
         }
 
         [TestMethod]
         [TestCategory("nF test attributes")]
-        public void TestClassProxyCreatedForClassInstantiatePerClass()
+        public void TestClassProxyCreatedForNonStaticClassWithSource()
         {
+            ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(typeof(StaticTestClassMock));
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMockPerClass), new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(NonStaticTestClassMock), new TestFrameworkImplementation(), source.Attributes, logger);
 
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.IsNotNull(actual);
@@ -52,12 +45,24 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.AreEqual(typeof(TestClassProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestClassProxy;
-            Assert.AreEqual(TestClassProxy.TestClassInstantiation.PerClass, proxy.Instantiation);
-            Assert.AreEqual(true, proxy.RunTestMethodsOneAfterTheOther);
+            Assert.IsNotNull(proxy.Source);
+            Assert.AreEqual("TestClassMock", proxy.Source.Name);
         }
-        [TestClassMock(false, false)]
-        private class NonStaticTestClassMockPerClass
+
+
+
+        [TestMethod]
+        [TestCategory("nF test attributes")]
+        [TestCategory("Source code")]
+        public void TestClassProxyCreatedForStaticClass()
         {
+            var logger = new LogMessengerMock();
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(typeof(StaticTestClassMock), new TestFrameworkImplementation(), null, logger);
+
+            Assert.AreEqual(0, logger.Messages.Count);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(typeof(TestClassProxy), actual[0].GetType());
         }
 
         [TestMethod]
@@ -75,8 +80,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.AreEqual(typeof(TestClassProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestClassProxy;
-            Assert.AreEqual(TestClassProxy.TestClassInstantiation.Never, proxy.Instantiation);
-            Assert.AreEqual(false, proxy.RunTestMethodsOneAfterTheOther);
             Assert.IsNotNull(proxy.Source);
             Assert.AreEqual("TestClassMock", proxy.Source.Name);
         }
@@ -93,7 +96,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.AreEqual(0, actual?.Count ?? -1);
         }
-        [TestClassMock(true, true)]
+        [TestClassMock]
         private abstract class AbstractTestClassMock
         {
         }
@@ -109,7 +112,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.AreEqual(0, logger.Messages.Count);
             Assert.AreEqual(0, actual?.Count ?? -1);
         }
-        [TestClassMock(true, true)]
+        [TestClassMock]
         private class TestClassMock<SomeArgument>
         {
         }
@@ -133,7 +136,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         [TestMethod]
         [TestCategory("nF test attributes")]
-        [TestClassMock(true, true)] // This is not correct!
+        [TestClassMock] // This is not correct!
         public void TestClassProxyErrorForMethod()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
@@ -151,29 +154,22 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
         internal sealed class TestClassMockAttribute : Attribute, nfTest.ITestClass
         {
-            public TestClassMockAttribute(bool instantiatePerMethod, bool runClassMethodsInParallel)
+            public TestClassMockAttribute()
             {
-                InstantiatePerMethod = instantiatePerMethod;
-                RunClassMethodsInParallel = runClassMethodsInParallel;
-            }
-
-            public bool InstantiatePerMethod
-            {
-                get;
-            }
-
-            public bool RunClassMethodsInParallel
-            {
-                get;
             }
         }
         #endregion
     }
 
+    [TestClassProxyTest.TestClassMock]
+    internal class NonStaticTestClassMock
+    {
+    }
+
     /// <summary>
     /// Mock cannot be a nested class as that will not be found by the <see cref="ProjectSourceInventory"/>s
     /// </summary>
-    [TestClassProxyTest.TestClassMock(true, true)]
+    [TestClassProxyTest.TestClassMock]
     internal static class StaticTestClassMock
     {
     }

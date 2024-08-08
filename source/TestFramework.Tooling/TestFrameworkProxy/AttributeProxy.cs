@@ -139,14 +139,6 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                             ReportMissingSourceAttribute();
                         }
                     }
-                    else if (attributeInterface.FullName == typeof(IRunInParallel).FullName)
-                    {
-                        result.Add(new RunInParallelProxy(attribute, framework, attributeInterface)
-                        {
-                            Source = attributeInSource
-                        });
-                        ReportMissingSourceAttribute();
-                    }
                     else if (attributeInterface.FullName == typeof(ISetup).FullName)
                     {
                         if (AssertElementIsMethod(nameof(ISetup), attributeInSource))
@@ -162,7 +154,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                     {
                         if (AssertElementIsClass(nameof(ITestClass), attributeInSource))
                         {
-                            result.Add(new TestClassProxy(element as Type, attribute, framework, attributeInterface)
+                            result.Add(new TestClassProxy()
                             {
                                 Source = attributeInSource
                             });

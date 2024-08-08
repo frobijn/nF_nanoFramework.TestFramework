@@ -12,11 +12,9 @@ namespace nanoFramework.TestFramework.Tooling
         /// Create the instance
         /// </summary>
         /// <param name="testGroupIndex"></param>
-        /// <param name="runOneAfterTheOther"></param>
-        internal TestCaseGroup(int testGroupIndex, bool runOneAfterTheOther)
+        internal TestCaseGroup(int testGroupIndex)
         {
             TestGroupIndex = testGroupIndex;
-            RunOneAfterTheOther = runOneAfterTheOther;
         }
         #endregion
 
@@ -50,27 +48,6 @@ namespace nanoFramework.TestFramework.Tooling
         {
             get;
             internal set;
-        }
-
-        /// <summary>
-        /// Indicates whether the setup and cleanup methods are executed for each of the tests in the group,
-        /// rather than the setup before the execution of the first test and a cleanup after the last test.
-        /// If there are no setup and cleanup procedures, the value is <c>false</c>.
-        /// </summary>
-        public bool SetupCleanupForEachTest
-        {
-            get;
-            internal set;
-        }
-
-        /// <summary>
-        /// Indicates whether the tests from this group should be run one after the other. If the value is <c>false</c>
-        /// the tests in the group can be run in parallel with each other, provided the device the tests are running
-        /// on can provide that feature.
-        /// </summary>
-        public bool RunOneAfterTheOther
-        {
-            get;
         }
 
         /// <summary>

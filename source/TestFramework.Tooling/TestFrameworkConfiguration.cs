@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml;
 
@@ -15,12 +14,62 @@ namespace nanoFramework.TestFramework.Tooling
     /// </summary>
     public sealed class TestFrameworkConfiguration
     {
-        #region Properties
+        #region Fields and constants
         /// <summary>
-        /// Settings property XML node name
+        /// TestFramework settings property XML node name
         /// </summary>
         public const string SettingsName = "nanoFrameworkAdapter";
 
+        /// <summary>
+        /// File name to store the nanoFramework.TestFramework configuration in.
+        /// </summary>
+        public const string SettingsFileName = "nano.runsettings";
+
+        /// <summary>
+        /// Settings in RunConfiguration that determine the behaviour of the Visual Studio test runner
+        /// and that we case so much about that a user cannot assign them.
+        /// </summary>
+        private static readonly Dictionary<string, string> s_requiredRunConfigurationNodes = new Dictionary<string, string>()
+        {
+            // The Visual Studio Test Explorer implements a "poor man's parallelization" method.
+            // If "Run Tests In Parallel" is selected, for each test assembly a new test host is
+            // instantiated and the test hosts run in parallel. We don't want that, as it could be that
+            // all those parallel hosts want to run tests on the same connected hardware device.
+            // We would have to implement some inter-process locking mechanism to ensure only one
+            // test host can access the device.
+            // VSTest has a way to override the parallelization by specifying the maximum number
+            // of test hosts that can run in parallel - specify 1 to effectively turn off the
+            // parallelization option.
+            { "MaxCpuCount", "1" },
+
+            // It is possible to run tests for many types of platforms (.NET Framework 4.8,
+            // .NET 8, ...) from the Visual Studio test infrastructure. VSTest uses auto-discovery
+            // to determine the platform and select the test host version that matches the platform.
+            // Assemblies created to run on the nanoCLR are marked for platform .NETnanoframework v1.0
+            // and VSTest does not know what test host version to use. That must be a host that can run
+            // the TestAdapter and this tooling.
+            // Fortunately there is a way to tell VSTest which test host to use: 
+            { "TargetFrameworkVersion", "net48" },
+            { "TargetPlatform", "x64" }
+            // Unfortunately there is no way to make that specific for the nanoCLR tests. For a solution
+            // that has both nanoFramework tests and other .NET tests, putting the TargetFrameworkVersion/
+            // TargetPlatform in a solution-wide .runsettings file would force all other tests to run
+            // on the same platform. That is why a separate set of configs with SettingsFileName
+            // are employed.
+        };
+
+        /// <summary>
+        /// The setting in RunConfiguration that instructs the Visual Studio test infrastructure
+        /// where the test adapter lives. This must be set to ensure VSTest is using the correct
+        /// one. The user can set it in the <see cref="SettingsFileName"/>-file, which is useful
+        /// when developing or testing a different (version of the) TestAdapter.
+        /// </summary>
+        private const string TestAdaptersPaths = "TestAdaptersPaths";
+
+        private string _maxVirtualDevices;
+        #endregion
+
+        #region Properties
         /// <summary>
         /// True (the default) to allow the tests to be executed on real hardware.
         /// </summary>
@@ -42,84 +91,6 @@ namespace nanoFramework.TestFramework.Tooling
         /// </summary>
         public IReadOnlyList<string> RealHardwarePort { get; set; } = new string[] { };
 
-        public sealed class DeployToDeviceConfiguration
-        {
-            /// <summary>
-            /// The name of the target for which the configuration is specified.
-            /// If the target is omitted or is value left blank, the configuration
-            /// is applied for any device that does not match the target of the other
-            /// DeployToRealHardware configurations (if those exist).
-            /// </summary>
-            public string TargetName { get; set; } = string.Empty;
-
-            /// <summary>
-            /// True to execute the tests of a single unit test assembly
-            /// at a time on real hardware. If the value is <c>false</c>, multiple assemblies
-            /// can be executed on the test assembly at once. Whether the setting is honoured
-            /// depends on the way the tests are conducted.
-            /// The default value is <c>false</c>.
-            /// </summary>
-            public bool DeployAssembliesOneByOne { get; set; } = false;
-        }
-
-        /// <summary>
-        /// Configuration of the deployment of test assemblies to real hardware.
-        /// </summary>
-        public IReadOnlyList<DeployToDeviceConfiguration> DeployToRealHardware { get; set; } = null;
-
-        /// <summary>
-        /// The default for <see cref="DeployToRealHardware"/> is <see cref="DeployToDeviceConfiguration.DeployAssembliesOneByOne"/>
-        /// = <c>true</c> for all devices. This is used if <see cref="DeployToDeviceConfiguration"/> is not specified,
-        /// or if a device has a target that does not match any of the specified configurations.
-        /// </summary>
-        public static IReadOnlyList<DeployToDeviceConfiguration> DefaultDeployToRealHardware
-        {
-            get;
-        } = new DeployToDeviceConfiguration[]
-            {
-                new DeployToDeviceConfiguration ()
-                {
-                    DeployAssembliesOneByOne = true
-                }
-            };
-
-        /// <summary>
-        /// Get the deployment configuration for a device.
-        /// </summary>
-        /// <param name="device">(Real hardware) device that is available to run tests on.</param>
-        /// <returns>The deployment configuration for the device.</returns>
-        public DeployToDeviceConfiguration DeployToDevice(ITestDevice device)
-        {
-            DeployToDeviceConfiguration FindConfiguration(IReadOnlyList<DeployToDeviceConfiguration> configurations)
-            {
-                DeployToDeviceConfiguration defaultConfiguration = null;
-                foreach (DeployToDeviceConfiguration configuration in configurations)
-                {
-                    if (string.IsNullOrWhiteSpace(configuration.TargetName))
-                    {
-                        defaultConfiguration = configuration;
-                    }
-                    else if (configuration.TargetName == device.TargetName())
-                    {
-                        return configuration;
-                    }
-                }
-                if (!(defaultConfiguration is null))
-                {
-                    return defaultConfiguration;
-                }
-                return null;
-            }
-
-            DeployToDeviceConfiguration result = null;
-            if (!(DeployToRealHardware is null))
-            {
-                result = FindConfiguration(DeployToRealHardware);
-            }
-            result ??= FindConfiguration(DefaultDeployToRealHardware);
-            return result;
-        }
-
         /// <summary>
         /// Path to a local nanoCLR instance to use to run Unit Tests.
         /// If the path is specified as a relative path and the tests of a single assembly
@@ -139,11 +110,10 @@ namespace nanoFramework.TestFramework.Tooling
         public string CLRVersion { get; set; } = string.Empty;
 
         /// <summary>
-        /// Allow the parallel execution of tests o the Virtual Device, provided
-        /// that is enabled by the Test Framework attributes in the code of the test assembly.
-        /// The default is <c>true</c>.
+        /// Set to a number other than 1 tp allow the parallel execution of tests on a Virtual Device.
+        /// Set to 0 (the default) to let the test framework decide how many virtual devices to spin up.
         /// </summary>
-        public bool AllowLocalCLRParallelExecution { get; set; } = true;
+        public int MaxVirtualDevices { get; set; } = 0;
 
         /// <summary>
         /// Level of logging for Unit Test execution.
@@ -263,47 +233,6 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                 }
 
-                XmlNodeList deployToRealHardware = node.SelectNodes(nameof(DeployToRealHardware));
-                if (deployToRealHardware != null)
-                {
-                    var configurations = new List<DeployToDeviceConfiguration>();
-                    var targets = new HashSet<string>();
-
-                    foreach (XmlNode deviceConfiguration in deployToRealHardware)
-                    {
-                        if (deviceConfiguration.NodeType == XmlNodeType.Element)
-                        {
-                            var configuration = new DeployToDeviceConfiguration();
-
-                            XmlNode targetName = deviceConfiguration.SelectSingleNode(nameof(DeployToDeviceConfiguration.TargetName))?.FirstChild;
-                            if (targetName != null && targetName.NodeType == XmlNodeType.Text)
-                            {
-                                configuration.TargetName = targetName.Value;
-                            }
-
-                            XmlNode deployAssembliesOneByOne = deviceConfiguration.SelectSingleNode(nameof(DeployToDeviceConfiguration.DeployAssembliesOneByOne))?.FirstChild;
-                            if (deployAssembliesOneByOne != null && deployAssembliesOneByOne.NodeType == XmlNodeType.Text)
-                            {
-                                configuration.DeployAssembliesOneByOne = deployAssembliesOneByOne.Value.ToLower() == "true";
-                            }
-
-                            targets.Add(configuration.TargetName);
-                            configurations.Add(configuration);
-                        }
-                    }
-
-                    if (!(DeployToRealHardware is null))
-                    {
-                        configurations.AddRange(from c in DeployToRealHardware
-                                                where !targets.Contains(c.TargetName)
-                                                select c);
-                    }
-                    if (configurations.Count > 0)
-                    {
-                        DeployToRealHardware = configurations;
-                    }
-                }
-
                 XmlNode loggingLevel = node.SelectSingleNode(nameof(Logging))?.FirstChild;
                 if (loggingLevel != null && loggingLevel.NodeType == XmlNodeType.Text)
                 {
@@ -325,10 +254,21 @@ namespace nanoFramework.TestFramework.Tooling
                     PathToLocalCLRInstance = pathToLocalCLRInstance.Value;
                 }
 
-                XmlNode allowLocalCLRParallelExecution = node.SelectSingleNode(nameof(AllowLocalCLRParallelExecution))?.FirstChild;
-                if (allowLocalCLRParallelExecution != null && allowLocalCLRParallelExecution.NodeType == XmlNodeType.Text)
+                XmlNode maxVirtualDevices = node.SelectSingleNode(nameof(MaxVirtualDevices))?.FirstChild;
+                if (maxVirtualDevices != null && maxVirtualDevices.NodeType == XmlNodeType.Text)
                 {
-                    AllowLocalCLRParallelExecution = allowLocalCLRParallelExecution.Value.ToLower() == "true";
+                    if (int.TryParse(maxVirtualDevices.Value.Trim(), out int value))
+                    {
+                        MaxVirtualDevices = value;
+                        if (MaxVirtualDevices < 0)
+                        {
+                            _maxVirtualDevices = MaxVirtualDevices.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _maxVirtualDevices = maxVirtualDevices.Value;
+                    }
                 }
             }
         }
@@ -352,26 +292,6 @@ namespace nanoFramework.TestFramework.Tooling
                     logger?.Invoke(LoggingLevel.Verbose, $"Tests on real hardware are disabled; {nameof(RealHardwarePort)} is ignored.'");
                 }
             }
-
-            if (!(DeployToRealHardware is null))
-            {
-                var deployAssembliesOneByOne = new Dictionary<string, (bool asTrue, bool asFalse)>();
-                foreach (DeployToDeviceConfiguration configuration in DeployToRealHardware)
-                {
-                    if (!deployAssembliesOneByOne.TryGetValue(configuration.TargetName, out (bool asTrue, bool asFalse) asWhich))
-                    {
-                        asWhich = (false, false);
-                    }
-                    deployAssembliesOneByOne[configuration.TargetName] = (asWhich.asTrue || configuration.DeployAssembliesOneByOne, asWhich.asFalse || !configuration.DeployAssembliesOneByOne);
-                }
-                foreach (string targetName in from c in deployAssembliesOneByOne
-                                              where c.Value.asTrue && c.Value.asFalse
-                                              select c.Key)
-                {
-                    logger?.Invoke(LoggingLevel.Error, $"{nameof(DeployToDeviceConfiguration.DeployAssembliesOneByOne)} is specified as both true and false for {nameof(DeployToDeviceConfiguration.TargetName)} = '{targetName}'");
-                }
-            }
-
 
             if (!string.IsNullOrWhiteSpace(PathToLocalCLRInstance))
             {
@@ -427,6 +347,11 @@ namespace nanoFramework.TestFramework.Tooling
                 }
             }
 
+            if (!string.IsNullOrWhiteSpace(_maxVirtualDevices))
+            {
+                logger?.Invoke(LoggingLevel.Error, $"{nameof(MaxVirtualDevices)} must be an integer ≥ 0, not '{_maxVirtualDevices}'");
+                isValid = false;
+            }
             return isValid;
         }
         #endregion
@@ -446,7 +371,7 @@ namespace nanoFramework.TestFramework.Tooling
             XmlNode runConfiguration;
             if (RunConfiguration is null)
             {
-                runConfiguration = configuration.CreateElement("RunConfiguration");
+                runConfiguration = configuration.CreateElement(nameof(RunConfiguration));
             }
             else
             {
@@ -461,10 +386,10 @@ namespace nanoFramework.TestFramework.Tooling
                 node.AppendChild(value);
             }
 
-            XmlNode adapterPath = runConfiguration.SelectSingleNode("TestAdaptersPaths");
+            XmlNode adapterPath = runConfiguration.SelectSingleNode(TestAdaptersPaths);
             if (adapterPath is null)
             {
-                adapterPath = configuration.CreateElement("TestAdaptersPaths");
+                adapterPath = configuration.CreateElement(TestAdaptersPaths);
                 runConfiguration.AppendChild(adapterPath);
                 XmlText value = configuration.CreateTextNode(testAdapterDirectoryPath);
                 adapterPath.AppendChild(value);
@@ -486,12 +411,6 @@ namespace nanoFramework.TestFramework.Tooling
                 return Encoding.UTF8.GetString(buffer.ToArray());
             }
         }
-        private static readonly Dictionary<string, string> s_requiredRunConfigurationNodes = new Dictionary<string, string>()
-        {
-            { "MaxCpuCount", "1" },
-            { "TargetFrameworkVersion", "net48" },
-            { "TargetPlatform", "x64" }
-        };
 
         private static XmlDocument CreateRunSettings()
         {
@@ -533,18 +452,6 @@ namespace nanoFramework.TestFramework.Tooling
                 AddNode(nameof(RealHardwarePort), string.Join(";", RealHardwarePort));
             }
 
-            if (!(DeployToRealHardware is null))
-            {
-                foreach (DeployToDeviceConfiguration device in DeployToRealHardware)
-                {
-                    XmlElement deviceNode = configuration.CreateElement(nameof(DeployToRealHardware));
-                    frameworkConfiguration.AppendChild(deviceNode);
-
-                    AddNode(nameof(device.TargetName), device.TargetName, deviceNode);
-                    AddBooleanNode(nameof(device.DeployAssembliesOneByOne), device.DeployAssembliesOneByOne, deviceNode);
-                }
-            }
-
             if (PathToLocalCLRInstance != defaultConfiguration.PathToLocalCLRInstance)
             {
                 AddNode(nameof(PathToLocalCLRInstance), PathToLocalCLRInstance);
@@ -555,9 +462,9 @@ namespace nanoFramework.TestFramework.Tooling
                 AddNode(nameof(CLRVersion), CLRVersion);
             }
 
-            if (AllowLocalCLRParallelExecution != defaultConfiguration.AllowLocalCLRParallelExecution)
+            if (MaxVirtualDevices != defaultConfiguration.MaxVirtualDevices)
             {
-                AddBooleanNode(nameof(AllowLocalCLRParallelExecution), AllowLocalCLRParallelExecution);
+                AddNode(nameof(MaxVirtualDevices), MaxVirtualDevices.ToString());
             }
 
             if (Logging != defaultConfiguration.Logging)
