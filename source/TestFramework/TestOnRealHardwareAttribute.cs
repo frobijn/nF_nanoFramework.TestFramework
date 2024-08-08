@@ -18,19 +18,14 @@ namespace nanoFramework.TestFramework
 #endif
         sealed class TestOnRealHardwareAttribute : Attribute, ITestOnRealHardware
     {
-        #region Fields
-        private readonly bool _runOnEveryDevice;
-        #endregion
-
         #region Construction
         /// <summary>
-        /// Inform the test runner that the test should be run on the virtual nanoDevice.
+        /// Inform the test runner that the test should be run on real hardware. If the available devices
+        /// have a different CLR firmware (target) installed, the test is executed for each target on
+        /// one of the devices with that firmware.
         /// </summary>
-        /// <param name="runOnEveryDevice">Indicates whether to run the test on every available hardware device,
-        /// rather than just one of the devices.</param>
-        public TestOnRealHardwareAttribute(bool runOnEveryDevice)
+        public TestOnRealHardwareAttribute()
         {
-            _runOnEveryDevice = runOnEveryDevice;
         }
         #endregion
 
@@ -41,8 +36,8 @@ namespace nanoFramework.TestFramework
         bool ITestOnRealHardware.ShouldTestOnDevice(ITestDevice testDevice)
             => true;
 
-        bool ITestOnRealHardware.TestOnAllDevices
-            => _runOnEveryDevice;
+        bool ITestOnRealHardware.AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2)
+            => testDevice1.TargetName() == testDevice2.TargetName();
         #endregion
     }
 }

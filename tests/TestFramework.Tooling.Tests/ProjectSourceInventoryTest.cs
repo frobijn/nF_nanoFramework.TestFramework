@@ -248,7 +248,7 @@ $@"TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass in {pathPrefix}Test
 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass in {pathPrefix}TestClassVariants.cs(7,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes in {pathPrefix}TestAllCurrentAttributes.cs(8,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.BrokenAfterRefactoringAttribute in {pathPrefix}TestFrameworkExtensions\BrokenAfterRefactoringAttribute.cs(8,4)
-TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.TestOnDoublePrecisionDeviceAttribute in {pathPrefix}TestFrameworkExtensions\TestOnDoublePrecisionDeviceAttribute.cs(9,4)
+TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions.TestOnDeviceWithSomeFileAttribute in {pathPrefix}TestFrameworkExtensions\TestOnDeviceWithSomeFileAttribute.cs(8,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestWithALotOfErrors in {pathPrefix}TestWithALotOfErrors.cs(8,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions in {pathPrefix}TestWithFrameworkExtensions.cs(8,4)
 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMethods.cs(8,4)

@@ -16,7 +16,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         internal PropertyInfo _property_ITestMethod_CanBeRun;
         internal PropertyInfo _property_ITestOnRealHardware_Description;
         internal MethodInfo _method_ITestOnRealHardware_ShouldTestOnDevice;
-        internal PropertyInfo _property_ITestOnRealHardware_TestOnAllDevices;
+        internal MethodInfo _method_ITestOnRealHardware_AreDevicesEqual;
         internal PropertyInfo _property_ITraits_Traits;
         internal Type _type_TestDeviceProxy;
     }

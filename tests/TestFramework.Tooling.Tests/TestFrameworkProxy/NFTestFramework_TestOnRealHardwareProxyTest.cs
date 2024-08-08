@@ -36,7 +36,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             TestCase actual = (from tc in testCases.TestCases
                                where tc.ShouldRunOnRealHardware
                                      && tc.FullyQualifiedName == "TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test"
-                                     && tc.Traits.Contains("@test")
                                select tc).FirstOrDefault();
             if (actual is null)
             {
@@ -47,26 +46,10 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.IsNotNull(actual.SelectDevicesForExecution(new TestDeviceProxy[] { testDevice }).FirstOrDefault());
             #endregion
 
-            #region Custom ITestOnRealHardware implementation, ShouldTestOnDevice has some code for local evaluation
-            actual = (from tc in testCases.TestCases
-                      where tc.ShouldRunOnRealHardware
-                            && tc.FullyQualifiedName == "TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation"
-                            && tc.Traits.Contains("@DoublePrecisionDevice")
-                      select tc).FirstOrDefault();
-            if (actual is null)
-            {
-                Assert.Inconclusive();
-            }
-
-            testDevice = new TestDeviceProxy(new TestDeviceMock("any", "any"));
-            Assert.IsNotNull(actual.SelectDevicesForExecution(new TestDeviceProxy[] { testDevice }).FirstOrDefault());
-            #endregion
-
             #region Custom ITestOnRealHardware implementation, ShouldTestOnDevice has some code for remote devices
             actual = (from tc in testCases.TestCases
                       where tc.ShouldRunOnRealHardware
                             && tc.FullyQualifiedName == "TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDeviceWithSomeFile"
-                            && tc.Traits.Contains("@DeviceWithSomeFile")
                       select tc).FirstOrDefault();
             if (actual is null)
             {

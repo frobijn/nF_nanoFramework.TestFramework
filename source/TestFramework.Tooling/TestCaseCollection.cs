@@ -23,7 +23,7 @@ namespace nanoFramework.TestFramework.Tooling
         private readonly List<string> _assemblyFilePaths = new List<string>();
         private readonly Dictionary<string, int> _assemblyTestMethods = new Dictionary<string, int>();
         private readonly List<TestCase> _testCases = new List<TestCase>();
-        private static readonly string s_realHardwareTrait = $"@{(new TestOnRealHardwareAttribute(false) as ITestOnRealHardware).Description}";
+        private static readonly string s_realHardwareDescription = (new TestOnRealHardwareAttribute() as ITestOnRealHardware).Description;
         #endregion
 
         #region Construction
@@ -335,15 +335,16 @@ namespace nanoFramework.TestFramework.Tooling
 
             // Default for all tests
             TestOnRealHardwareProxy defaultRealHardwareProxy = allowTestOnRealHardware
-                ? new TestOnRealHardwareProxy(new TestOnRealHardwareAttribute(false), new TestFrameworkImplementation(), typeof(ITestOnRealHardware))
+                ? new TestOnRealHardwareProxy(new TestOnRealHardwareAttribute(), new TestFrameworkImplementation(), typeof(ITestOnRealHardware))
                 : null;
 
             // Defaults for the assembly
             List<AttributeProxy> assemblyAttributes = AttributeProxy.GetAttributeProxies(assembly, framework, logger);
+            HashSet<string> allTestsTraits = TraitsProxy.Collect(null, assemblyAttributes.OfType<TraitsProxy>());
             bool testAllOnVirtualDevice = assemblyAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
-            Dictionary<string, List<TestOnRealHardwareProxy>> testAllOnRealHardware = allowTestOnRealHardware
-                ? TestOnRealHardwareProxy.Collect(null, assemblyAttributes.OfType<TestOnRealHardwareProxy>())
-                : null;
+            (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testAllOnRealHardware = allowTestOnRealHardware
+                ? TestOnRealHardwareProxy.Collect((null, null), assemblyAttributes.OfType<TestOnRealHardwareProxy>())
+                : (null, null);
 
             // Find the test classes
             foreach (
@@ -369,10 +370,11 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                 }
 
+                HashSet<string> testClassTraits = TraitsProxy.Collect(allTestsTraits, assemblyAttributes.OfType<TraitsProxy>());
                 bool testClassTestOnVirtualDevice = testAllOnVirtualDevice || classAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
-                Dictionary<string, List<TestOnRealHardwareProxy>> testClassTestOnRealHardware = allowTestOnRealHardware
+                (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testClassTestOnRealHardware = allowTestOnRealHardware
                     ? TestOnRealHardwareProxy.Collect(testAllOnRealHardware, classAttributes.OfType<TestOnRealHardwareProxy>())
-                    : null;
+                    : (null, null);
 
                 var group = new TestCaseGroup(++testGroupIndex);
                 #endregion
@@ -421,18 +423,13 @@ namespace nanoFramework.TestFramework.Tooling
                     if (setup is null && cleanup is null)
                     {
                         #region Create test cases from the test method
-                        var traits = new HashSet<string>();
-                        foreach (TraitsProxy attribute in methodAttributes.OfType<TraitsProxy>())
-                        {
-                            traits.UnionWith(attribute.Traits);
-                        }
-
+                        HashSet<string> testTraits = TraitsProxy.Collect(testClassTraits, assemblyAttributes.OfType<TraitsProxy>());
                         bool testOnVirtualDevice = testClassTestOnVirtualDevice || methodAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
-                        Dictionary<string, List<TestOnRealHardwareProxy>> testOnRealHardware = allowTestOnRealHardware
+                        (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testOnRealHardware = allowTestOnRealHardware
                             ? TestOnRealHardwareProxy.Collect(testClassTestOnRealHardware, methodAttributes.OfType<TestOnRealHardwareProxy>())
-                            : null;
+                            : (null, null);
 
-                        int deviceTypeCount = (testOnRealHardware?.Count ?? 0) + (testOnVirtualDevice ? 1 : 0);
+                        int deviceTypeCount = (testOnRealHardware.descriptions is null ? 0 : 1) + (testOnVirtualDevice ? 1 : 0);
                         if (deviceTypeCount == 0)
                         {
                             string methodInSource = sourceLocation is null
@@ -444,9 +441,9 @@ namespace nanoFramework.TestFramework.Tooling
                             testOnVirtualDevice = true;
                             if (!(defaultRealHardwareProxy is null))
                             {
-                                testOnRealHardware = TestOnRealHardwareProxy.Collect(null, new TestOnRealHardwareProxy[] { defaultRealHardwareProxy });
+                                testOnRealHardware = TestOnRealHardwareProxy.Collect((null, null), new TestOnRealHardwareProxy[] { defaultRealHardwareProxy });
                             }
-                            deviceTypeCount = (testOnRealHardware?.Count ?? 0) + (testOnVirtualDevice ? 1 : 0);
+                            deviceTypeCount = (testOnRealHardware.descriptions is null ? 0 : 1) + (testOnVirtualDevice ? 1 : 0);
                         }
 
                         var dataRowParameters = (from dataRow in methodAttributes.OfType<DataRowProxy>()
@@ -478,23 +475,23 @@ namespace nanoFramework.TestFramework.Tooling
                                     method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{VIRTUALDEVICE}]" : "")}",
                                     testCaseSource,
                                     true, null,
-                                    traits, $"@{VIRTUALDEVICE}"
+                                    TraitsProxy.Collect(testTraits, null, new string[] { $"@{VIRTUALDEVICE}" })
                                 ));
                             }
-                            if (!(testOnRealHardware is null))
+                            if (!(testOnRealHardware.descriptions is null))
                             {
-                                foreach (KeyValuePair<string, List<TestOnRealHardwareProxy>> device in testOnRealHardware)
-                                {
-                                    _testCases.Add(new TestCase(
-                                        testCaseIndex,
-                                        assemblyFilePath,
-                                        group,
-                                        method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{device.Key}]" : "")}",
-                                        testCaseSource,
-                                        false, device.Value,
-                                        traits, $"@{device.Key}", s_realHardwareTrait
-                                    ));
-                                }
+                                HashSet<string> traits = TraitsProxy.Collect(testTraits, null, from d in testOnRealHardware.descriptions
+                                                                                               select $"@{d}");
+                                traits.Add($"@{s_realHardwareDescription}");
+                                _testCases.Add(new TestCase(
+                                    testCaseIndex,
+                                    assemblyFilePath,
+                                    group,
+                                    method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{s_realHardwareDescription}]" : "")}",
+                                    testCaseSource,
+                                    false, testOnRealHardware.attributes,
+                                    traits
+                                ));
                             }
                         }
                         #endregion

@@ -48,12 +48,13 @@ namespace TestFramework.Tooling.Tests.Helpers
         private readonly string _platform;
 
         /// <summary>
-        /// Get the content of a file that is stored on the device.
+        /// Get the content of a file that is stored on the device
+        /// as an array of bytes.
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
         /// or if the device does not support file storage.</returns>
-        public byte[] GetStorageFileContent(string filePath)
+        public byte[] GetStorageFileContentAsBytes(string filePath)
         {
             if (!_storageFileContent.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
             {
@@ -62,6 +63,25 @@ namespace TestFramework.Tooling.Tests.Helpers
             else
             {
                 return Encoding.UTF8.GetBytes(content);
+            }
+        }
+
+        /// <summary>
+        /// Get the content of a file that is stored on the device
+        /// as a string
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
+        /// or if the device does not support file storage.</returns>
+        public string GetStorageFileContentAsString(string filePath)
+        {
+            if (!_storageFileContent.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
+            {
+                return null;
+            }
+            else
+            {
+                return content;
             }
         }
         #endregion

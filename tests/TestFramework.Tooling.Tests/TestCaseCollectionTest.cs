@@ -251,31 +251,29 @@ Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are all
             // Assert collection, index, FQN and name
             Assert.AreEqual(
 $@"#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
-#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [test]'
+#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
 #2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
-#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [test]'
+#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
 #3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
-#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [test]'
+#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
 #4 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Virtual Device]'
-#4 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [test]'
+#4 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Real hardware]'
 #5 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Virtual Device]'
-#5 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [test]'
+#5 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Real hardware]'
 #6 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Virtual Device]'
-#6 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [test]'
+#6 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Real hardware]'
 #7 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Virtual Device]'
-#7 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [test]'
-#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation 'TestDoublePrecisionCalculation [Virtual Device]'
-#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation 'TestDoublePrecisionCalculation [test]'
-#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation 'TestDoublePrecisionCalculation [DoublePrecisionDevice]'
+#7 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Real hardware]'
+#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Virtual Device]'
+#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Real hardware]'
 #9 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
-#9 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [test]'
+#9 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
 #10 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
-#10 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [test]'
+#10 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
 #11 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Virtual Device]'
-#11 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [test]'
+#11 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Real hardware]'
 #12 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Virtual Device]'
-#12 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [test]'
-#12 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [esp32]'
+#12 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Real hardware]'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -292,26 +290,24 @@ $@"#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
 #2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@test', '@Real hardware'
 #3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
 #3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@test', '@Real hardware'
-#4 @{pathPrefix}TestClassVariants.cs(13,28) 'TestClass demonstration', '@Virtual Device'
-#4 @{pathPrefix}TestClassVariants.cs(13,28) 'TestClass demonstration', '@test', '@Real hardware'
-#5 @{pathPrefix}TestClassVariants.cs(33,21) 'TestClass demonstration', '@Virtual Device'
-#5 @{pathPrefix}TestClassVariants.cs(33,21) 'TestClass demonstration', '@test', '@Real hardware'
-#6 @{pathPrefix}TestClassVariants.cs(40,21) 'TestClass demonstration', '@Virtual Device'
-#6 @{pathPrefix}TestClassVariants.cs(40,21) 'TestClass demonstration', '@test', '@Real hardware'
+#4 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
+#4 @{pathPrefix}TestClassVariants.cs(13,28) '@test', '@Real hardware'
+#5 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
+#5 @{pathPrefix}TestClassVariants.cs(33,21) '@test', '@Real hardware'
+#6 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
+#6 @{pathPrefix}TestClassVariants.cs(40,21) '@test', '@Real hardware'
 #7 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
 #7 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@test', '@Real hardware'
 #8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
-#8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@test', '@Real hardware'
-#8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@DoublePrecisionDevice', '@Real hardware'
+#8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@test', '@DeviceWithSomeFile', '@Real hardware'
 #9 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
 #9 @{pathPrefix}TestWithMethods.cs(13,21) '@test', '@Real hardware'
 #10 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
 #10 @{pathPrefix}TestWithMethods.cs(18,21) '@test', '@Real hardware'
-#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(14,21) 'Example trait', 'Other trait', '@Virtual Device'
-#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(14,21) 'Example trait', 'Other trait', '@test', '@Real hardware'
-#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(19,21) '@Virtual Device'
-#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(19,21) '@test', '@Real hardware'
-#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(19,21) '@esp32', '@Real hardware'
+#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
+#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@test', '@Real hardware'
+#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
+#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@test', '@esp32', '@Real hardware'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -335,9 +331,8 @@ $@"#1 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCur
 #6 RH=True VD=False G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
 #7 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
 #7 RH=True VD=False G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-#8 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation
-#8 RH=True VD=False G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation
-#8 RH=True VD=False G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation
+#8 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+#8 RH=True VD=False G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
 #9 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
 #9 RH=True VD=False G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
 #10 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
@@ -345,7 +340,6 @@ $@"#1 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCur
 #11 RH=False VD=True G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
 #11 RH=True VD=False G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
 #12 RH=False VD=True G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
-#12 RH=True VD=False G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
 #12 RH=True VD=False G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
@@ -412,7 +406,7 @@ $@"#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
 #5 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1'
 #6 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2'
 #7 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray'
-#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation 'TestDoublePrecisionCalculation'
+#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile'
 #9 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
 #10 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
 #11 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits'
@@ -430,15 +424,15 @@ $@"#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
 $@"#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
 #2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
 #3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-#4 @{pathPrefix}TestClassVariants.cs(13,28) 'TestClass demonstration', '@Virtual Device'
-#5 @{pathPrefix}TestClassVariants.cs(33,21) 'TestClass demonstration', '@Virtual Device'
-#6 @{pathPrefix}TestClassVariants.cs(40,21) 'TestClass demonstration', '@Virtual Device'
+#4 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
+#5 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
+#6 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
 #7 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
 #8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
 #9 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
 #10 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
-#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(14,21) 'Example trait', 'Other trait', '@Virtual Device'
-#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(19,21) '@Virtual Device'
+#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
+#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -455,7 +449,7 @@ $@"#1 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCur
 #5 RH=False VD=True G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
 #6 RH=False VD=True G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
 #7 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-#8 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDoublePrecisionCalculation
+#8 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
 #9 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
 #10 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 #11 RH=False VD=True G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
@@ -686,8 +680,8 @@ $@"{assemblyFilePath1}
                     (assemblyFilePath1, "TestMethod1(2,2) [some_platform]", "TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1"),
                     (assemblyFilePath1, "NoSuchMethod", "TestFramework.Tooling.Tests.NFUnitTest.NoSuchClass.NoSuchMethod"),
                     (assemblyFilePath2, "MethodWithTraits [Virtual Device]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits"),
-                    (assemblyFilePath2, "MethodWithTraits [test]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits"),
-                    (assemblyFilePath1, "Method2 [test]", "TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2"),
+                    (assemblyFilePath2, "MethodWithTraits [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits"),
+                    (assemblyFilePath1, "Method2 [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2"),
                 },
                 (f) => ProjectSourceInventory.FindProjectFilePath(f, logger),
                 true,
@@ -698,7 +692,7 @@ $@"{assemblyFilePath1}
                 expectedDiscoveryMessages +
 $@"Verbose: Test case 'TestMethod1(2,2) [some_platform]' (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) from '{assemblyFilePath1}' is no longer available
 Verbose: Test case 'NoSuchMethod' (TestFramework.Tooling.Tests.NFUnitTest.NoSuchClass.NoSuchMethod) from '{assemblyFilePath1}' is no longer available
-Verbose: Test case 'Method2 [test]' (TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2) from '{assemblyFilePath1}' is no longer available
+Verbose: Test case 'Method2 [Real hardware]' (TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2) from '{assemblyFilePath1}' is no longer available
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                         from m in logger.Messages
@@ -710,7 +704,7 @@ Verbose: Test case 'Method2 [test]' (TestFramework.Tooling.Tests.NFUnitTest.Test
             Assert.AreEqual(
 @"#2 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [Real hardware]
 #11 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Virtual Device]
-#11 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [test]
+#11 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Real hardware]
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases

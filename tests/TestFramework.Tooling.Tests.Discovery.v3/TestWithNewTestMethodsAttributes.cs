@@ -6,6 +6,7 @@ using nanoFramework.TestFramework;
 namespace TestFramework.Tooling.Tests.NFUnitTest
 {
     [TestClass]
+    [Trait("Test class with v3 attributes")]
     public class TestWithNewTestMethodsAttributes
     {
         [TestMethod]
@@ -15,7 +16,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         {
         }
 
-        [TestOnPlatform("esp32", true)]
+        [TestOnPlatform("esp32")]
         public void MethodWithNewTestMethods()
         {
         }

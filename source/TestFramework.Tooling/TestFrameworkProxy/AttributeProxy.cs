@@ -199,14 +199,11 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                     }
                     else if (attributeInterface.FullName == typeof(ITraits).FullName)
                     {
-                        if (AssertElementIsMethod(nameof(ITraits), attributeInSource))
+                        result.Add(new TraitsProxy(attribute, framework, attributeInterface)
                         {
-                            result.Add(new TraitsProxy(attribute, framework, attributeInterface)
-                            {
-                                Source = attributeInSource
-                            });
-                            ReportMissingSourceAttribute();
-                        }
+                            Source = attributeInSource
+                        });
+                        ReportMissingSourceAttribute();
                     }
                 }
                 #endregion

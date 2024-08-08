@@ -15,8 +15,8 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
 
         }
 
-        [TestOnDoublePrecisionDevice]
-        public void TestDoublePrecisionCalculation()
+        [TestOnDeviceWithSomeFile(@"xyzzy")]
+        public void TestOnDeviceWithSomeFile()
         {
         }
     }

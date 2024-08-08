@@ -26,7 +26,8 @@ namespace nanoFramework.TestFramework.Tools
         private readonly object _testDevice;
         private readonly MethodInfo _targetName;
         private readonly MethodInfo _platform;
-        private readonly MethodInfo _getStorageFileContent;
+        private readonly MethodInfo _getStorageFileContentAsBytes;
+        private readonly MethodInfo _getStorageFileContentAsString;
         #endregion
 
         #region Construction
@@ -43,8 +44,12 @@ namespace nanoFramework.TestFramework.Tools
             _testDevice = testDevice;
             _targetName = otherITestDevice.GetMethod(nameof(ITestDevice.TargetName));
             _platform = otherITestDevice.GetMethod(nameof(ITestDevice.Platform));
-            _getStorageFileContent = otherITestDevice.GetMethod(nameof(ITestDevice.GetStorageFileContent));
-            if (testDevice is null || _targetName is null || _platform is null || _getStorageFileContent is null)
+            _getStorageFileContentAsBytes = otherITestDevice.GetMethod(nameof(ITestDevice.GetStorageFileContentAsBytes));
+            _getStorageFileContentAsString = otherITestDevice.GetMethod(nameof(ITestDevice.GetStorageFileContentAsString));
+            if (testDevice is null
+                || _targetName is null || _platform is null
+                || _getStorageFileContentAsBytes is null
+                || _getStorageFileContentAsString is null)
             {
                 throw new ArgumentException();
             }
@@ -62,14 +67,12 @@ namespace nanoFramework.TestFramework.Tools
             => (string)_platform.Invoke(_testDevice, null);
 
         /// <inheritdoc/>>
-        public byte[] GetStorageFileContent(string filePath)
-            => (byte[])_getStorageFileContent.Invoke(_testDevice, new object[] { filePath });
+        public byte[] GetStorageFileContentAsBytes(string filePath)
+            => (byte[])_getStorageFileContentAsBytes.Invoke(_testDevice, new object[] { filePath });
 
-        /// <inheritdoc/>
-        public bool IsRemoteDevice()
-            // If the proxy is used, the nanoFramework code is run within the context of
-            // a .NET application, so the runtime is nanoCLR.
-            => true;
+        /// <inheritdoc/>>
+        public string GetStorageFileContentAsString(string filePath)
+            => (string)_getStorageFileContentAsString.Invoke(_testDevice, new object[] { filePath });
         #endregion
     }
 }

@@ -55,14 +55,17 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                 }
             }
 
-            if (_framework._property_ITestOnRealHardware_TestOnAllDevices is null)
+            if (_framework._method_ITestOnRealHardware_AreDevicesEqual is null)
             {
-                _framework._property_ITestOnRealHardware_TestOnAllDevices = interfaceType.GetProperty(nameof(ITestOnRealHardware.TestOnAllDevices));
-                if (_framework._property_ITestOnRealHardware_TestOnAllDevices is null
-                    || _framework._property_ITestOnRealHardware_TestOnAllDevices.PropertyType != typeof(bool))
+                _framework._method_ITestOnRealHardware_AreDevicesEqual = interfaceType.GetMethod(nameof(ITestOnRealHardware.AreDevicesEqual));
+                if (_framework._method_ITestOnRealHardware_AreDevicesEqual is null
+                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.GetParameters().Length != 2
+                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.GetParameters()[0].ParameterType.FullName != typeof(ITestDevice).FullName
+                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.GetParameters()[1].ParameterType.FullName != typeof(ITestDevice).FullName
+                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.ReturnType != typeof(bool))
                 {
-                    _framework._property_ITestOnRealHardware_TestOnAllDevices = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestOnRealHardware)}.${nameof(ITestOnRealHardware.TestOnAllDevices)}");
+                    _framework._method_ITestOnRealHardware_AreDevicesEqual = null;
+                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestOnRealHardware)}.${nameof(ITestOnRealHardware.AreDevicesEqual)}");
                 }
             }
         }
@@ -88,12 +91,24 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                 });
 
         /// <summary>
-        /// Indicates whether the test should be executed on every available devices for which
-        /// <see cref="ITestOnRealHardware.ShouldTestOnDevice(ITestDevice)"/> of this attribute returns <c>true</c>. If the property
-        /// is <c>false</c>, the test is executed only on the first of those devices.
+        /// Indicates whether two test devices are considered similar enough that the
+        /// test should be executed only on one of both devices.
         /// </summary>
-        public bool TestOnAllDevices
-            => (bool)_framework._property_ITestOnRealHardware_TestOnAllDevices.GetValue(_attribute, null);
+        /// <param name="testDevice1">First device.</param>
+        /// <param name="testDevice2">Second device.</param>
+        /// <returns>Returns <c>true</c> if it is sufficient to execute the test
+        /// on one of the devices. Returns <c>false</c> if the devices are sufficiently
+        /// different that the test should be executed on both devices.</returns>
+        /// <remarks>
+        /// For each of the devices <see cref="ShouldTestOnDevice"/> has been called and
+        /// has returned <c>true</c>.
+        /// </remarks>
+        public bool AreDevicesEqual(TestDeviceProxy testDevice1, TestDeviceProxy testDevice2)
+            => (bool)_framework._method_ITestOnRealHardware_AreDevicesEqual.Invoke(_attribute, new object[]
+                {
+                    (testDevice1 ?? throw new ArgumentNullException (nameof (testDevice1))).ITestDeviceProxy (_framework),
+                    (testDevice2 ?? throw new ArgumentNullException (nameof (testDevice2))).ITestDeviceProxy (_framework)
+                });
         #endregion
 
         #region Helpers
@@ -103,24 +118,26 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="inherited">Inherited collection of attributes. Pass <c>null</c> if no attributes are inherited.</param>
         /// <param name="attributes">Attributes to add to the collection; may be <c>null</c> if no attributes have to be added.</param>
         /// <returns>The collection of attributes, or <c>null</c> if there are none.</returns>
-        public static Dictionary<string, List<TestOnRealHardwareProxy>> Collect(Dictionary<string, List<TestOnRealHardwareProxy>> inherited, IEnumerable<TestOnRealHardwareProxy> attributes)
+        internal static (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) Collect((HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) inherited, IEnumerable<TestOnRealHardwareProxy> attributes)
         {
             if (attributes is null || !attributes.Any())
             {
                 return inherited;
             }
 
-            Dictionary<string, List<TestOnRealHardwareProxy>> result =
-                inherited?.ToDictionary(rh => rh.Key, rh => new List<TestOnRealHardwareProxy>(rh.Value)); // Deep copy required!
+            (HashSet<string>, List<TestOnRealHardwareProxy>) result = (
+                inherited.descriptions is null ? null : new HashSet<string>(inherited.descriptions),
+                inherited.attributes is null ? null : new List<TestOnRealHardwareProxy>(inherited.attributes)
+            );
 
             foreach (TestOnRealHardwareProxy testOnRealHardware in attributes)
             {
-                result ??= new Dictionary<string, List<TestOnRealHardwareProxy>>();
-                if (!result.TryGetValue(testOnRealHardware.Description, out List<TestOnRealHardwareProxy> list))
-                {
-                    result[testOnRealHardware.Description] = list = new List<TestOnRealHardwareProxy>();
-                }
-                list.Add(testOnRealHardware);
+                result = (
+                    result.Item1 ??= new HashSet<string>(),
+                    result.Item2 ??= new List<TestOnRealHardwareProxy>()
+                );
+                result.Item1.Add(testOnRealHardware.Description);
+                result.Item2.Add(testOnRealHardware);
             }
             return result;
         }

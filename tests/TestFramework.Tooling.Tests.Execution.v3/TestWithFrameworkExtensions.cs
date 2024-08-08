@@ -9,12 +9,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     [TestClass]
     public class TestWithFrameworkExtensions
     {
-        [TestOnDoublePrecisionDevice]
-        public void TestDoublePrecisionCalculation()
-        {
-        }
-
-        [TestOnDeviceWithSomeFile]
+        [TestOnDeviceWithSomeFile(@"xyzzy")]
         public void TestDeviceWithSomeFile()
         {
         }

@@ -11,7 +11,7 @@ namespace nanoFramework.TestFramework.Tooling
     {
         #region Fields
         private readonly HashSet<string> _traits;
-        private readonly List<TestOnRealHardwareProxy> _testOnRealHardware;
+        private readonly IEnumerable<TestOnRealHardwareProxy> _testOnRealHardware;
         #endregion
 
         #region Construction
@@ -21,8 +21,8 @@ namespace nanoFramework.TestFramework.Tooling
             MethodInfo method, string displayName,
             ProjectSourceInventory.ElementDeclaration location,
             bool shouldRunOnVirtualDevice,
-            List<TestOnRealHardwareProxy> testOnRealHardware,
-            HashSet<string> traits, params string[] extraTraits)
+            IEnumerable<TestOnRealHardwareProxy> testOnRealHardware,
+            HashSet<string> traits)
         {
             AssemblyFilePath = assemblyFilePath;
             TestIndex = testIndex;
@@ -31,15 +31,7 @@ namespace nanoFramework.TestFramework.Tooling
             TestMethodSourceCodeLocation = location;
             ShouldRunOnVirtualDevice = shouldRunOnVirtualDevice;
             _testOnRealHardware = testOnRealHardware;
-            if (extraTraits.Length > 0)
-            {
-                _traits = new HashSet<string>(traits);
-                _traits.UnionWith(extraTraits);
-            }
-            else
-            {
-                _traits = traits;
-            }
+            _traits = traits;
             Group = group;
             Group._testCases.Add(this);
         }

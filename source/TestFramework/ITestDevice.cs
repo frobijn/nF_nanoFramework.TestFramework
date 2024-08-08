@@ -23,23 +23,21 @@ namespace nanoFramework.TestFramework
         string Platform();
 
         /// <summary>
-        /// Get the content of a file that is stored on the device.
+        /// Get the content of a file that is stored on the device
+        /// as an array of bytes.
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
         /// or if the device does not support file storage.</returns>
-        byte[] GetStorageFileContent(string filePath);
+        byte[] GetStorageFileContentAsBytes(string filePath);
 
-#if !REFERENCED_IN_NFUNITMETADATA
         /// <summary>
-        /// Indicates whether this device is a remote device that is different
-        /// from the device the code is running on. If <c>false</c>, the attribute
-        /// investigating the device can only use the information provided via this
-        /// interface to decide whether a test can or should be executed on the device.
-        /// If <c>true</c>, the attribute can also use the capabilities as reported by
-        /// the nanoFramework runtime/firmware.
+        /// Get the content of a file that is stored on the device
+        /// as a string
         /// </summary>
-        bool IsRemoteDevice();
-#endif
+        /// <param name="filePath"></param>
+        /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
+        /// or if the device does not support file storage.</returns>
+        string GetStorageFileContentAsString(string filePath);
     }
 }

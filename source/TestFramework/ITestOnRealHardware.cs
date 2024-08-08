@@ -65,13 +65,18 @@ namespace nanoFramework.TestFramework
         bool ShouldTestOnDevice(ITestDevice testDevice);
 
         /// <summary>
-        /// Indicates whether the test should be executed on every available devices for which
-        /// <see cref="ShouldTestOnDevice(ITestDevice)"/> of this attribute returns <c>true</c>. If the property
-        /// is <c>false</c>, the test is executed only on the first of those devices.
+        /// Indicates whether two test devices are considered similar enough that the
+        /// test should be executed only on one of both devices.
         /// </summary>
-        bool TestOnAllDevices
-        {
-            get;
-        }
+        /// <param name="testDevice1">First device.</param>
+        /// <param name="testDevice2">Second device.</param>
+        /// <returns>Returns <c>true</c> if it is sufficient to execute the test
+        /// on one of the devices. Returns <c>false</c> if the devices are sufficiently
+        /// different that the test should be executed on both devices.</returns>
+        /// <remarks>
+        /// For each of the devices <see cref="ShouldTestOnDevice"/> has been called and
+        /// has returned <c>true</c>.
+        /// </remarks>
+        bool AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2);
     }
 }

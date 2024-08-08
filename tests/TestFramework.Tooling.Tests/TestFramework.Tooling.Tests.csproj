@@ -107,6 +107,18 @@
       <Project>{D10594AF-5494-4A91-8456-D7CDC4CA0459}</Project>
       <Name>nanoFramework.TestFramework.Tooling</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestFramework.Tooling.Tests.Discovery.v2\TestFramework.Tooling.Tests.Discovery.v2.nfproj">
+      <Project>{d3285fb9-f3d3-4396-b837-852450ed9640}</Project>
+      <Name>TestFramework.Tooling.Tests.Discovery.v2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestFramework.Tooling.Tests.Discovery.v3\TestFramework.Tooling.Tests.Discovery.v3.nfproj">
+      <Project>{7088d760-fce7-4cdf-bccc-e87c44082f26}</Project>
+      <Name>TestFramework.Tooling.Tests.Discovery.v3</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestFramework.Tooling.Tests.Execution.v3\TestFramework.Tooling.Tests.Execution.v3.nfproj">
+      <Project>{c2fe1cfd-3fb9-48f4-b832-a8ae79920ab7}</Project>
+      <Name>TestFramework.Tooling.Tests.Execution.v3</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

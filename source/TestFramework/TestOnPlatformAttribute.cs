@@ -8,15 +8,15 @@ namespace nanoFramework.TestFramework
     /// <summary>
     /// Mark a test, all methods of a test class or all tests in a assembly as intended to be executed
     /// on real hardware based on the specified platform. For each platform a separate test case is created, and the
-    /// test case is selectable via its trait. The test will be executed on at least one the available devices
-    /// that are based on the specified platform.
+    /// test case is selectable via its trait. The test will be executed on the available devices
+    /// that are based on the specified platform. If the available devices have a different CLR firmware (target)
+    /// installed, the test is executed for each target on one of the devices with that firmware.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
     public sealed class TestOnPlatformAttribute : Attribute, ITestOnRealHardware
     {
         #region Fields
         private readonly string _platform;
-        private readonly bool _runOnEveryDevice;
         #endregion
 
         #region Construction
@@ -24,12 +24,9 @@ namespace nanoFramework.TestFramework
         /// Inform the test runner that the test should be executed on real hardware based on the specified platform.
         /// </summary>
         /// <param name="platform">Platform the test should be executed on.</param>
-        /// <param name="runOnEveryDevice">Indicates whether to run the test on every available device based on the <paramref name="platform"/>,
-        /// rather than just one of the devices.</param>
-        public TestOnPlatformAttribute(string platform, bool runOnEveryDevice)
+        public TestOnPlatformAttribute(string platform)
         {
             _platform = platform;
-            _runOnEveryDevice = runOnEveryDevice;
         }
         #endregion
 
@@ -40,8 +37,8 @@ namespace nanoFramework.TestFramework
         bool ITestOnRealHardware.ShouldTestOnDevice(ITestDevice testDevice)
             => testDevice.Platform() == _platform;
 
-        bool ITestOnRealHardware.TestOnAllDevices
-            => _runOnEveryDevice;
+        bool ITestOnRealHardware.AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2)
+            => testDevice1.TargetName() == testDevice2.TargetName();
         #endregion
     }
 }

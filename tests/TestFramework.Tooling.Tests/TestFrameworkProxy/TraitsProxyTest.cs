@@ -10,13 +10,13 @@ using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
 using nfTest = nanoFramework.TestFramework;
 
-[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TraitsProxyTest.TraitsMock("This is not correct!")]
+[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TraitsProxyTest.TraitsMock("In assembly")]
 
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
 
     [TestClass]
-    [TraitsMock("This is not correct!")]
+    [TraitsMock("In test class")]
     public sealed class TraitsProxyTest
     {
         [TestMethod]
@@ -75,32 +75,62 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         [TestMethod]
         [TestCategory("nF test attributes")]
-        public void TraitsProxyErrorForAssembly()
+        public void TraitsProxyCreatedForAssembly()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
-                new object[] { LoggingLevel.Error },
+                new object[] { },
                 (from msg in logger.Messages
                  where msg.message.Contains(nameof(nfTest.ITraits))
                  select msg.level).ToList()
             );
-            Assert.AreEqual(0, actual?.OfType<TraitsProxy>().Count() ?? -1);
+
+            TraitsProxy proxy = actual.OfType<TraitsProxy>()
+                              .FirstOrDefault();
+            Assert.IsNotNull(proxy);
+            CollectionAssert.AreEquivalent(
+                new string[] { "In assembly" },
+                proxy.Traits);
         }
 
         [TestMethod]
         [TestCategory("nF test attributes")]
-        public void TraitsProxyErrorForClass()
+        public void TraitsProxyCreatedForClass()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            CollectionAssert.AreEqual(
-                new object[] { LoggingLevel.Error },
-                (from msg in logger.Messages select msg.level).ToList()
-            );
-            Assert.AreEqual(0, actual?.Count ?? -1);
+            Assert.AreEqual(0, logger.Messages.Count);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
+
+            var proxy = actual[0] as TraitsProxy;
+            CollectionAssert.AreEquivalent(
+                new string[] { "In test class" },
+                proxy.Traits);
+        }
+
+        [TestMethod]
+        [TestCategory("nF test attributes")]
+        public void TraitsProxyCreatedForClassWithSource()
+        {
+            var logger = new LogMessengerMock();
+            ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
+            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
+
+            Assert.AreEqual(0, logger.Messages.Count);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
+
+            var proxy = actual[0] as TraitsProxy;
+            CollectionAssert.AreEquivalent(
+                new string[] { "In test class" },
+                proxy.Traits);
+            Assert.AreEqual("TraitsMock", proxy.Source.Name);
         }
 
         #region TraitsMockAttribute

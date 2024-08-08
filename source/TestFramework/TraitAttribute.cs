@@ -6,10 +6,10 @@ using System;
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// Attribute that publishes a characterization of the test.
-    /// The category are listed under 'traits' in the Visual Studio test explorer.
+    /// Attribute that publishes a characterization of the test
+    /// that is listed under 'traits' in the Visual Studio Test Explorer.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
     public sealed class TraitAttribute : Attribute, ITraits
     {
         #region Fields

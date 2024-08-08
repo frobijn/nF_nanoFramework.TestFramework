@@ -15,7 +15,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         {
         }
 
-        [TestOnPlatform("esp32", true)]
+        [TestOnPlatform("esp32")]
         public void MethodWithNewTestMethods()
         {
         }

@@ -64,7 +64,7 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 TestCase testCase = testCases.TestCases[selected.Value];
                 Dictionary<string, TestCasesForDevice> runOnDevice = testCase.ShouldRunOnRealHardware ? _runOnRealHardware : _runOnVirtualDevice;
-                if (!runOnDevice.TryGetValue(testCase.AssemblyFilePath, out var toRun))
+                if (!runOnDevice.TryGetValue(testCase.AssemblyFilePath, out TestCasesForDevice toRun))
                 {
                     runOnDevice[testCase.AssemblyFilePath] = toRun = new TestCasesForDevice(testCase.AssemblyFilePath, testCases.TestMethodsInAssembly(testCase.AssemblyFilePath));
                 }
@@ -111,7 +111,7 @@ namespace nanoFramework.TestFramework.Tooling
         {
             if (_runOnVirtualDevice.Count > 0)
             {
-                var virtualDeviceRunners = _settings.MaxVirtualDevices == 0
+                int virtualDeviceRunners = _settings.MaxVirtualDevices == 0
                     ? Environment.ProcessorCount
                     : _settings.MaxVirtualDevices;
                 if (virtualDeviceRunners > _runOnVirtualDevice.Count)

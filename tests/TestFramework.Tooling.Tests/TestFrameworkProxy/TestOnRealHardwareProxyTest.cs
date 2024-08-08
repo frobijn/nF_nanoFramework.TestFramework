@@ -10,12 +10,12 @@ using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
 using nfTest = nanoFramework.TestFramework;
 
-[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TestOnRealHardwareProxyTest.TestOnPlatformMock("assembly", true)]
+[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TestOnRealHardwareProxyTest.TestOnPlatformMock("assembly")]
 
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
     [TestClass]
-    [TestOnPlatformMock("class", false)]
+    [TestOnPlatformMock("class")]
     public sealed class TestOnRealHardwareProxyTest
     {
         [TestMethod]
@@ -37,7 +37,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                               .FirstOrDefault();
             Assert.IsNotNull(proxy);
             Assert.AreEqual("assembly", proxy.Description);
-            Assert.AreEqual(true, proxy.TestOnAllDevices);
         }
 
         [TestMethod]
@@ -54,7 +53,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             var proxy = actual[0] as TestOnRealHardwareProxy;
             Assert.AreEqual("class", proxy.Description);
-            Assert.AreEqual(false, proxy.TestOnAllDevices);
         }
 
         [TestMethod]
@@ -73,7 +71,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             var proxy = actual[0] as TestOnRealHardwareProxy;
             Assert.AreEqual("class", proxy.Description);
-            Assert.AreEqual(false, proxy.TestOnAllDevices);
             Assert.IsNotNull(proxy.Source);
             Assert.AreEqual("TestOnPlatformMock", proxy.Source.Name);
         }
@@ -81,7 +78,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [TestMethod]
         [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
-        [TestOnPlatformMock("mcu", true)]
+        [TestOnPlatformMock("mcu")]
         public void TestOnRealHardwareProxyCreatedForMethodWithSource()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
@@ -96,19 +93,25 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             var proxy = actual[0] as TestOnRealHardwareProxy;
             Assert.AreEqual("mcu", proxy.Description);
-            Assert.AreEqual(true, proxy.TestOnAllDevices);
             Assert.IsNotNull(proxy.Source);
             Assert.AreEqual("TestOnPlatformMock", proxy.Source.Name);
 
-            var testDevice = new TestDeviceProxy(
-                new TestDeviceMock("-", "mcu")
+            var testDevice1 = new TestDeviceProxy(
+                new TestDeviceMock("target1", "mcu")
             );
-            Assert.IsTrue(proxy.ShouldTestOnDevice(testDevice));
+            Assert.IsTrue(proxy.ShouldTestOnDevice(testDevice1));
+            Assert.IsTrue(proxy.AreDevicesEqual(testDevice1, testDevice1));
 
-            testDevice = new TestDeviceProxy(
+            var testDevice2 = new TestDeviceProxy(
+                new TestDeviceMock("target2", "mcu")
+            );
+            Assert.IsTrue(proxy.ShouldTestOnDevice(testDevice2));
+            Assert.IsFalse(proxy.AreDevicesEqual(testDevice1, testDevice2));
+
+            var testDevice3 = new TestDeviceProxy(
                 new TestDeviceMock("-", "other")
             );
-            Assert.IsFalse(proxy.ShouldTestOnDevice(testDevice));
+            Assert.IsFalse(proxy.ShouldTestOnDevice(testDevice3));
         }
 
         [TestMethod]
@@ -127,23 +130,32 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             var proxy = actual[0] as TestOnRealHardwareProxy;
             Assert.AreEqual("xyzzy", proxy.Description);
-            Assert.AreEqual(false, proxy.TestOnAllDevices);
 
-            var testDevice = new TestDeviceProxy(
+            var testDevice1 = new TestDeviceProxy(
                 new TestDeviceMock("-", "-", new Dictionary<string, string>
                 {
                     {  "xyzzy", "Present!" }
                 })
             );
-            Assert.IsTrue(proxy.ShouldTestOnDevice(testDevice));
+            Assert.IsTrue(proxy.ShouldTestOnDevice(testDevice1));
+            Assert.IsTrue(proxy.AreDevicesEqual(testDevice1, testDevice1));
 
-            testDevice = new TestDeviceProxy(
+            var testDevice2 = new TestDeviceProxy(
                 new TestDeviceMock("-", "-", new Dictionary<string, string>
                 {
-                    {  "not_xyzzy", "Present!" }
+                    {  "xyzzy", "Also present!" }
                 })
             );
-            Assert.IsFalse(proxy.ShouldTestOnDevice(testDevice));
+            Assert.IsTrue(proxy.ShouldTestOnDevice(testDevice1));
+            Assert.IsFalse(proxy.AreDevicesEqual(testDevice1, testDevice2));
+
+            var testDevice3 = new TestDeviceProxy(
+                new TestDeviceMock("-", "-", new Dictionary<string, string>
+                {
+                    {  "not_xyzzy", "Not present!" }
+                })
+            );
+            Assert.IsFalse(proxy.ShouldTestOnDevice(testDevice3));
         }
 
         #region ITestOnRealHardware implementations
@@ -154,38 +166,22 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         internal sealed class TestOnPlatformMockAttribute : Attribute, nfTest.ITestOnRealHardware
         {
             #region Construction
-            public TestOnPlatformMockAttribute(string platform, bool testOnAllDevices)
+            public TestOnPlatformMockAttribute(string platform)
             {
                 _platform = platform;
-                _testOnAllDevices = testOnAllDevices;
             }
             private readonly string _platform;
-            private readonly bool _testOnAllDevices;
             #endregion
 
             #region ITestOnRealHardware implementation
-            /// <summary>
-            /// Get a (short!) description of the devices that are suitable to execute the test on.
-            /// This is added to the name of the test
-            /// </summary>
             string nfTest.ITestOnRealHardware.Description
                 => _platform;
 
-            /// <summary>
-            /// Indicates whether the test should be executed on the device
-            /// </summary>
-            /// <param name="testDevice">Device that is available to execute the test</param>
-            /// <returns>Returns <c>true</c> if the test should be run, <c>false</c> otherwise.</returns>
             bool nfTest.ITestOnRealHardware.ShouldTestOnDevice(nfTest.ITestDevice testDevice)
                 => testDevice.Platform() == _platform;
 
-            /// <summary>
-            /// Indicates whether the test should be executed on every available devices for which
-            /// <see cref="ShouldTestOnDevice(ITestDevice)"/> of this attribute returns <c>true</c>. If the property
-            /// is <c>false</c>, the test is executed only on the first of those devices.
-            /// </summary>
-            bool nfTest.ITestOnRealHardware.TestOnAllDevices
-                => _testOnAllDevices;
+            bool nfTest.ITestOnRealHardware.AreDevicesEqual(nfTest.ITestDevice testDevice1, nfTest.ITestDevice testDevice2)
+                => testDevice1.TargetName() == testDevice2.TargetName();
             #endregion
         }
 
@@ -205,28 +201,14 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             #endregion
 
             #region ITestOnRealHardware implementation
-            /// <summary>
-            /// Get a (short!) description of the devices that are suitable to execute the test on.
-            /// This is added to the name of the test
-            /// </summary>
             string nfTest.ITestOnRealHardware.Description
                 => _fileThatMustExist;
 
-            /// <summary>
-            /// Indicates whether the test should be executed on the device
-            /// </summary>
-            /// <param name="testDevice">Device that is available to execute the test</param>
-            /// <returns>Returns <c>true</c> if the test should be run, <c>false</c> otherwise.</returns>
             bool nfTest.ITestOnRealHardware.ShouldTestOnDevice(nfTest.ITestDevice testDevice)
-                => !(testDevice.GetStorageFileContent(_fileThatMustExist) is null);
+                => !(testDevice.GetStorageFileContentAsBytes(_fileThatMustExist) is null);
 
-            /// <summary>
-            /// Indicates whether the test should be executed on every available devices for which
-            /// <see cref="ShouldTestOnDevice(ITestDevice)"/> of this attribute returns <c>true</c>. If the property
-            /// is <c>false</c>, the test is executed only on the first of those devices.
-            /// </summary>
-            bool nfTest.ITestOnRealHardware.TestOnAllDevices
-                => false;
+            bool nfTest.ITestOnRealHardware.AreDevicesEqual(nfTest.ITestDevice testDevice1, nfTest.ITestDevice testDevice2)
+                => testDevice1.GetStorageFileContentAsString(_fileThatMustExist) == testDevice2.GetStorageFileContentAsString(_fileThatMustExist);
             #endregion
         }
         #endregion
