@@ -17,10 +17,10 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
     [TestClass]
     [DataRowMock(42)] // This is not correct!
+    [TestCategory("nF test attributes")]
     public sealed class DataRowProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [DataRowMock(42)]
         public void DataRowProxyCreated()
         {
@@ -41,7 +41,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         [DataRowMock(42, 'A')]
         [DataRowMock(3.14d, "B")]
@@ -77,7 +76,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void DataRowProxyErrorForAssembly()
         {
             var logger = new LogMessengerMock();
@@ -93,7 +91,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void DataRowProxyErrorForClass()
         {
             var logger = new LogMessengerMock();

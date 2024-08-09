@@ -16,11 +16,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
 
     [TestClass]
+    [TestCategory("nF test attributes")]
     [TestMethodMock(false)] // This is not correct!
     public sealed class TestMethodProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestMethodMock(true)]
         public void TestMethodProxyCreatedForMethod()
         {
@@ -38,7 +38,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         [TestMethodMock(true)]
         public void TestMethodProxyCreatedForMethodWithSource()
@@ -60,7 +59,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestMethodProxyErrorForAssembly()
         {
             var logger = new LogMessengerMock();
@@ -76,7 +74,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestMethodProxyErrorForClass()
         {
             var logger = new LogMessengerMock();

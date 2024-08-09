@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -11,21 +10,17 @@ using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
 
-/*
- * See remark about assembly dependencies in ProjectSourceInventoryTest
- */
-
 namespace TestFramework.Tooling.Tests
 {
     /// <summary>
     /// 
     /// </summary>
     [TestClass]
+    [TestCategory("Test cases")]
     public class TestCaseCollectionTest
     {
         #region TestFramework.Tooling.Tests.Discovery.v2
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_Discovery_v2_VirtualDevice()
         {
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
@@ -48,53 +43,48 @@ Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have
                     ) + '\n'
             );
 
-            // Assert assembly file path
-            Assert.AreEqual(1, actual.AssemblyFilePaths.Count);
-            Assert.AreEqual(assemblyFilePath, actual.AssemblyFilePaths[0]);
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where tc.AssemblyFilePath != assemblyFilePath
-                                select tc).Count());
-
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
-#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
-#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
-#4 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
-#5 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
+$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
+G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
+G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
+G1T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
+G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} {tc.FullyQualifiedName} '{tc.DisplayName}'"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} {tc.FullyQualifiedName} '{tc.DisplayName}'"
                 ) + '\n'
             );
-            Assert.AreEqual(5, actual.TestMethodsInAssembly(assemblyFilePath));
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-#2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-#3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-#4 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
-#5 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
+$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G1T0 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
+G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
                 ) + '\n'
             );
 
             // Assert run information
             Assert.AreEqual(
-$@"#1 RH=False VD=True G=1
-#2 RH=False VD=True G=1
-#3 RH=False VD=True G=1
-#4 RH=False VD=True G=2
-#5 RH=False VD=True G=2
+$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G1T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G1T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} G={tc.Group?.TestGroupIndex}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -108,7 +98,6 @@ $@"#1 RH=False VD=True G=1
         }
 
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_Discovery_v2_VirtualDevice_RealHardware()
         {
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
@@ -131,69 +120,63 @@ Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have
                     ) + '\n'
             );
 
-            // Assert assembly file path
-            Assert.AreEqual(1, actual.AssemblyFilePaths.Count);
-            Assert.AreEqual(assemblyFilePath, actual.AssemblyFilePaths[0]);
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where tc.AssemblyFilePath != assemblyFilePath
-                                select tc).Count());
-
-
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
-#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
-#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
-#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
-#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
-#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
-#4 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
-#4 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
-#5 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
-#5 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
+$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
+G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
+G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
+G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
+G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
+G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
+G1T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
+G1T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
+G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
+G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} {tc.FullyQualifiedName} '{tc.DisplayName}'"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} {tc.FullyQualifiedName} '{tc.DisplayName}'"
                 ) + '\n'
             );
-            Assert.AreEqual(5, actual.TestMethodsInAssembly(assemblyFilePath));
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Real hardware'
-#2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-#2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Real hardware'
-#3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-#3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Real hardware'
-#4 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
-#4 @{pathPrefix}TestWithMethods.cs(9,21) '@Real hardware'
-#5 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
-#5 @{pathPrefix}TestWithMethods.cs(14,21) '@Real hardware'
+$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Real hardware'
+G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Real hardware'
+G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Real hardware'
+G1T0 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
+G1T0 @{pathPrefix}TestWithMethods.cs(9,21) '@Real hardware'
+G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
+G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Real hardware'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
                 ) + '\n'
             );
 
             // Assert run information
             Assert.AreEqual(
-$@"#1 RH=False VD=True G=1
-#1 RH=True VD=False G=1
-#2 RH=False VD=True G=1
-#2 RH=True VD=False G=1
-#3 RH=False VD=True G=1
-#3 RH=True VD=False G=1
-#4 RH=False VD=True G=2
-#4 RH=True VD=False G=2
-#5 RH=False VD=True G=2
-#5 RH=True VD=False G=2
+$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G0T0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D1 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G1T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G1T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G1T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G1T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} G={tc.Group?.TestGroupIndex}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -216,7 +199,6 @@ $@"#1 RH=False VD=True G=1
 
         #region TestFramework.Tooling.Tests.Discovery.v3
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_Discovery_v3()
         {
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v3");
@@ -241,110 +223,105 @@ Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are all
                     ) + '\n'
             );
 
-            // Assert assembly file path
-            Assert.AreEqual(1, actual.AssemblyFilePaths.Count);
-            Assert.AreEqual(assemblyFilePath, actual.AssemblyFilePaths[0]);
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where tc.AssemblyFilePath != assemblyFilePath
-                                select tc).Count());
-
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
-#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
-#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
-#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
-#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
-#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
-#4 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Virtual Device]'
-#4 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Real hardware]'
-#5 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Virtual Device]'
-#5 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Real hardware]'
-#6 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Virtual Device]'
-#6 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Real hardware]'
-#7 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Virtual Device]'
-#7 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Real hardware]'
-#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Virtual Device]'
-#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Real hardware]'
-#9 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
-#9 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
-#10 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
-#10 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
-#11 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Virtual Device]'
-#11 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Real hardware]'
-#12 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Virtual Device]'
-#12 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Real hardware]'
+$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
+G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
+G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
+G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
+G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
+G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
+G1T0 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Virtual Device]'
+G1T0 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Real hardware]'
+G2T0 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Virtual Device]'
+G2T0 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Real hardware]'
+G2T1 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Virtual Device]'
+G2T1 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Real hardware]'
+G4T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Virtual Device]'
+G4T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Real hardware]'
+G4T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Virtual Device]'
+G4T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Real hardware]'
+G5T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
+G5T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
+G5T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
+G5T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
+G6T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Virtual Device]'
+G6T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Real hardware]'
+G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Virtual Device]'
+G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Real hardware]'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} {tc.FullyQualifiedName} '{tc.DisplayName}'"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} {tc.FullyQualifiedName} '{tc.DisplayName}'"
                 ) + '\n'
             );
-            Assert.AreEqual(12, actual.TestMethodsInAssembly(assemblyFilePath));
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@test', '@Real hardware'
-#2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-#2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@test', '@Real hardware'
-#3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-#3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@test', '@Real hardware'
-#4 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
-#4 @{pathPrefix}TestClassVariants.cs(13,28) '@test', '@Real hardware'
-#5 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
-#5 @{pathPrefix}TestClassVariants.cs(33,21) '@test', '@Real hardware'
-#6 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
-#6 @{pathPrefix}TestClassVariants.cs(40,21) '@test', '@Real hardware'
-#7 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
-#7 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@test', '@Real hardware'
-#8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
-#8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@test', '@DeviceWithSomeFile', '@Real hardware'
-#9 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
-#9 @{pathPrefix}TestWithMethods.cs(13,21) '@test', '@Real hardware'
-#10 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
-#10 @{pathPrefix}TestWithMethods.cs(18,21) '@test', '@Real hardware'
-#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
-#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@test', '@Real hardware'
-#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
-#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@test', '@esp32', '@Real hardware'
+$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@test', '@Real hardware'
+G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@test', '@Real hardware'
+G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@test', '@Real hardware'
+G1T0 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
+G1T0 @{pathPrefix}TestClassVariants.cs(13,28) '@test', '@Real hardware'
+G2T0 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
+G2T0 @{pathPrefix}TestClassVariants.cs(33,21) '@test', '@Real hardware'
+G2T1 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
+G2T1 @{pathPrefix}TestClassVariants.cs(40,21) '@test', '@Real hardware'
+G4T0 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
+G4T0 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@test', '@Real hardware'
+G4T1 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
+G4T1 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@test', '@DeviceWithSomeFile', '@Real hardware'
+G5T0 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
+G5T0 @{pathPrefix}TestWithMethods.cs(13,21) '@test', '@Real hardware'
+G5T1 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
+G5T1 @{pathPrefix}TestWithMethods.cs(18,21) '@test', '@Real hardware'
+G6T0 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
+G6T0 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@test', '@Real hardware'
+G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
+G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@test', '@esp32', '@Real hardware'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
                 ) + '\n'
             );
 
             // Assert run information
             Assert.AreEqual(
-$@"#1 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-#1 RH=True VD=False G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-#2 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-#2 RH=True VD=False G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-#3 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-#3 RH=True VD=False G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-#4 RH=False VD=True G=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
-#4 RH=True VD=False G=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
-#5 RH=False VD=True G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
-#5 RH=True VD=False G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
-#6 RH=False VD=True G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
-#6 RH=True VD=False G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
-#7 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-#7 RH=True VD=False G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-#8 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-#8 RH=True VD=False G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-#9 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-#9 RH=True VD=False G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-#10 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-#10 RH=True VD=False G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-#11 RH=False VD=True G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
-#11 RH=True VD=False G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
-#12 RH=False VD=True G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
-#12 RH=True VD=False G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
+$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G0T0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D1 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G1T0 RH=False VD=True GS=1 GC=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
+G1T0 RH=True VD=False GS=1 GC=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
+G2T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
+G2T0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
+G2T1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
+G2T1 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
+G4T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
+G4T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
+G4T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+G4T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+G5T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G5T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G5T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G5T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G6T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G6T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G6T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
+G6T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} G={tc.Group?.TestGroupIndex} FQN={tc.FullyQualifiedName}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -365,7 +342,6 @@ $@"#1 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCur
         }
 
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_Discovery_v3_NoRealHardware()
         {
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v3");
@@ -390,74 +366,69 @@ Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are all
                     ) + '\n'
             );
 
-            // Assert assembly file path
-            Assert.AreEqual(1, actual.AssemblyFilePaths.Count);
-            Assert.AreEqual(assemblyFilePath, actual.AssemblyFilePaths[0]);
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where tc.AssemblyFilePath != assemblyFilePath
-                                select tc).Count());
-
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"#1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
-#2 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
-#3 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
-#4 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method'
-#5 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1'
-#6 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2'
-#7 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray'
-#8 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile'
-#9 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
-#10 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
-#11 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits'
-#12 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods'
+$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
+G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
+G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
+G1T0 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method'
+G2T0 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1'
+G2T1 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2'
+G4T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray'
+G4T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile'
+G5T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
+G5T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
+G6T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits'
+G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} {tc.FullyQualifiedName} '{tc.DisplayName}'"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} {tc.FullyQualifiedName} '{tc.DisplayName}'"
                 ) + '\n'
             );
-            Assert.AreEqual(12, actual.TestMethodsInAssembly(assemblyFilePath));
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"#1 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-#2 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-#3 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-#4 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
-#5 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
-#6 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
-#7 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
-#8 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
-#9 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
-#10 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
-#11 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
-#12 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
+$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G1T0 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
+G2T0 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
+G2T1 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
+G4T0 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
+G4T1 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
+G5T0 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
+G5T1 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
+G6T0 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
+G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")}"
                 ) + '\n'
             );
 
             // Assert run information
             Assert.AreEqual(
-$@"#1 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-#2 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-#3 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-#4 RH=False VD=True G=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
-#5 RH=False VD=True G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
-#6 RH=False VD=True G=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
-#7 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-#8 RH=False VD=True G=5 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-#9 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-#10 RH=False VD=True G=6 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-#11 RH=False VD=True G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
-#12 RH=False VD=True G=7 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
+$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G1T0 RH=False VD=True GS=1 GC=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
+G2T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
+G2T1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
+G4T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
+G4T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+G5T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G5T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G6T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G6T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} G={tc.Group?.TestGroupIndex} FQN={tc.FullyQualifiedName}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -473,7 +444,6 @@ $@"#1 RH=False VD=True G=1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCur
 
         #region Multiple assemblies, no source, no logger
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_Multiple_Assemblies()
         {
             string projectFilePath1 = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
@@ -509,24 +479,30 @@ Verbose: Project file for assembly '{assemblyFilePath3}' not found
                     ) + '\n'
             );
 
-            // Assert that only the NFUnitTests assemblies are included
+            // Check only the number of test cases
             Assert.AreEqual(
-$@"{assemblyFilePath1}
-{assemblyFilePath2}
+$@"{assemblyFilePath1} #5
+{assemblyFilePath2} #12
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
-                        actual.AssemblyFilePaths
+                        from sel in actual.TestOnVirtualDevice
+                        orderby sel.AssemblyFilePath
+                        select $"{sel.AssemblyFilePath} #{sel.TestCases.Count}"
                     ) + '\n'
             );
-
-            // Test methods
-            Assert.AreEqual(5, actual.TestMethodsInAssembly(assemblyFilePath1));
-            Assert.AreEqual(12, actual.TestMethodsInAssembly(assemblyFilePath2));
-            Assert.AreEqual(0, actual.TestMethodsInAssembly(assemblyFilePath3));
+            Assert.AreEqual(
+            $@"{assemblyFilePath1} #5
+{assemblyFilePath2} #12
+".Replace("\r\n", "\n"),
+                            string.Join("\n",
+                                    from sel in actual.TestOnRealHardware
+                                    orderby sel.AssemblyFilePath
+                                    select $"{sel.AssemblyFilePath} #{sel.TestCases.Count}"
+                                ) + '\n'
+                        );
         }
 
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_Multiple_Assemblies_NoLogger()
         {
             string projectFilePath1 = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
@@ -546,11 +522,10 @@ $@"{assemblyFilePath1}
                                                 true,
                                                 null);
             Assert.IsNotNull(actual.TestCases);
-            Assert.AreEqual(withLogger.TestCases.Count, actual.TestCases.Count);
+            Assert.AreEqual(withLogger.TestCases.Count(), actual.TestCases.Count());
         }
 
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_Multiple_Assemblies_NoSourceCode()
         {
             string projectFilePath1 = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
@@ -573,13 +548,12 @@ $@"{assemblyFilePath1}
                                                 true,
                                                 logger);
             Assert.IsNotNull(actual.TestCases);
-            Assert.AreEqual(withLogger.TestCases.Count, actual.TestCases.Count);
+            Assert.AreEqual(withLogger.TestCases.Count(), actual.TestCases.Count());
         }
         #endregion
 
         #region Selection
         [TestMethod]
-        [TestCategory("Test cases")]
         [DataRow(true, true)]
         [DataRow(true, false)]
         [DataRow(false, true)]
@@ -596,7 +570,7 @@ $@"{assemblyFilePath1}
                                                   (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
                                                   originalAllowHardware,
                                                   logger);
-            if (original.TestCases.Count == 0)
+            if (original.TestCases.Count() == 0)
             {
                 Assert.Inconclusive("Original collection of test cases could not be constructed");
             }
@@ -606,12 +580,13 @@ $@"{assemblyFilePath1}
                                             ) + '\n';
 
             // Select all test cases
+            var selectionSpecification = (from tc in original.TestCases
+                                          orderby tc.AssemblyFilePath, tc.ShouldRunOnVirtualDevice ? 0 : 1, -tc.TestIndex
+                                          select (tc.AssemblyFilePath, tc.DisplayName, tc.FullyQualifiedName)).ToList();
             logger = new LogMessengerMock();
-            var actual = new TestCaseCollection(from tc in original.TestCases.Reverse()
-                                                select (tc.AssemblyFilePath, tc.DisplayName, tc.FullyQualifiedName),
+            var actual = new TestCaseCollection(selectionSpecification,
                                                 (f) => ProjectSourceInventory.FindProjectFilePath(f, logger),
                                                 selectionAllowHardware,
-                                                out Dictionary<int, int> testCaseIndex,
                                                 logger);
 
             // Assert that there are no selection-related messages
@@ -628,27 +603,53 @@ $@"{assemblyFilePath1}
                 string.Join("\n",
                     from tc in original.TestCases
                     where tc.ShouldRunOnVirtualDevice || (originalAllowHardware && selectionAllowHardware && tc.ShouldRunOnRealHardware)
-                    select $"#{tc.TestIndex} ({tc.FullyQualifiedName}) {s_stripDevice.Replace(tc.DisplayName, "")} VD={tc.ShouldRunOnVirtualDevice} RH={tc.ShouldRunOnRealHardware}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} ({tc.FullyQualifiedName}) {s_stripDevice.Replace(tc.DisplayName, "")} VD={tc.ShouldRunOnVirtualDevice} RH={tc.ShouldRunOnRealHardware}"
                 ) + '\n',
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} ({tc.FullyQualifiedName}) {s_stripDevice.Replace(tc.DisplayName, "")} VD={tc.ShouldRunOnVirtualDevice} RH={tc.ShouldRunOnRealHardware}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} ({tc.FullyQualifiedName}) {s_stripDevice.Replace(tc.DisplayName, "")} VD={tc.ShouldRunOnVirtualDevice} RH={tc.ShouldRunOnRealHardware}"
                 ) + '\n'
             );
 
-            // Assert the testCaseIndex
-            if (originalAllowHardware == selectionAllowHardware)
+            // Assert the selection index
+            foreach (TestCaseSelection selection in actual.TestOnVirtualDevice)
             {
-                foreach (KeyValuePair<int, int> index in testCaseIndex)
+                foreach ((int selectionIndex, TestCase testCase) in selection.TestCases)
                 {
-                    Assert.AreEqual(original.TestCases.Count - 1 - index.Key, index.Value);
+                    Assert.IsTrue(selectionIndex >= 0);
+                    (string AssemblyFilePath, string DisplayName, string FullyQualifiedName) = selectionSpecification[selectionIndex];
+
+                    Assert.AreEqual(testCase.AssemblyFilePath, AssemblyFilePath);
+                    Assert.AreEqual(testCase.FullyQualifiedName, FullyQualifiedName);
+
+                    int idx = testCase.DisplayName.IndexOf('[');
+                    string displayBaseName = idx < 0 ? testCase.DisplayName : testCase.DisplayName.Substring(0, idx).Trim();
+                    string deviceName = $"{displayBaseName} [Virtual Device]";
+                    Assert.IsTrue(DisplayName == displayBaseName || DisplayName == deviceName);
+                }
+            }
+            foreach (TestCaseSelection selection in actual.TestOnRealHardware)
+            {
+                foreach ((int selectionIndex, TestCase testCase) in selection.TestCases)
+                {
+                    Assert.IsTrue(selectionIndex >= 0);
+                    (string AssemblyFilePath, string DisplayName, string FullyQualifiedName) = selectionSpecification[selectionIndex];
+
+                    Assert.AreEqual(testCase.AssemblyFilePath, AssemblyFilePath);
+                    Assert.AreEqual(testCase.FullyQualifiedName, FullyQualifiedName);
+
+                    int idx = testCase.DisplayName.IndexOf('[');
+                    string displayBaseName = idx < 0 ? testCase.DisplayName : testCase.DisplayName.Substring(0, idx).Trim();
+                    string deviceName = $"{displayBaseName} [Real hardware]";
+                    Assert.IsTrue(DisplayName == displayBaseName || DisplayName == deviceName);
                 }
             }
         }
         private static readonly Regex s_stripDevice = new Regex(@"\s\[[^]]+\]", RegexOptions.Compiled);
 
         [TestMethod]
-        [TestCategory("Test cases")]
         public void TestCases_NFUnitTests_SelectAFewAndNonExisting()
         {
             string projectFilePath1 = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
@@ -662,7 +663,7 @@ $@"{assemblyFilePath1}
                                                   (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
                                                   true,
                                                   logger);
-            if (original.TestCases.Count == 0)
+            if (original.TestCases.Count() == 0)
             {
                 Assert.Inconclusive("Original collection of test cases could not be constructed");
             }
@@ -702,13 +703,14 @@ Verbose: Test case 'Method2 [Real hardware]' (TestFramework.Tooling.Tests.NFUnit
 
             // Assert that the selected test case are present
             Assert.AreEqual(
-@"#2 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [Real hardware]
-#11 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Virtual Device]
-#11 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Real hardware]
+@"G0T1D0 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [Real hardware]
+G6T0 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Virtual Device]
+G6T0 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Real hardware]
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
-                    select $"#{tc.TestIndex} ({tc.FullyQualifiedName}) {tc.DisplayName}"
+                    orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
+                    select $"{tc.TestCaseId} ({tc.FullyQualifiedName}) {tc.DisplayName}"
                 ) + '\n'
             );
         }

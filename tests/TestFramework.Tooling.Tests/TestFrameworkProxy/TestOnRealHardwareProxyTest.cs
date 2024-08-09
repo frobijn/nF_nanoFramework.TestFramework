@@ -15,11 +15,11 @@ using nfTest = nanoFramework.TestFramework;
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
     [TestClass]
+    [TestCategory("nF test attributes")]
     [TestOnPlatformMock("class")]
     public sealed class TestOnRealHardwareProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestOnRealHardwareProxyCreatedForAssembly()
         {
             var logger = new LogMessengerMock();
@@ -40,7 +40,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestOnRealHardwareProxyCreatedForClass()
         {
             var logger = new LogMessengerMock();
@@ -56,7 +55,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         public void TestOnRealHardwareProxyCreatedForClassWithSource()
         {
@@ -76,7 +74,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         [TestOnPlatformMock("mcu")]
         public void TestOnRealHardwareProxyCreatedForMethodWithSource()
@@ -115,7 +112,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestForExistingStorageMock("xyzzy")]
         public void TestOnRealHardwareProxyUsingStorage()
         {

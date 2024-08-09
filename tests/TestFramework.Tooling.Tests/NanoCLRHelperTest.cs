@@ -11,6 +11,7 @@ using TestFramework.Tooling.Tests.Helpers;
 namespace TestFramework.Tooling.Tests
 {
     [TestClass]
+    [TestCategory("Test execution")]
     public sealed class NanoCLRHelperTest
     {
         public TestContext TestContext { get; set; }
@@ -19,7 +20,6 @@ namespace TestFramework.Tooling.Tests
 
 
         [TestMethod]
-        [TestCategory("Test execution")]
         public void NanoCLR_Local_Download()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
@@ -43,7 +43,6 @@ Verbose: Install/update successful. Running Vx
         }
 
         [TestMethod]
-        [TestCategory("Test execution")]
         public void NanoCLR_Local_NotAvailable()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
@@ -66,7 +65,6 @@ $@"Error: *** Failed to locate nanoCLR instance '{nanoCLRFilePath}' ***
         }
 
         [TestMethod]
-        [TestCategory("Test execution")]
         public void NanoCLR_Global_RequiredVersion_Available()
         {
             var logger = new LogMessengerMock();
@@ -90,7 +88,6 @@ Verbose: nanoCLR instance updated to Vx
         }
 
         [TestMethod]
-        [TestCategory("Test execution")]
         public void NanoCLR_Global_Update()
         {
             var logger = new LogMessengerMock();
@@ -113,7 +110,6 @@ Verbose: No need to update. Running Vx
         }
 
         [TestMethod]
-        [TestCategory("Test execution")]
         public void NanoCLR_Global_NoUpdate()
         {
             var logger = new LogMessengerMock();

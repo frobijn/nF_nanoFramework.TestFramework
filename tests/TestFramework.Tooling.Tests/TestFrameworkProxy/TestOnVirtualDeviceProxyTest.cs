@@ -15,11 +15,11 @@ using nfTest = nanoFramework.TestFramework;
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
     [TestClass]
+    [TestCategory("nF test attributes")]
     [TestOnVirtualDeviceMock]
     public sealed class TestOnVirtualDeviceProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestOnVirtualDeviceProxyCreatedForAssembly()
         {
             var logger = new LogMessengerMock();
@@ -39,7 +39,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestOnVirtualDeviceProxyCreatedForClass()
         {
             LogMessengerMock logger = new LogMessengerMock();
@@ -52,7 +51,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         public void TestOnVirtualDeviceProxyCreatedForClassWithSource()
         {
@@ -70,7 +68,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestOnVirtualDeviceMock]
         public void TestOnVirtualDeviceCreatedForMethod()
         {
@@ -85,7 +82,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         [TestOnVirtualDeviceMock]
         public void TestOnVirtualDeviceProxyCreatedForMethodWithSource()

@@ -20,10 +20,9 @@ namespace nanoFramework.TestFramework.Tooling
     {
         #region Fields
         private static readonly HashSet<string> s_assemblyLocations = new HashSet<string>();
-        private readonly List<string> _assemblyFilePaths = new List<string>();
-        private readonly Dictionary<string, int> _assemblyTestMethods = new Dictionary<string, int>();
-        private readonly List<TestCase> _testCases = new List<TestCase>();
         private static readonly string s_realHardwareDescription = (new TestOnRealHardwareAttribute() as ITestOnRealHardware).Description;
+        private readonly List<TestCaseSelection> _testsOnVirtualDevice = new List<TestCaseSelection>();
+        private readonly List<TestCaseSelection> _testsOnRealHardware = new List<TestCaseSelection>();
         #endregion
 
         #region Construction
@@ -60,7 +59,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <returns>A description of the tests in the assemblies, or <c>null</c> if the assembly does not contain tests.</returns>
         public TestCaseCollection(IEnumerable<string> testAssemblyFilePaths, Func<string, string> getProjectFilePath, bool allowTestOnRealHardware, LogMessenger logger)
         {
-            foreach (string assemblyFilePath in from a in testAssemblyFilePaths // Sort the assemblies to make the order of test cases predictable
+            foreach (string assemblyFilePath in from a in testAssemblyFilePaths // Sort the paths to make the messages predictable
                                                 orderby a
                                                 select a)
             {
@@ -84,14 +83,7 @@ namespace nanoFramework.TestFramework.Tooling
                 Assembly test = Assembly.LoadFile(assemblyFilePath);
                 AppDomain.CurrentDomain.Load(test.GetName());
 
-                AddTestClasses(assemblyFilePath, test, sourceCode, allowTestOnRealHardware, out int numTestMethods, logger);
-
-                if (numTestMethods > 0)
-                {
-                    // This assembly has test cases
-                    _assemblyFilePaths.Add(assemblyFilePath);
-                    _assemblyTestMethods[assemblyFilePath] = numTestMethods;
-                }
+                AddTestClasses(assemblyFilePath, test, sourceCode, allowTestOnRealHardware, logger);
             }
         }
 
@@ -113,54 +105,6 @@ namespace nanoFramework.TestFramework.Tooling
             Func<string, string> getProjectFilePath,
             bool allowTestOnRealHardware,
             LogMessenger logger)
-            : this(testCaseSelection, getProjectFilePath, allowTestOnRealHardware, false, out Dictionary<int, int> testCaseForSelection, logger)
-        {
-        }
-
-        /// <summary>
-        /// Get a selection of test cases from one or more assemblies
-        /// </summary>
-        /// <param name="testCaseSelection">Enumeration of the selected test cases. The display name and fully qualified name of the test case
-        /// must match the <see cref="TestCase.DisplayName"/> and <see cref="TestCase.FullyQualifiedName"/> of the previously collected test cases.</param>
-        /// <param name="getProjectFilePath">Method that provides the path of the project file that produced the assembly. If <c>null</c>
-        /// is passed for this argument or <c>null</c> is returned from the function, the <see cref="TestCase"/>s from that assembly do not provide
-        /// the locations of tests in the source code. See also <see cref="ProjectSourceInventory.FindProjectFilePath"/>.</param>
-        /// <param name="allowTestOnRealHardware">Indicates whether a test case for which no information is available on what device it should be run,
-        /// is allowed to be executed on real hardware. The value of the parameter may be different from the value used to collect the
-        /// test cases previously.</param>
-        /// <param name="testCaseForSelection">The index of the test case in <see cref="TestCases"/> (value) for
-        /// each test case in <paramref name="testCaseSelection"/> (index is the key) that has been found.</param>
-        /// <param name="logger">Method to pass information about the discovery process to the caller.</param>
-        public TestCaseCollection(
-            IEnumerable<(string testAssemblyPath, string testCaseDisplayName, string testCaseFullyQualifiedName)> testCaseSelection,
-            Func<string, string> getProjectFilePath,
-            bool allowTestOnRealHardware,
-            out Dictionary<int, int> testCaseForSelection,
-            LogMessenger logger)
-            : this(testCaseSelection, getProjectFilePath, allowTestOnRealHardware, true, out testCaseForSelection, logger)
-        {
-        }
-
-        /// <summary>
-        /// Get a selection of test cases from one or more assemblies
-        /// </summary>
-        /// <param name="testCaseSelection">Enumeration of the selected test cases. The display name and fully qualified name of the test case
-        /// must match the <see cref="TestCase.DisplayName"/> and <see cref="TestCase.FullyQualifiedName"/> of the previously collected test cases.</param>
-        /// <param name="getProjectFilePath">Method that provides the path of the project file that produced the assembly. If <c>null</c>
-        /// is passed for this argument or <c>null</c> is returned from the function, the <see cref="TestCase"/>s from that assembly do not provide
-        /// the locations of tests in the source code. See also <see cref="ProjectSourceInventory.FindProjectFilePath"/>.</param>
-        /// <param name="allowTestOnRealHardware">Indicates whether a test case for which no information is available on what device it should be run,
-        /// is allowed to be executed on real hardware. The value of the parameter may be different from the value used to collect the
-        /// test cases previously.</param>
-        /// <param name="testCaseForSelection">The index of the test case in <see cref="TestCases"/> (value) for
-        /// each test case in <paramref name="testCaseSelection"/> (index is the key) that has been found.</param>
-        /// <param name="logger">Method to pass information about the discovery process to the caller.</param>
-        private TestCaseCollection(
-                IEnumerable<(string testAssemblyPath, string testCaseDisplayName, string testCaseFullyQualifiedName)> testCaseSelection,
-                Func<string, string> getProjectFilePath,
-                bool allowTestOnRealHardware,
-                bool createTestCaseForSelection, out Dictionary<int, int> testCaseForSelection,
-                LogMessenger logger)
             : this(
                   new HashSet<string>(from tc in testCaseSelection
                                       select tc.testAssemblyPath),
@@ -168,14 +112,29 @@ namespace nanoFramework.TestFramework.Tooling
                   allowTestOnRealHardware,
                   logger)
         {
-            var selected = new HashSet<int>();
-            testCaseForSelection = createTestCaseForSelection ? new Dictionary<int, int>() : null;
-
             int selectionIndex = 0;
+            string currentAssemblyPath = null;
+            TestCaseSelection testsOnVirtualDevice = null;
+            TestCaseSelection testsOnRealHardware = null;
             foreach ((string testAssemblyPath, string testCaseDisplayName, string testCaseFullyQualifiedName) in testCaseSelection)
             {
+                if (testAssemblyPath != currentAssemblyPath)
+                {
+                    currentAssemblyPath = testAssemblyPath;
+                    testsOnVirtualDevice = (from tc in _testsOnVirtualDevice
+                                            where tc.AssemblyFilePath == testAssemblyPath
+                                            select tc).FirstOrDefault();
+                    testsOnRealHardware = (from tc in _testsOnRealHardware
+                                           where tc.AssemblyFilePath == testAssemblyPath
+                                           select tc).FirstOrDefault();
+                }
+
+                bool testCaseFound = false;
+                bool testCaseNotSelected = false;
+
                 string displayBaseName;
                 string displayNameForVirtualDevice = null;
+                string displayNameForRealHardware = null;
                 if (testCaseDisplayName.EndsWith("]"))
                 {
                     displayBaseName = testCaseDisplayName.Substring(0, testCaseDisplayName.IndexOf('[')).Trim();
@@ -187,17 +146,25 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         displayNameForVirtualDevice = $"{displayBaseName} [{VIRTUALDEVICE}]";
                     }
+                    else
+                    {
+                        displayNameForRealHardware = $"{displayBaseName} [{s_realHardwareDescription}]";
+                    }
                 }
+                bool mustBeForVirtualDevice = testCaseDisplayName == displayNameForVirtualDevice;
+                bool mustBeForRealHardware = testCaseDisplayName == displayNameForRealHardware;
 
-                bool testCaseFound = false;
-                for (int i = 0; i < _testCases.Count; i++)
+                if (!(testsOnVirtualDevice is null))
                 {
-                    TestCase testCase = _testCases[i];
-                    if (testCase.AssemblyFilePath == testAssemblyPath
-                        && testCase.FullyQualifiedName == testCaseFullyQualifiedName
-                        && (
+                    for (int i = 0; i < testsOnVirtualDevice.TestCases.Count; i++)
+                    {
+                        (int selIndex, TestCase testCase) = testsOnVirtualDevice.TestCases[i];
+                        if (testCase.FullyQualifiedName == testCaseFullyQualifiedName)
+                        {
+                            if (
                                 testCase.DisplayName == testCaseDisplayName // test cases then and now created
-                                                                            // with the same allowTestOnRealHardware
+                                                                            // with the same allowTestOnRealHardware,
+                                                                            // or test can only run on the virtual device
                                 ||
                                 (
                                     allowTestOnRealHardware // now the test may have a device name,
@@ -208,73 +175,137 @@ namespace nanoFramework.TestFramework.Tooling
                                 (
                                     !allowTestOnRealHardware // now the name does not include the device name,
                                                              // but then it did when created with allowTestOnRealHardware=true
+                                    && !mustBeForRealHardware // It is not the real hardware test case
                                     && testCase.DisplayName == displayBaseName
                                 )
                             )
-                        )
-                    {
-                        selected.Add(i);
-                        if (createTestCaseForSelection)
-                        {
-                            testCaseForSelection[selectionIndex] = i;
+                            {
+                                if (selIndex < 0) // if selIndex >= 0, the test case was already found, Ignore this one
+                                {
+                                    testsOnVirtualDevice._testCases[i] = (selectionIndex, testCase);
+                                }
+                                testCaseFound = true;
+                                break;
+                            }
+                            else if (
+                                    !allowTestOnRealHardware // now the name does not include the device name,
+                                                             // but then it did when created with allowTestOnRealHardware=true
+                                    && mustBeForRealHardware // It is the real hardware test case
+                                    && testCase.DisplayName == displayBaseName
+                                )
+                            {
+                                testCaseNotSelected = true;
+                                break;
+                            }
                         }
-                        testCaseFound = true;
-                        break;
+                    }
+                }
+                if (!(testCaseFound || testCaseNotSelected)
+                    && !(testsOnRealHardware is null))
+                {
+                    // allowTestOnRealHardware must be true
+
+                    for (int i = 0; i < testsOnRealHardware.TestCases.Count; i++)
+                    {
+                        (int selIndex, TestCase testCase) = testsOnRealHardware.TestCases[i];
+                        if (testCase.FullyQualifiedName == testCaseFullyQualifiedName)
+                        {
+                            if (
+                                testCase.DisplayName == testCaseDisplayName // test cases then and now created
+                                                                            // with the same allowTestOnRealHardware = true,
+                                                                            // or test can only run on real hardware
+                            )
+                            {
+                                if (selIndex < 0) // if selIndex >= 0, the test case was already found, ignore this one
+                                {
+                                    testsOnRealHardware._testCases[i] = (selectionIndex, testCase);
+                                }
+                                testCaseFound = true;
+                                break;
+                            }
+                            else if (
+                                testCase.DisplayName == displayBaseName // the selection was created with allowTestOnRealHardware = false,
+                                                                        // so this must be the virtual device test case
+                                )
+                            {
+                                testCaseNotSelected = true;
+                                break;
+                            }
+                        }
                     }
                 }
 
-                if (!testCaseFound)
+                if (!testCaseFound && !testCaseNotSelected)
                 {
                     logger?.Invoke(LoggingLevel.Verbose, $"Test case '{testCaseDisplayName}' ({testCaseFullyQualifiedName}) from '{testAssemblyPath}' is no longer available");
                 }
                 selectionIndex++;
             }
 
-            if (selected.Count < _testCases.Count)
+            foreach (TestCaseSelection selection in _testsOnVirtualDevice)
             {
-                // Keep the same order for the selected tests as discovered in the assemblies
-                var testCases = new List<TestCase>();
-                for (int i = 0; i < _testCases.Count; i++)
+
+            }
+
+            static List<TestCaseSelection> KeepSelectionOnly(List<TestCaseSelection> all)
+            {
+                List<TestCaseSelection> result = new List<TestCaseSelection>();
+                foreach (TestCaseSelection selection in all)
                 {
-                    if (selected.Contains(i))
+                    selection._testCases = (from tc in selection._testCases
+                                            where tc.selectionIndex >= 0
+                                            select tc).ToList();
+                    if (selection._testCases.Count > 0)
                     {
-                        testCases.Add(_testCases[i]);
+                        result.Add(selection);
                     }
                 }
-                _testCases = testCases;
+                return result;
             }
+            _testsOnRealHardware = KeepSelectionOnly(_testsOnRealHardware);
+            _testsOnVirtualDevice = KeepSelectionOnly(_testsOnVirtualDevice);
         }
         #endregion
 
         #region Properties
         /// <summary>
-        /// Get the file paths of the assemblies for which test cases have been found.
+        /// Get the tests per assembly to be run on the virtual device
         /// </summary>
-        public IReadOnlyList<string> AssemblyFilePaths
-            => _assemblyFilePaths;
+        public IReadOnlyList<TestCaseSelection> TestOnVirtualDevice
+            => _testsOnVirtualDevice;
 
         /// <summary>
-        /// Get the total number of test methods in the assembly. Not all test methods
-        /// may result in a test case, and some test methods result in multiple test cases.
+        /// Get the tests per assembly to be run on real hardware
         /// </summary>
-        /// <param name="assemblyFilePath">One of the <see cref="AssemblyFilePaths"/>.</param>
-        /// <returns></returns>
-        public int TestMethodsInAssembly(string assemblyFilePath)
+        public IReadOnlyList<TestCaseSelection> TestOnRealHardware
+            => _testsOnRealHardware;
+
+        /// <summary>
+        /// Get all test cases in the collection.
+        /// </summary>
+        public IEnumerable<TestCase> TestCases
         {
-            _assemblyTestMethods.TryGetValue(assemblyFilePath, out int result);
-            return result;
+            get
+            {
+                foreach (TestCaseSelection selection in _testsOnVirtualDevice)
+                {
+                    foreach ((int _, TestCase testCase) in selection._testCases)
+                    {
+                        yield return testCase;
+                    }
+                }
+                foreach (TestCaseSelection selection in _testsOnRealHardware)
+                {
+                    foreach ((int _, TestCase testCase) in selection._testCases)
+                    {
+                        yield return testCase;
+                    }
+                }
+            }
         }
-
-        /// <summary>
-        /// Get all test cases in the collection. The test cases are sorted by assembly
-        /// first (same order as <see cref="AssemblyFilePaths"/>), then by the order in
-        /// which they are discovered in the assembly.
-        /// </summary>
-        public IReadOnlyList<TestCase> TestCases
-            => _testCases;
         #endregion
 
-        #region Helpers for test case discovery
+        #region Helpers for assembly loading
         private static Assembly AssemblyResolve(object sender, ResolveEventArgs args)
         {
             string dllName = args.Name.Split(new[] { ',' })[0] + ".dll";
@@ -326,11 +357,18 @@ namespace nanoFramework.TestFramework.Tooling
             }
             return null;
         }
+        #endregion
 
-        private void AddTestClasses(string assemblyFilePath, Assembly assembly, ProjectSourceInventory sourceCode, bool allowTestOnRealHardware, out int testCaseIndex, LogMessenger logger)
+        #region Helpers for test case discovery
+        /// <summary>
+        /// Description of the test cases per assembly and per device type
+        /// (Virtual Device or real hardware)
+        /// </summary>
+        private void AddTestClasses(string assemblyFilePath, Assembly assembly, ProjectSourceInventory sourceCode, bool allowTestOnRealHardware, LogMessenger logger)
         {
-            testCaseIndex = 0;
-            int testGroupIndex = 0;
+            var testsOnVirtualDevice = new TestCaseSelection(assemblyFilePath);
+            var testsOnRealHardware = new TestCaseSelection(assemblyFilePath);
+
             var framework = new TestFrameworkImplementation();
 
             // Default for all tests
@@ -349,9 +387,10 @@ namespace nanoFramework.TestFramework.Tooling
             // Find the test classes
             foreach (
                 (
+                    int testGroupIndex,
                     Type classType,
                     ProjectSourceInventory.ClassDeclaration classSourceLocation,
-                    Func<IEnumerable<(MethodInfo method, ProjectSourceInventory.MethodDeclaration sourceLocation)>> enumerateMethods
+                    Func<IEnumerable<(int methodIndex, MethodInfo method, ProjectSourceInventory.MethodDeclaration sourceLocation)>> enumerateMethods
                 )
                 in ProjectSourceInventory.EnumerateNonAbstractClasses(assembly, sourceCode))
             {
@@ -376,14 +415,14 @@ namespace nanoFramework.TestFramework.Tooling
                     ? TestOnRealHardwareProxy.Collect(testAllOnRealHardware, classAttributes.OfType<TestOnRealHardwareProxy>())
                     : (null, null);
 
-                var group = new TestCaseGroup(++testGroupIndex);
+                var group = new TestCaseGroup(testGroupIndex);
                 #endregion
 
                 #region A method is turned into zero or more test cases
                 bool hasSetup = false;
                 bool hasCleanup = false;
                 var previousDisplayNames = new HashSet<string>();
-                foreach ((MethodInfo method, ProjectSourceInventory.MethodDeclaration sourceLocation) in enumerateMethods())
+                foreach ((int methodIndex, MethodInfo method, ProjectSourceInventory.MethodDeclaration sourceLocation) in enumerateMethods())
                 {
                     List<AttributeProxy> methodAttributes = AttributeProxy.GetAttributeProxies(method, framework, sourceLocation?.Attributes, logger);
                     if (methodAttributes.Count == 0)
@@ -402,6 +441,7 @@ namespace nanoFramework.TestFramework.Tooling
                         else
                         {
                             hasSetup = true;
+                            group.SetupMethodIndex = methodIndex;
                             group.SetupSourceCodeLocation = setup.Source;
                         }
                     }
@@ -415,6 +455,7 @@ namespace nanoFramework.TestFramework.Tooling
                         else
                         {
                             hasCleanup = true;
+                            group.CleanupMethodIndex = methodIndex;
                             group.CleanupSourceCodeLocation = cleanup.Source;
                         }
                     }
@@ -448,14 +489,16 @@ namespace nanoFramework.TestFramework.Tooling
 
                         var dataRowParameters = (from dataRow in methodAttributes.OfType<DataRowProxy>()
                                                  select (dataRow.Source, dataRow.MethodParametersAsString)).ToList();
+                        int dataRowIndex = 0;
                         if (dataRowParameters.Count == 0)
                         {
                             dataRowParameters.Add((sourceLocation, ""));
+                            dataRowIndex = -1;
                         }
 
                         foreach ((ProjectSourceInventory.ElementDeclaration testCaseSource, string methodParametersAsString) in dataRowParameters)
                         {
-                            ++testCaseIndex;
+
                             string displayNameBase = $"{method.Name}{methodParametersAsString}";
                             for (int i = 2; true; i++)
                             {
@@ -468,31 +511,37 @@ namespace nanoFramework.TestFramework.Tooling
 
                             if (testOnVirtualDevice)
                             {
-                                _testCases.Add(new TestCase(
-                                    testCaseIndex,
-                                    assemblyFilePath,
-                                    group,
-                                    method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{VIRTUALDEVICE}]" : "")}",
-                                    testCaseSource,
-                                    true, null,
-                                    TraitsProxy.Collect(testTraits, null, new string[] { $"@{VIRTUALDEVICE}" })
-                                ));
+                                testsOnVirtualDevice._testCases.Add((-1,
+                                    new TestCase(
+                                        methodIndex,
+                                        dataRowIndex,
+                                        assemblyFilePath,
+                                        group,
+                                        method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{VIRTUALDEVICE}]" : "")}",
+                                        testCaseSource,
+                                        true, null,
+                                        TraitsProxy.Collect(testTraits, null, new string[] { $"@{VIRTUALDEVICE}" })
+                                    )));
                             }
                             if (!(testOnRealHardware.descriptions is null))
                             {
                                 HashSet<string> traits = TraitsProxy.Collect(testTraits, null, from d in testOnRealHardware.descriptions
                                                                                                select $"@{d}");
                                 traits.Add($"@{s_realHardwareDescription}");
-                                _testCases.Add(new TestCase(
-                                    testCaseIndex,
-                                    assemblyFilePath,
-                                    group,
-                                    method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{s_realHardwareDescription}]" : "")}",
-                                    testCaseSource,
-                                    false, testOnRealHardware.attributes,
-                                    traits
-                                ));
+                                testsOnRealHardware._testCases.Add((-1,
+                                    new TestCase(
+                                        methodIndex,
+                                        dataRowIndex,
+                                        assemblyFilePath,
+                                        group,
+                                        method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{s_realHardwareDescription}]" : "")}",
+                                        testCaseSource,
+                                        false, testOnRealHardware.attributes,
+                                        traits
+                                    )));
                             }
+
+                            dataRowIndex++;
                         }
                         #endregion
                     }
@@ -502,6 +551,15 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                 }
                 #endregion
+            }
+
+            if (testsOnVirtualDevice.TestCases.Count > 0)
+            {
+                _testsOnVirtualDevice.Add(testsOnVirtualDevice);
+            }
+            if (testsOnRealHardware.TestCases.Count > 0)
+            {
+                _testsOnRealHardware.Add(testsOnRealHardware);
             }
         }
         private const string VIRTUALDEVICE = "Virtual Device";

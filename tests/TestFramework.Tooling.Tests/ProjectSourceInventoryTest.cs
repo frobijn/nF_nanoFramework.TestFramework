@@ -7,35 +7,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
 using TestFramework.Tooling.Tests.Helpers;
 
-
-/*
-    There seems to be something off with the dependency relations between some Microsoft assemblies.
-    When running this code from a unit test, an exception may be thrown in ProjectSourceAnalyzer that has to do
-    with the dependency of System.Memory on System.Runtime.CompilerServices.Unsafe. This can be solved by adding
-    to the file:
-
-C:\Program Files\Microsoft Visual Studio\...year...\...version...\Common7\IDE\Extensions\TestPlatform\testhost.net48.exe.Config
-
-    the binding redirect:
-
-     <dependentAssembly>
-        <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-        <bindingRedirect oldVersion="1.0.0.0-6.0.0.0" newVersion="6.0.0.0" />
-     </dependentAssembly>
-
-    The System.Runtime.CompilerServices.Unsafe assembly in the TestFramework.Tooling bin directory originates
-    from the Microsoft.CodeAnalysis.CSharp nuget package dependencies.
- */
-
-
 namespace TestFramework.Tooling.Tests
 {
     [TestClass]
+    [TestCategory("Source code")]
     public sealed class ProjectSourceInventoryTest
     {
         #region Test for parsing source code
         [TestMethod]
-        [TestCategory("Source code")]
         public void Parse_SomeTestClasses()
         {
             #region Source code
@@ -221,7 +200,6 @@ RunInParallel in SomeOtherTest.cs(10,9)
 
         #region Test for reading project and sanity check
         [TestMethod]
-        [TestCategory("Source code")]
         public void Parse_Discovery_v2()
         {
             (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.Discovery.v2", true);
@@ -238,7 +216,6 @@ TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods in {pathPrefix}TestWithMe
         }
 
         [TestMethod]
-        [TestCategory("Source code")]
         public void Parse_Discovery_v3()
         {
             (ProjectSourceInventory actual, string pathPrefix) = TestProjectHelper.FindAndCreateProjectSource("TestFramework.Tooling.Tests.Discovery.v3", true);
@@ -265,7 +242,6 @@ TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes in {path
 
         #region Helper test
         [TestMethod]
-        [TestCategory("Source code")]
         public void FindProjectFilePathTest()
         {
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");

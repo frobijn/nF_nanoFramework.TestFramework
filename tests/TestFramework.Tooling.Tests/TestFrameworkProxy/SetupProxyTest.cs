@@ -12,10 +12,10 @@ using nfTest = nanoFramework.TestFramework;
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
     [TestClass]
+    [TestCategory("nF test attributes")]
     public class SetupProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [SetupMock]
         public void SetupProxyCreated()
         {
@@ -30,7 +30,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         [SetupMock]
         public void SetupProxyCreatedWithSource()

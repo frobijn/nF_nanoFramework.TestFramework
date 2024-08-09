@@ -16,10 +16,10 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
 
     [TestClass]
+    [TestCategory("nF test attributes")]
     public sealed class TestClassProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestClassProxyCreatedForNonStaticClass()
         {
             var logger = new LogMessengerMock();
@@ -32,7 +32,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestClassProxyCreatedForNonStaticClassWithSource()
         {
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(typeof(StaticTestClassMock));
@@ -52,7 +51,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         public void TestClassProxyCreatedForStaticClass()
         {
@@ -66,7 +64,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         public void TestClassProxyCreatedForStaticClassWithSource()
         {
@@ -87,7 +84,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestClassProxyNotCreatedForAbstractClass()
         {
             var logger = new LogMessengerMock();
@@ -103,7 +99,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestClassProxyNotCreatedForGenericTemplate()
         {
             var logger = new LogMessengerMock();
@@ -119,7 +114,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TestClassProxyErrorForAssembly()
         {
             var logger = new LogMessengerMock();
@@ -135,7 +129,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestClassMock] // This is not correct!
         public void TestClassProxyErrorForMethod()
         {

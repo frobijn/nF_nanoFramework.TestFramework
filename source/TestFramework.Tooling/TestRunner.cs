@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace nanoFramework.TestFramework.Tooling
@@ -12,9 +11,11 @@ namespace nanoFramework.TestFramework.Tooling
     {
         #region Fields
         private readonly TestFrameworkConfiguration _settings;
-        private readonly List<TestResult> _testResults = new List<TestResult>();
-        private readonly Dictionary<string, TestCasesForDevice> _runOnVirtualDevice = new Dictionary<string, TestCasesForDevice>();
-        private readonly Dictionary<string, TestCasesForDevice> _runOnRealHardware = new Dictionary<string, TestCasesForDevice>();
+        private readonly List<TestResult> _testResults;
+        private readonly IReadOnlyList<TestCaseSelection> _testCaseSelections;
+        private int _testCaseSelectionIndex = -1;
+        private int _testCaseRunners;
+        private readonly LogMessenger _logger;
         #endregion
 
         #region Entry point
@@ -31,94 +32,157 @@ namespace nanoFramework.TestFramework.Tooling
         /// <returns>The test results. For each test case from <paramref name="testCaseSelection"/> there is at least one test result; there can be more than one
         /// if the test case has been run on multiple devices.</returns>
         public static IReadOnlyList<TestResult> Execute(
-            IEnumerable<(string testAssemblyPath, string testCaseDisplayName, string testCaseFullyQualifiedName)> testCaseSelection,
+            IEnumerable<string> testAssemblyPaths,
             Func<string, string> getProjectFilePath,
             TestFrameworkConfiguration settings,
             LogMessenger logger)
         {
+            // Get all test cases from the assemblies
+            var testCases = new TestCaseCollection(testAssemblyPaths, getProjectFilePath,
+                settings.AllowRealHardware,
+                logger);
+            return Execute(testCases, settings, logger).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Execute the test cases
+        /// </summary>
+        /// <param name="testCaseSelection">Enumeration of the selected test cases. The display name and fully qualified name of the test case
+        /// must match the <see cref="TestCase.DisplayName"/> and <see cref="TestCase.FullyQualifiedName"/> of the previously collected test cases.</param>
+        /// <param name="getProjectFilePath">Method that provides the path of the project file that produced the assembly. If <c>null</c>
+        /// is passed for this argument or <c>null</c> is returned from the function, the <see cref="TestCase"/>s from that assembly do not provide
+        /// the locations of tests in the source code. See also <see cref="ProjectSourceInventory.FindProjectFilePath"/>.</param>
+        /// <param name="settings">Configuration for the execution of the tests.</param>
+        /// <param name="logger">Method to pass information about the discovery process to the caller.</param>
+        /// <returns>The test results. For each test case from <paramref name="testCaseSelection"/> there is at least one test result; there can be more than one
+        /// if the test case has been run on multiple devices.</returns>
+        public static IReadOnlyList<TestResult> Execute(
+        IEnumerable<(string testAssemblyPath, string testCaseDisplayName, string testCaseFullyQualifiedName)> testCaseSelection,
+        Func<string, string> getProjectFilePath,
+        TestFrameworkConfiguration settings,
+        LogMessenger logger)
+        {
+            // Get the test cases based on the selection
             var testCases = new TestCaseCollection(testCaseSelection, getProjectFilePath,
                 settings.AllowRealHardware,
-                out Dictionary<int, int> testCaseForSelection,
                 logger);
+            return Execute(testCases, settings, logger).GetAwaiter().GetResult();
+        }
 
-            var runner = new TestRunner(settings, testCases, testCaseForSelection, testCaseSelection.Count());
-            runner.RunTestCasesAsync().GetAwaiter().GetResult();
+        private static async Task<IReadOnlyList<TestResult>> Execute(
+            TestCaseCollection testCases,
+            TestFrameworkConfiguration settings,
+            LogMessenger logger
+        )
+        {
+            LogMessenger syncLogger = null;
+            if (!(logger is null))
+            {
+                syncLogger = (l, m) =>
+                {
+                    lock (logger)
+                    {
+                        logger(l, m);
+                    }
+                };
+            }
 
-            return runner._testResults;
+            var testResults = new List<TestResult>();
+
+            var tasks = new List<Task>();
+            if (testCases.TestOnVirtualDevice.Count > 0)
+            {
+                tasks.Add(
+                    new TestRunner(
+                        testResults,
+                        testCases.TestOnVirtualDevice,
+                        settings,
+                        syncLogger
+                    ).ExecuteOnVirtualDevice()
+                );
+            }
+            if (testCases.TestOnRealHardware.Count > 0)
+            {
+                //tasks.Add(
+                //    new TestRunner(
+                //        testResults,
+                //        testCases.TestOnRealHardware,
+                //        settings,
+                //        syncLogger
+                //    ).ExecuteOnRealHardware()
+                //);
+            }
+            if (tasks.Count > 0)
+            {
+                await Task.WhenAll(tasks);
+            }
+            return testResults;
         }
         #endregion
 
-        #region Construction
-        private TestRunner(TestFrameworkConfiguration settings, TestCaseCollection testCases, Dictionary<int, int> testCaseForSelection, int selectionCount)
+        #region Construction and queue
+        private TestRunner(
+            List<TestResult> testResults,
+            IReadOnlyList<TestCaseSelection> testCaseSelections,
+            TestFrameworkConfiguration settings,
+            LogMessenger logger)
         {
+            _testResults = testResults;
+            _testCaseSelections = testCaseSelections;
             _settings = settings;
-            for (int i = 0; i < selectionCount; i++)
+            _logger = logger;
+        }
+
+        private async Task RunInParallel(Func<TestCaseSelection, Task> action)
+        {
+            if (_testCaseRunners > _testCaseSelections.Count)
             {
-                if (!testCaseForSelection.ContainsKey(i))
-                {
-                    // Selected test case was not found
-                    _testResults.Add(new TestResult(i, false));
-                }
+                _testCaseRunners = _testCaseSelections.Count;
             }
-            foreach (KeyValuePair<int, int> selected in testCaseForSelection)
+            var queue = new List<Task>();
+            for (int i = 0; i < _testCaseRunners; i++)
             {
-                TestCase testCase = testCases.TestCases[selected.Value];
-                Dictionary<string, TestCasesForDevice> runOnDevice = testCase.ShouldRunOnRealHardware ? _runOnRealHardware : _runOnVirtualDevice;
-                if (!runOnDevice.TryGetValue(testCase.AssemblyFilePath, out TestCasesForDevice toRun))
+                queue.Add(RunSingleTask(action));
+            }
+            await Task.WhenAll(queue);
+        }
+
+        private async Task RunSingleTask(Func<TestCaseSelection, Task> action)
+        {
+            while (true)
+            {
+                int testCaseSelectionIndex = 0;
+                lock (this)
                 {
-                    runOnDevice[testCase.AssemblyFilePath] = toRun = new TestCasesForDevice(testCase.AssemblyFilePath, testCases.TestMethodsInAssembly(testCase.AssemblyFilePath));
+                    testCaseSelectionIndex = ++_testCaseSelectionIndex;
                 }
-                toRun.TestCases.Add(testCase);
-                toRun.SelectionIndexForTestCaseIndex[testCase.TestIndex] = selected.Key;
+                if (testCaseSelectionIndex >= _testCaseSelections.Count)
+                {
+                    return;
+                }
+                await action(_testCaseSelections[testCaseSelectionIndex]);
             }
         }
         #endregion
 
-        #region Helper classes
-        private sealed class TestCasesForDevice
+
+        #region Execute on Virtual Device
+        private async Task ExecuteOnVirtualDevice()
         {
-            internal TestCasesForDevice(string assemblyFilePath, int testMethodsInAssembly)
+            var nanoClr = new NanoCLRHelper(_settings, _logger);
+            if (!nanoClr.NanoClrIsInstalled)
             {
-                AssemblyFilePath = assemblyFilePath;
-                TestMethodsInAssembly = testMethodsInAssembly;
+                return;
             }
-
-            public string AssemblyFilePath
-            {
-                get;
-            }
-
-            public int TestMethodsInAssembly
-            {
-                get;
-            }
-
-            public List<TestCase> TestCases
-            {
-                get;
-            } = new List<TestCase>();
-
-            public Dictionary<int, int> SelectionIndexForTestCaseIndex
-            {
-                get;
-            } = new Dictionary<int, int>();
+            _testCaseRunners = _settings.MaxVirtualDevices == 0
+                                    ? Environment.ProcessorCount
+                                    : _settings.MaxVirtualDevices;
+            await RunInParallel(RunTestCaseSelectionOnVirtualDevice);
         }
-        #endregion
 
-
-        #region Runner implementation
-        private async Task RunTestCasesAsync()
+        private async Task RunTestCaseSelectionOnVirtualDevice(TestCaseSelection selection)
         {
-            if (_runOnVirtualDevice.Count > 0)
-            {
-                int virtualDeviceRunners = _settings.MaxVirtualDevices == 0
-                    ? Environment.ProcessorCount
-                    : _settings.MaxVirtualDevices;
-                if (virtualDeviceRunners > _runOnVirtualDevice.Count)
-                {
-                    virtualDeviceRunners = _runOnVirtualDevice.Count;
-                }
-            }
+
         }
         #endregion
 

@@ -17,10 +17,10 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
     [TestClass]
     [TraitsMock("In test class")]
+    [TestCategory("nF test attributes")]
     public sealed class TraitsProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TraitsMock("Some", "trait")]
         public void TraitsProxyCreatedForMethod()
         {
@@ -40,7 +40,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         [TraitsMock("Some", "trait")]
         [TraitsMock("Other")]
@@ -74,7 +73,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TraitsProxyCreatedForAssembly()
         {
             var logger = new LogMessengerMock();
@@ -96,7 +94,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         public void TraitsProxyCreatedForClass()
         {
             var logger = new LogMessengerMock();
@@ -114,7 +111,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
+        [TestCategory("Source code")]
         public void TraitsProxyCreatedForClassWithSource()
         {
             var logger = new LogMessengerMock();

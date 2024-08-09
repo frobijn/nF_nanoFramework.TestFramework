@@ -12,12 +12,12 @@ using TestFramework.Tooling.Tests.Helpers;
 namespace TestFramework.Tooling.Tests
 {
     [TestClass]
+    [TestCategory("Test execution")]
     public sealed class TestFrameworkConfigurationTest
     {
         #region Configuration from XML, save/read as runsettings
         [TestMethod]
         [TestCategory("Test cases")]
-        [TestCategory("Test execution")]
         public void DefaultConfigurationAndValidation()
         {
             // No configuration
@@ -56,7 +56,6 @@ $@"
 
         [TestMethod]
         [TestCategory("Test cases")]
-        [TestCategory("Test execution")]
         [DataRow(true)]
         [DataRow(false)]
         public void CustomConfigurationAndValidation(bool withLogger)
@@ -112,7 +111,6 @@ Verbose: CLRVersion is ignored because the path to a local CLR instance is speci
 
         [TestMethod]
         [TestCategory("Test cases")]
-        [TestCategory("Test execution")]
         public void BackwardCompatibleConfiguration()
         {
             var actual = TestFrameworkConfiguration.Extract(
@@ -134,7 +132,6 @@ Verbose: CLRVersion is ignored because the path to a local CLR instance is speci
         #region Resolution of relative paths
         [TestMethod]
         [TestCategory("Test cases")]
-        [TestCategory("Test execution")]
         [DataRow(true)]
         [DataRow(false)]
         public void ConfigurationWithRelativePath_Unresolved(bool withLogger)
@@ -171,7 +168,6 @@ $@"Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFil
 
         [TestMethod]
         [TestCategory("Test cases")]
-        [TestCategory("Test execution")]
         [DataRow(true)]
         [DataRow(false)]
         public void ConfigurationWithRelativePath_NotFound(bool withLogger)
@@ -210,7 +206,6 @@ Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFileNa
 
         [TestMethod]
         [TestCategory("Test cases")]
-        [TestCategory("Test execution")]
         [DataRow(true)]
         [DataRow(false)]
         public void ConfigurationWithRelativePath_InSolutionDirectory(bool withLogger)
@@ -249,7 +244,6 @@ Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
 
         [TestMethod]
         [TestCategory("Test cases")]
-        [TestCategory("Test execution")]
         [DataRow(true)]
         [DataRow(false)]
         public void ConfigurationWithRelativePath_InAssemblyDirectory(bool withLogger)
@@ -287,7 +281,6 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
 
         #region Construction of runsettings
         [TestMethod]
-        [TestCategory("Test execution")]
         public void RunSettingsDefaultConfiguration()
         {
             string actual = new TestFrameworkConfiguration().CreateRunSettings("TestAdapter");
@@ -307,7 +300,6 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
         }
 
         [TestMethod]
-        [TestCategory("Test execution")]
         [DataRow(true)]
         [DataRow(false)]
         public void RunSettingsWithRunConfiguration(bool withLogger)
@@ -374,7 +366,6 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
         }
 
         [TestMethod]
-        [TestCategory("Test execution")]
         [DataRow(true, false)]
         [DataRow(false, false)]
         [DataRow(true, true)]
@@ -460,7 +451,6 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
         }
 
         [TestMethod]
-        [TestCategory("Test execution")]
         [DataRow(true)]
         [DataRow(false)]
         public void InvalidRunSettings(bool withLogger)

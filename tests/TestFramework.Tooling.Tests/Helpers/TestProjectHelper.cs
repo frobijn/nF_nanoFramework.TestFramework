@@ -7,10 +7,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
 
-/*
- * See remark about assembly dependencies in ProjectSourceInventoryTest
- */
-
 namespace TestFramework.Tooling.Tests.Helpers
 {
     /// <summary>

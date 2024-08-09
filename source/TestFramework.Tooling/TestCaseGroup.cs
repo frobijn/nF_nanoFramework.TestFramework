@@ -5,6 +5,10 @@ using System.Collections.Generic;
 
 namespace nanoFramework.TestFramework.Tooling
 {
+    /// <summary>
+    /// A test case group has tests cases as members that share a test execution
+    /// context. At the moment, a test group corresponds to a test class.
+    /// </summary>
     public sealed class TestCaseGroup
     {
         #region Construction
@@ -20,15 +24,36 @@ namespace nanoFramework.TestFramework.Tooling
 
         #region Properties
         /// <summary>
-        /// Get the 1-based index of the group of test cases (in the set of all test cases in a collection of test assemblies).
-        /// All tests in a group share setup/cleanup code.
-        /// The index matches the index that as determined by the test runner when it enumerates the tests
-        /// in the assemblies (in the same order).
+        /// The fully qualified name of the test class within its assembly
         /// </summary>
+        public string FullyQualifiedName
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Get a 0-based index of the group of test cases (in the set of all test cases in a collection of test assemblies).
+        /// The index does not have to be contiguous.
+        /// </summary>
+        /// <remarks>
+        /// In the current implementation, the index matches the index of the related test class
+        /// in the list of classes in the assembly. That is not the same index when run on the
+        /// nanoFramework/nanoCLR.
+        /// </remarks>
         public int TestGroupIndex
         {
             get;
         }
+
+        /// <summary>
+        /// Get the index of the setup method within the methods of its class.
+        /// If there is no setup method, the value is -1.
+        /// </summary>
+        public int SetupMethodIndex
+        {
+            get;
+            internal set;
+        } = -1;
 
         /// <summary>
         /// Get the location in the source code of the setup method that is run before the test(s).
@@ -39,6 +64,16 @@ namespace nanoFramework.TestFramework.Tooling
             get;
             internal set;
         }
+
+        /// <summary>
+        /// Get the index of the cleanup method within the methods of its class.
+        /// If there is no setup method, the value is -1.
+        /// </summary>
+        public int CleanupMethodIndex
+        {
+            get;
+            internal set;
+        } = -1;
 
         /// <summary>
         /// Get the location in the source code of the cleanup method that is run after the test(s).

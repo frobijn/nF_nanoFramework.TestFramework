@@ -21,10 +21,10 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
     /// of test cases.
     /// </summary>
     [TestClass]
+    [TestCategory("nF test attributes")]
     public sealed class NFTestFramework_TestOnRealHardwareProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Test cases")]
         public void TestOnRealHardwareProxy_nF_TestFramework()
         {

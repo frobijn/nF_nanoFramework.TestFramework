@@ -1,12 +1,13 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using nanoFramework.TestFramework;
 
 namespace TestFramework.Tooling.Tests.NFUnitTest
 {
     [TestClass]
-    public class FailInConstructor
+    public class FailInConstructor : IDisposable
     {
         public FailInConstructor()
         {
@@ -15,6 +16,11 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
             Assert.Fail();
         }
 
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
+        }
+
         [Setup]
         public void Setup()
         {
@@ -35,11 +41,16 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     }
 
     [TestClass]
-    public class FailInSetup
+    public class FailInSetup : IDisposable
     {
         public FailInSetup()
         {
             OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
         }
 
         [Setup]
@@ -64,11 +75,16 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     }
 
     [TestClass]
-    public class FailInTest
+    public class FailInTest : IDisposable
     {
         public FailInTest()
         {
             OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
         }
 
         [Setup]
@@ -92,11 +108,16 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     }
 
     [TestClass]
-    public class InconclusiveInTest
+    public class InconclusiveInTest : IDisposable
     {
         public InconclusiveInTest()
         {
             OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
         }
 
         [Setup]
@@ -120,11 +141,16 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     }
 
     [TestClass]
-    public class CleanupFailedInTest
+    public class CleanupFailedInTest : IDisposable
     {
         public CleanupFailedInTest()
         {
             OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
         }
 
         [Setup]
@@ -148,11 +174,16 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     }
 
     [TestClass]
-    public class FailInCleanUp
+    public class FailInCleanUp : IDisposable
     {
         public FailInCleanUp()
         {
             OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
         }
 
         [Setup]
@@ -168,11 +199,77 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         }
 
         [Cleanup]
-        public void CleanUp()
+        public void Cleanup()
         {
             OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
             // Should be reported as CleanupFailed
             Assert.Fail();
+        }
+    }
+
+    [TestClass]
+    public class FailInDispose : IDisposable
+    {
+        public FailInDispose()
+        {
+            OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
+            // Should be reported as CleanupFailed
+            Assert.Fail();
+        }
+
+        [Setup]
+        public void Setup()
+        {
+            OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
+        }
+
+        [TestMethod]
+        public void Test()
+        {
+            OutputHelper.WriteLine($"Test method of {GetType().FullName}");
+        }
+
+        [Cleanup]
+        public void Cleanup()
+        {
+            OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
+        }
+    }
+
+    [TestClass]
+    public class NonFailingTest : IDisposable
+    {
+        public NonFailingTest()
+        {
+            OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
+        }
+
+        [Setup]
+        public void Setup()
+        {
+            OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
+        }
+
+        [TestMethod]
+        public void Test()
+        {
+            OutputHelper.WriteLine($"Test method of {GetType().FullName}");
+        }
+
+        [Cleanup]
+        public void Cleanup()
+        {
+            OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
         }
     }
 }

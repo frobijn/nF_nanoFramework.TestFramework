@@ -364,19 +364,30 @@ namespace nanoFramework.TestFramework.Tooling
         /// Enumerate all static and instantiable classes in the assembly.
         /// </summary>
         /// <param name="assembly">Assembly to enumerate the classes for</param>
-        /// <param name="sourceInventory">Locations of the classes, methods and attributes in the source for the assembly. Pass <c>null</c> is no source is available.</param>
+        /// <param name="sourceInventory">Locations of the classes, methods and attributes in the source for the assembly.
+        /// Pass <c>null</c> is no source is available.</param>
         /// <returns>
-        /// Returns an enumeration of the class type and the location of its declaration in the source code. Also included is a function that can be used to
-        /// enumerate the class methods and the declaration of the method in the source. For inherited methods no source code location is available. The source code location
-        /// of the method declaration is unreliable if the method has overloads (same method name but different argument lists).
+        /// Returns an enumeration of the class type, its position in the list of the assembly's classes, and the location
+        /// of its declaration in the source code. Also included is a function that can be used to enumerate the class methods
+        /// and the declaration of the method in the source. For inherited methods no source code location is available.
+        /// The source code location of the method declaration is unreliable if the method has overloads (same method name
+        /// but different argument lists).
         /// </returns>
         public static IEnumerable<(
+            int classIndex,
             Type classType,
             ClassDeclaration sourceLocation,
-            Func<IEnumerable<(MethodInfo method, MethodDeclaration sourceLocation)>> enumerateMethods)> EnumerateNonAbstractClasses(Assembly assembly, ProjectSourceInventory sourceInventory)
+            Func<IEnumerable<(int methodIndex, MethodInfo method, MethodDeclaration sourceLocation)>> enumerateMethods)> EnumerateNonAbstractClasses(Assembly assembly, ProjectSourceInventory sourceInventory)
         {
+            int classIndex = -1;
             foreach (Type classType in assembly.GetTypes())
             {
+                if (!classType.IsClass)
+                {
+                    continue;
+                }
+                classIndex++;
+
                 if (classType.IsGenericTypeDefinition ||
                     (classType.IsAbstract && !classType.IsSealed) // Abstract and sealed is a static class
                     )
@@ -386,16 +397,18 @@ namespace nanoFramework.TestFramework.Tooling
 
                 ClassDeclaration classDeclaration = sourceInventory?.TryGet(classType.FullName);
                 yield return (
+                    classIndex,
                     classType,
                     classDeclaration,
                     () => EnumerateClassMethods(classType, classDeclaration)
                 );
             }
         }
-        private static IEnumerable<(MethodInfo method, MethodDeclaration sourceLocation)> EnumerateClassMethods(Type classType, ClassDeclaration classDeclaration)
+        private static IEnumerable<(int methodIndex, MethodInfo method, MethodDeclaration sourceLocation)> EnumerateClassMethods(Type classType, ClassDeclaration classDeclaration)
         {
             List<MethodDeclaration> remainingSourceLocations = classDeclaration is null ? null : new List<MethodDeclaration>(classDeclaration.Methods);
 
+            int methodIndex = 0;
             foreach (MethodInfo method in classType.GetMethods((classType.IsAbstract && classType.IsSealed ? BindingFlags.Static : BindingFlags.Instance) | BindingFlags.Public))
             {
                 #region Find the position in the source
@@ -424,7 +437,8 @@ namespace nanoFramework.TestFramework.Tooling
                 }
                 #endregion
 
-                yield return (method, sourceLocation);
+                yield return (methodIndex, method, sourceLocation);
+                methodIndex++;
             }
         }
 

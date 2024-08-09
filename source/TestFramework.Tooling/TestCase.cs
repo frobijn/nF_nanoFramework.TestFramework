@@ -16,6 +16,7 @@ namespace nanoFramework.TestFramework.Tooling
 
         #region Construction
         internal TestCase(int testIndex,
+            int dataRowIndex,
             string assemblyFilePath,
             TestCaseGroup group,
             MethodInfo method, string displayName,
@@ -26,6 +27,7 @@ namespace nanoFramework.TestFramework.Tooling
         {
             AssemblyFilePath = assemblyFilePath;
             TestIndex = testIndex;
+            DataRowIndex = dataRowIndex;
             DisplayName = displayName;
             FullyQualifiedName = $"{method.ReflectedType.FullName}.{method.Name}";
             TestMethodSourceCodeLocation = location;
@@ -93,11 +95,26 @@ namespace nanoFramework.TestFramework.Tooling
             => !(_testOnRealHardware is null);
 
         /// <summary>
-        /// Get the 1-based index of the test case (in the set of all test cases in a collection of test assemblies).
-        /// The index matches the index that as determined by the test runner when it enumerates the tests
-        /// in the assemblies (in the same order).
+        /// Get the 0-based index of the test case (in the set of all test cases in a <see cref="TestCaseGroup"/>).
+        /// The index does not have to be contiguous.
         /// </summary>
+        /// <remarks>
+        /// In the current implementation, the index is the position of the test method in the list of class methods.
+        /// </remarks>
         public int TestIndex
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Get the 0-based index of the <see cref="IDataRow"/> that is related to this test case,
+        /// </summary>
+        /// <remarks>
+        /// In the current implementation, the index is the position of the attribute implementing
+        /// <see cref="IDataRow"/> in the list of attributes that implement <see cref="IDataRow"/>.
+        /// If the test case does not correspond to a <see cref="IDataRow"/>, the index is -1.
+        /// </remarks>
+        public int DataRowIndex
         {
             get;
         }
@@ -109,6 +126,13 @@ namespace nanoFramework.TestFramework.Tooling
         {
             get;
         }
+
+        /// <summary>
+        /// Get a unique identification of this test case among all test cases for the assembly,
+        /// if the device is ignored (the equivalent test on another device has the same identifier).
+        /// </summary>
+        public string TestCaseId
+            => DataRowIndex < 0 ? $"G{Group.TestGroupIndex}T{TestIndex}" : $"G{Group.TestGroupIndex}T{TestIndex}D{DataRowIndex}";
         #endregion
 
         #region Methods

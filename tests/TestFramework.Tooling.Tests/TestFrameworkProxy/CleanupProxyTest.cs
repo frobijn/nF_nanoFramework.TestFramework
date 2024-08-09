@@ -12,10 +12,10 @@ using nfTest = nanoFramework.TestFramework;
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
     [TestClass]
+    [TestCategory("nF test attributes")]
     public class CleanupProxyTest
     {
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [CleanupMock]
         public void CleanupProxyCreated()
         {
@@ -30,7 +30,6 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestCategory("nF test attributes")]
         [TestCategory("Source code")]
         [CleanupMock]
         public void CleanupProxyCreatedWithSource()

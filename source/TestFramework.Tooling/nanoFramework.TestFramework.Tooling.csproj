@@ -69,6 +69,7 @@
 	<Compile Include="ProjectSourceInventory.cs" />
 	<Compile Include="TestCase.cs" />
 	<Compile Include="TestCaseGroup.cs" />
+	<Compile Include="TestCaseSelection.cs" />
 	<Compile Include="TestFrameworkProxy\AttributeProxy.cs" />
 	<Compile Include="TestFrameworkProxy\CleanupProxy.cs" />
 	<Compile Include="TestFrameworkProxy\DataRowProxy.cs" />
@@ -86,6 +87,8 @@
 	<Compile Include="TestFrameworkConfiguration.cs" />
 	<Compile Include="TestResult.cs" />
 	<Compile Include="TestRunner.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.cs" />
+	<Compile Include="UnitTestLauncherGenerator.cs" />
   </ItemGroup>
   
 </Project>

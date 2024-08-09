@@ -157,7 +157,7 @@ namespace nanoFramework.TestFramework
 
             // ReSharper disable once MergeConditionalExpression
 #pragma warning disable IDE0031 // IDE keeps suggesting I change this to value?.GetType() but since we don't have Nullable<T> this won't work in all cases.
-            var actual = value is null ? null : value.GetType();
+            Type actual = value is null ? null : value.GetType();
 #pragma warning restore IDE0031
 
             HandleFail("Assert.IsInstanceOfType", $"Expected type:<{expected}>. Actual type:<{ReplaceNulls(actual)}>. {ReplaceNulls(message)}");
@@ -348,7 +348,7 @@ namespace nanoFramework.TestFramework
         [DoesNotReturn]
         internal static void HandleFail(string assertion, string message)
         {
-            var safeMessage = string.Empty;
+            string safeMessage = string.Empty;
 
             if (!string.IsNullOrEmpty(message))
             {
@@ -388,9 +388,9 @@ namespace nanoFramework.TestFramework
                 return input;
             }
 
-            var replacedString = string.Empty;
+            string replacedString = string.Empty;
 
-            for (var i = 0; i < input.Length; i++)
+            for (int i = 0; i < input.Length; i++)
             {
                 if (input[i] == '\0')
                 {
