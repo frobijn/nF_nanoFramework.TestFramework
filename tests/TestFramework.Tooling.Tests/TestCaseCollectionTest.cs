@@ -31,17 +31,11 @@ namespace TestFramework.Tooling.Tests
             var actual = new TestCaseCollection(assemblyFilePath, false, projectFilePath, logger);
 
             Assert.IsNotNull(actual.TestCases);
-            Assert.AreEqual(
+            logger.AssertEqual(
 $@"Detailed: {pathPrefix}TestAllCurrentAttributes.cs(13,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
 Detailed: {pathPrefix}TestAllCurrentAttributes.cs(19,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
 Detailed: {pathPrefix}TestWithMethods.cs(9,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have no attributes to indicate on what device the test should be run.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
@@ -108,17 +102,11 @@ G1T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             var actual = new TestCaseCollection(assemblyFilePath, true, projectFilePath, logger);
 
             Assert.IsNotNull(actual.TestCases);
-            Assert.AreEqual(
+            logger.AssertEqual(
 $@"Detailed: {pathPrefix}TestAllCurrentAttributes.cs(13,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
 Detailed: {pathPrefix}TestAllCurrentAttributes.cs(19,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
 Detailed: {pathPrefix}TestWithMethods.cs(9,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have no attributes to indicate on what device the test should be run.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
@@ -209,19 +197,13 @@ G1T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             var actual = new TestCaseCollection(assemblyFilePath, true, projectFilePath, logger);
 
             Assert.IsNotNull(actual.TestCases);
-            Assert.AreEqual(
+            logger.AssertEqual(
 $@"Verbose: {pathPrefix}TestWithALotOfErrors.cs(10,6): Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(19,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(31,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(39,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(38,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
@@ -352,19 +334,13 @@ G6T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             var actual = new TestCaseCollection(assemblyFilePath, false, projectFilePath, logger);
 
             Assert.IsNotNull(actual.TestCases);
-            Assert.AreEqual(
+            logger.AssertEqual(
 $@"Verbose: {pathPrefix}TestWithALotOfErrors.cs(10,6): Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(19,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(31,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(39,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix}TestWithALotOfErrors.cs(38,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
@@ -460,7 +436,7 @@ G6T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
                                                 true,
                                                 logger);
             Assert.IsNotNull(actual.TestCases);
-            Assert.AreEqual(
+            logger.AssertEqual(
 $@"Detailed: {pathPrefix1}TestAllCurrentAttributes.cs(13,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
 Detailed: {pathPrefix1}TestAllCurrentAttributes.cs(19,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
 Detailed: {pathPrefix1}TestWithMethods.cs(9,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
@@ -471,13 +447,7 @@ Verbose: {pathPrefix2}TestWithALotOfErrors.cs(31,10): Only one method of a class
 Verbose: {pathPrefix2}TestWithALotOfErrors.cs(39,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix2}TestWithALotOfErrors.cs(38,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
 Verbose: {pathPrefix2}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.
-Verbose: Project file for assembly '{assemblyFilePath3}' not found
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+Verbose: Project file for assembly '{assemblyFilePath3}' not found");
 
             // Check only the number of test cases
             Assert.AreEqual(
@@ -574,10 +544,7 @@ $@"{assemblyFilePath1} #5
             {
                 Assert.Inconclusive("Original collection of test cases could not be constructed");
             }
-            string expectedDiscoveryMessages = string.Join("\n",
-                                                from m in logger.Messages
-                                                select $"{m.level}: {m.message}"
-                                            ) + '\n';
+            string expectedDiscoveryMessages = logger.ToString();
 
             // Select all test cases
             var selectionSpecification = (from tc in original.TestCases
@@ -590,13 +557,7 @@ $@"{assemblyFilePath1} #5
                                                 logger);
 
             // Assert that there are no selection-related messages
-            Assert.AreEqual(
-                expectedDiscoveryMessages,
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+            logger.AssertEqual(expectedDiscoveryMessages);
 
             // Assert that all test case are present in the same order
             Assert.AreEqual(
@@ -667,10 +628,7 @@ $@"{assemblyFilePath1} #5
             {
                 Assert.Inconclusive("Original collection of test cases could not be constructed");
             }
-            string expectedDiscoveryMessages = string.Join("\n",
-                                                from m in logger.Messages
-                                                select $"{m.level}: {m.message}"
-                                            ) + '\n';
+            string expectedDiscoveryMessages = logger.ToString();
 
             // Select some test cases
             logger = new LogMessengerMock();
@@ -689,17 +647,11 @@ $@"{assemblyFilePath1} #5
                 logger);
 
             // Assert the selection-related messages
-            Assert.AreEqual(
+            logger.AssertEqual(
                 expectedDiscoveryMessages +
 $@"Verbose: Test case 'TestMethod1(2,2) [some_platform]' (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) from '{assemblyFilePath1}' is no longer available
 Verbose: Test case 'NoSuchMethod' (TestFramework.Tooling.Tests.NFUnitTest.NoSuchClass.NoSuchMethod) from '{assemblyFilePath1}' is no longer available
-Verbose: Test case 'Method2 [Real hardware]' (TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2) from '{assemblyFilePath1}' is no longer available
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+Verbose: Test case 'Method2 [Real hardware]' (TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2) from '{assemblyFilePath1}' is no longer available");
 
             // Assert that the selected test case are present
             Assert.AreEqual(

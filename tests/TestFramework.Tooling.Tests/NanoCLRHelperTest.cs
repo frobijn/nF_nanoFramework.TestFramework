@@ -22,8 +22,7 @@ namespace TestFramework.Tooling.Tests
         [TestMethod]
         public void NanoCLR_Local_Download()
         {
-            var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            string nanoCLRFilePath = Path.Combine(TestContext.ResultsDirectory, GetType().FullName, thisMethod.Name, "nanoclr.exe");
+            string nanoCLRFilePath = Path.Combine(TestDirectoryHelper.GetTestDirectory(TestContext), "nanoclr.exe");
             var logger = new LogMessengerMock();
 
             var actual = new NanoCLRHelper(nanoCLRFilePath, null, true, logger);
@@ -45,8 +44,7 @@ Verbose: Install/update successful. Running Vx
         [TestMethod]
         public void NanoCLR_Local_NotAvailable()
         {
-            var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            string nanoCLRFilePath = Path.Combine(TestContext.ResultsDirectory, GetType().FullName, thisMethod.Name, "nanoclr.exe");
+            string nanoCLRFilePath = Path.Combine(TestDirectoryHelper.GetTestDirectory(TestContext), "nanoclr.exe");
             var logger = new LogMessengerMock();
 
             var actual = new NanoCLRHelper(nanoCLRFilePath, null, false, logger);

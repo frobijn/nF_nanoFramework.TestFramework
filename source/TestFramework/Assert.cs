@@ -230,13 +230,12 @@ namespace nanoFramework.TestFramework
 
         /// <summary>
         /// Skip the test. A test should be skipped if the conditions to consider running the test are not met,
-        /// e.g., because the device the test is executed on does not support a feature required
-        /// for the test.
+        /// e.g., because the device the test is executed on does not support a feature required for the test.
         /// </summary>
         /// <param name="message"></param>
         /// <remarks>
-        /// Use <see cref="Inconclusive"/> instead if the device does support all required features but the the setup/initialisation
-        /// of the test context fails.
+        /// Use <see cref="SetupFailed(string, Exception)"/> if the setup of a test fails, either in the
+        /// setup method or at the start of the test.
         /// </remarks>
         [DoesNotReturn]
         public static void SkipTest(string message = null)
@@ -244,20 +243,20 @@ namespace nanoFramework.TestFramework
             throw new SkipTestException(message);
         }
 
+
         /// <summary>
-        /// Mark a test as inconclusive if the conditions to consider running the test are met,
-        /// but initialising the test context fails before the test proper could be started.
+        /// Use this method if the initialisation of a test has failed before the test proper could be started.
         /// </summary>
         /// <param name="message"></param>
         /// <param name="innerException"></param>
         /// <remarks>
-        /// Use <see cref="SkipTest"/> instead if conditions to consider running the test are not met,
-        /// e.g., because the device the test is executed on does not support a feature required.
+        /// Use <see cref="CleanupFailed"/> instead if the failure is detected after the test proper,
+        /// if the failure occurs while cleaning up.
         /// </remarks>
         [DoesNotReturn]
-        public static void Inconclusive(string message = null, Exception innerException = null)
+        public static void SetupFailed(string message = null, Exception innerException = null)
         {
-            throw new InconclusiveException(message, innerException);
+            throw new SetupFailedException(message, innerException);
         }
 
         /// <summary>

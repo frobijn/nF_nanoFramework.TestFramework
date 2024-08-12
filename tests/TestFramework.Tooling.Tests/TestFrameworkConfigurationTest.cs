@@ -3,7 +3,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
@@ -39,14 +38,7 @@ namespace TestFramework.Tooling.Tests
             // Validation with logger
             var logger = new LogMessengerMock();
             Assert.IsTrue(actual.Validate(null, null, logger));
-            Assert.AreEqual(
-$@"
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+            logger.AssertEqual("");
 
             // Save to XML and read back
             string xml = actual.CreateRunSettings("TestAdapter");
@@ -60,16 +52,18 @@ $@"
         [DataRow(false)]
         public void CustomConfigurationAndValidation(bool withLogger)
         {
-            string mockCLRInstanceFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
-            string mockCLRInstanceDirectoryPath = Path.GetDirectoryName(mockCLRInstanceFilePath);
+            string mockNanoCLRFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockCLRInstanceFilePath = Path.ChangeExtension(typeof(TestFrameworkConfiguration).Assembly.Location, ".pdb");
+            string mockCLRInstanceDirectoryPath = Path.GetDirectoryName(mockNanoCLRFilePath);
 
             var actual = TestFrameworkConfiguration.Extract(
                 ReadXml(
                     $@"<{TestFrameworkConfiguration.SettingsName}>
                         <AllowRealHardware>false</AllowRealHardware>
                         <RealHardwarePort>COM30;COM42</RealHardwarePort>
-                        <PathToLocalCLRInstance>{mockCLRInstanceFilePath}</PathToLocalCLRInstance>
+                        <PathToLocalNanoCLR>{mockNanoCLRFilePath}</PathToLocalNanoCLR>
                         <CLRVersion>1.2.3</CLRVersion>
+                        <PathToLocalCLRInstance>{mockCLRInstanceFilePath}</PathToLocalCLRInstance>
                         <MaxVirtualDevices>1</MaxVirtualDevices>
                         <Logging>Verbose</Logging>
                     </{TestFrameworkConfiguration.SettingsName}>"
@@ -78,8 +72,9 @@ $@"
             {
                 AllowRealHardware = false,
                 RealHardwarePort = new string[] { "COM30", "COM42" },
-                PathToLocalCLRInstance = mockCLRInstanceFilePath,
+                PathToLocalNanoCLR = mockNanoCLRFilePath,
                 CLRVersion = "1.2.3",
+                PathToLocalCLRInstance = mockCLRInstanceFilePath,
                 MaxVirtualDevices = 1,
                 Logging = LoggingLevel.Verbose
             }, actual);
@@ -89,18 +84,12 @@ $@"
 
             // Validation with log messages
             LogMessengerMock logger = withLogger ? new LogMessengerMock() : null;
-            Assert.IsTrue(actual.Validate(mockCLRInstanceDirectoryPath, mockCLRInstanceFilePath, logger));
+            Assert.IsTrue(actual.Validate(mockCLRInstanceDirectoryPath, mockNanoCLRFilePath, logger));
             if (withLogger)
             {
-                Assert.AreEqual(
+                logger.AssertEqual(
 $@"Verbose: Tests on real hardware are disabled; RealHardwarePort is ignored.'
-Verbose: CLRVersion is ignored because the path to a local CLR instance is specified.
-".Replace("\r\n", "\n"),
-                    string.Join("\n",
-                            from m in logger.Messages
-                            select $"{m.level}: {m.message}"
-                        ) + '\n'
-                );
+Verbose: CLRVersion is ignored because the path to a local CLR instance is specified.");
             }
 
             // Save to XML and read back
@@ -136,16 +125,19 @@ Verbose: CLRVersion is ignored because the path to a local CLR instance is speci
         [DataRow(false)]
         public void ConfigurationWithRelativePath_Unresolved(bool withLogger)
         {
-            string mockCLRInstanceFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockNanoCLRFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockCLRInstanceFilePath = Path.ChangeExtension(typeof(TestFrameworkConfiguration).Assembly.Location, ".pdb");
 
             var actual = TestFrameworkConfiguration.Extract(
                 ReadXml(
                     $@"<{TestFrameworkConfiguration.SettingsName}>
+                        <PathToLocalNanoCLR>{Path.GetFileName(mockNanoCLRFilePath)}</PathToLocalNanoCLR>
                         <PathToLocalCLRInstance>{Path.GetFileName(mockCLRInstanceFilePath)}</PathToLocalCLRInstance>
                     </{TestFrameworkConfiguration.SettingsName}>"
                 ));
             AssertConfiguration(new TestFrameworkConfiguration()
             {
+                PathToLocalNanoCLR = Path.GetFileName(mockNanoCLRFilePath),
                 PathToLocalCLRInstance = Path.GetFileName(mockCLRInstanceFilePath)
             }, actual);
 
@@ -154,14 +146,9 @@ Verbose: CLRVersion is ignored because the path to a local CLR instance is speci
             Assert.IsFalse(actual.Validate(null, null, logger));
             if (withLogger)
             {
-                Assert.AreEqual(
-$@"Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFileName(mockCLRInstanceFilePath)}'
-".Replace("\r\n", "\n"),
-                    string.Join("\n",
-                            from m in logger.Messages
-                            select $"{m.level}: {m.message}"
-                        ) + '\n'
-                );
+                logger.AssertEqual(
+$@"Error: Local nanoclr.exe not found at PathToLocalNanoCLR = '{Path.GetFileName(mockNanoCLRFilePath)}'
+Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFileName(mockCLRInstanceFilePath)}'");
             }
         }
 
@@ -172,18 +159,21 @@ $@"Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFil
         [DataRow(false)]
         public void ConfigurationWithRelativePath_NotFound(bool withLogger)
         {
-            string mockCLRInstanceFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockNanoCLRFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockCLRInstanceFilePath = Path.ChangeExtension(typeof(TestFrameworkConfiguration).Assembly.Location, ".pdb");
             string mockCLRInstanceDirectoryPath = Path.GetDirectoryName(mockCLRInstanceFilePath);
 
             var actual = TestFrameworkConfiguration.Extract(
                 ReadXml(
                     $@"<{TestFrameworkConfiguration.SettingsName}>
+                        <PathToLocalNanoCLR>{Path.GetFileName(mockNanoCLRFilePath)}</PathToLocalNanoCLR>
                         <PathToLocalCLRInstance>{Path.GetFileName(mockCLRInstanceFilePath)}</PathToLocalCLRInstance>
                     </{TestFrameworkConfiguration.SettingsName}>"
                 ));
             AssertConfiguration(new TestFrameworkConfiguration()
             {
-                PathToLocalCLRInstance = Path.GetFileName(mockCLRInstanceFilePath)
+                PathToLocalNanoCLR = Path.GetFileName(mockNanoCLRFilePath),
+                PathToLocalCLRInstance = Path.GetFileName(mockCLRInstanceFilePath),
             }, actual);
 
             // Validation with log messages
@@ -191,16 +181,13 @@ $@"Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFil
             Assert.IsFalse(actual.Validate($"{mockCLRInstanceDirectoryPath}_NotHereEither", Path.Combine($"{mockCLRInstanceDirectoryPath}_NotHere", "NFUnitTest.dll"), logger));
             if (withLogger)
             {
-                Assert.AreEqual(
-$@"Detailed: PathToLocalCLRInstance '{Path.GetFileName(mockCLRInstanceFilePath)}' is not relative to the assembly directory '{mockCLRInstanceDirectoryPath}_NotHere'
+                logger.AssertEqual(
+$@"Detailed: PathToLocalNanoCLR '{Path.GetFileName(mockNanoCLRFilePath)}' is not relative to the assembly directory '{mockCLRInstanceDirectoryPath}_NotHere'
+Detailed: PathToLocalNanoCLR '{Path.GetFileName(mockNanoCLRFilePath)}' is not relative to the solution directory '{mockCLRInstanceDirectoryPath}_NotHereEither'
+Error: Local nanoclr.exe not found at PathToLocalNanoCLR = '{Path.GetFileName(mockNanoCLRFilePath)}'
+Detailed: PathToLocalCLRInstance '{Path.GetFileName(mockCLRInstanceFilePath)}' is not relative to the assembly directory '{mockCLRInstanceDirectoryPath}_NotHere'
 Detailed: PathToLocalCLRInstance '{Path.GetFileName(mockCLRInstanceFilePath)}' is not relative to the solution directory '{mockCLRInstanceDirectoryPath}_NotHereEither'
-Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFileName(mockCLRInstanceFilePath)}'
-".Replace("\r\n", "\n"),
-                    string.Join("\n",
-                            from m in logger.Messages
-                            select $"{m.level}: {m.message}"
-                        ) + '\n'
-                );
+Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFileName(mockCLRInstanceFilePath)}'");
             }
         }
 
@@ -210,18 +197,21 @@ Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFileNa
         [DataRow(false)]
         public void ConfigurationWithRelativePath_InSolutionDirectory(bool withLogger)
         {
-            string mockCLRInstanceFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockNanoCLRFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockCLRInstanceFilePath = Path.ChangeExtension(typeof(TestFrameworkConfiguration).Assembly.Location, ".pdb");
             string mockCLRInstanceDirectoryPath = Path.GetDirectoryName(mockCLRInstanceFilePath);
 
             var actual = TestFrameworkConfiguration.Extract(
                 ReadXml(
                     $@"<{TestFrameworkConfiguration.SettingsName}>
+                        <PathToLocalNanoCLR>{Path.GetFileName(mockNanoCLRFilePath)}</PathToLocalNanoCLR>
                         <PathToLocalCLRInstance>{Path.GetFileName(mockCLRInstanceFilePath)}</PathToLocalCLRInstance>
                     </{TestFrameworkConfiguration.SettingsName}>"
                 ));
             AssertConfiguration(new TestFrameworkConfiguration()
             {
-                PathToLocalCLRInstance = Path.GetFileName(mockCLRInstanceFilePath)
+                PathToLocalNanoCLR = Path.GetFileName(mockNanoCLRFilePath),
+                PathToLocalCLRInstance = Path.GetFileName(mockCLRInstanceFilePath),
             }, actual);
 
             // Validation with log messages
@@ -229,15 +219,11 @@ Error: Local CLR instance not found at PathToLocalCLRInstance = '{Path.GetFileNa
             Assert.IsTrue(actual.Validate(mockCLRInstanceDirectoryPath, Path.Combine($"{mockCLRInstanceDirectoryPath}_NotHere", "NFUnitTest.dll"), logger));
             if (withLogger)
             {
-                Assert.AreEqual(
-$@"Detailed: PathToLocalCLRInstance '{Path.GetFileName(mockCLRInstanceFilePath)}' is not relative to the assembly directory '{mockCLRInstanceDirectoryPath}_NotHere'
-Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
-".Replace("\r\n", "\n"),
-                    string.Join("\n",
-                            from m in logger.Messages
-                            select $"{m.level}: {m.message}"
-                        ) + '\n'
-                );
+                logger.AssertEqual(
+$@"Detailed: PathToLocalNanoCLR '{Path.GetFileName(mockNanoCLRFilePath)}' is not relative to the assembly directory '{mockCLRInstanceDirectoryPath}_NotHere'
+Detailed: PathToLocalNanoCLR: found at '{mockNanoCLRFilePath}'
+Detailed: PathToLocalCLRInstance '{Path.GetFileName(mockCLRInstanceFilePath)}' is not relative to the assembly directory '{mockCLRInstanceDirectoryPath}_NotHere'
+Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'");
             }
         }
 
@@ -248,17 +234,20 @@ Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
         [DataRow(false)]
         public void ConfigurationWithRelativePath_InAssemblyDirectory(bool withLogger)
         {
-            string mockCLRInstanceFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockNanoCLRFilePath = typeof(TestFrameworkConfiguration).Assembly.Location;
+            string mockCLRInstanceFilePath = Path.ChangeExtension(typeof(TestFrameworkConfiguration).Assembly.Location, ".pdb");
             string mockCLRInstanceDirectoryPath = Path.GetDirectoryName(mockCLRInstanceFilePath);
 
             var actual = TestFrameworkConfiguration.Extract(
                 ReadXml(
                     $@"<{TestFrameworkConfiguration.SettingsName}>
+                        <PathToLocalNanoCLR>{Path.GetFileName(mockNanoCLRFilePath)}</PathToLocalNanoCLR>
                         <PathToLocalCLRInstance>{Path.GetFileName(mockCLRInstanceFilePath)}</PathToLocalCLRInstance>
                     </{TestFrameworkConfiguration.SettingsName}>"
                 ));
             AssertConfiguration(new TestFrameworkConfiguration()
             {
+                PathToLocalNanoCLR = Path.GetFileName(mockNanoCLRFilePath),
                 PathToLocalCLRInstance = Path.GetFileName(mockCLRInstanceFilePath)
             }, actual);
 
@@ -267,14 +256,9 @@ Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
             Assert.IsTrue(actual.Validate(mockCLRInstanceDirectoryPath, Path.Combine(mockCLRInstanceDirectoryPath, "NFUnitTest.dll"), logger));
             if (withLogger)
             {
-                Assert.AreEqual(
-$@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
-".Replace("\r\n", "\n"),
-                    string.Join("\n",
-                            from m in logger.Messages
-                            select $"{m.level}: {m.message}"
-                        ) + '\n'
-                );
+                logger.AssertEqual(
+$@"Detailed: PathToLocalNanoCLR: found at '{mockNanoCLRFilePath}'
+Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'");
             }
         }
         #endregion
@@ -309,14 +293,15 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
             var actual = TestFrameworkConfiguration.Read(
                     $@"<RunSettings>
                         <RunConfiguration>
-                            <TestSessionTimeout>1200000</TestSessionTimeout>
+                            <SomeSetting>42</SomeSetting>
                             <TestAdaptersPaths>OtherTestAdapter</TestAdaptersPaths>
                             <MaxCpuCount>10</MaxCpuCount>
+                            <TestSessionTimeout>1000</TestSessionTimeout>
                         </RunConfiguration>
                         <{TestFrameworkConfiguration.SettingsName}>
                             <AllowRealHardware>false</AllowRealHardware>
                             <RealHardwarePort>COM30;COM42</RealHardwarePort>
-                            <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
+                            <PathToLocalNanoCLR>New</PathToLocalNanoCLR>
                             <CLRVersion>3.2.1</CLRVersion>
                             <MaxVirtualDevices>10</MaxVirtualDevices>
                             <Logging>Detailed</Logging>
@@ -327,18 +312,18 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                 );
             if (withLogger)
             {
-                Assert.AreEqual(0, logger.Messages.Count);
+                logger.AssertEqual("");
             }
 
             AssertConfiguration(new TestFrameworkConfiguration()
             {
                 AllowRealHardware = false,
                 RealHardwarePort = new string[] { "COM30", "COM42" },
-                PathToLocalCLRInstance = "New",
+                PathToLocalNanoCLR = "New",
                 CLRVersion = "3.2.1",
                 MaxVirtualDevices = 10,
                 Logging = LoggingLevel.Detailed
-            }, actual);
+            }, actual, 1000);
 
             // Save to XML
             string xml = actual.CreateRunSettings("TestAdapter");
@@ -346,8 +331,9 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <RunSettings>
     <RunConfiguration>
-        <TestSessionTimeout>1200000</TestSessionTimeout>
+        <SomeSetting>42</SomeSetting>
         <TestAdaptersPaths>OtherTestAdapter</TestAdaptersPaths>
+        <TestSessionTimeout>1000</TestSessionTimeout>
         <MaxCpuCount>1</MaxCpuCount>
         <TargetFrameworkVersion>net48</TargetFrameworkVersion>
         <TargetPlatform>x64</TargetPlatform>
@@ -355,7 +341,7 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
     <nanoFrameworkAdapter>
         <AllowRealHardware>false</AllowRealHardware>
         <RealHardwarePort>COM30;COM42</RealHardwarePort>
-        <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
+        <PathToLocalNanoCLR>New</PathToLocalNanoCLR>
         <CLRVersion>3.2.1</CLRVersion>
         <MaxVirtualDevices>10</MaxVirtualDevices>
         <Logging>Detailed</Logging>
@@ -385,7 +371,7 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                         <{TestFrameworkConfiguration.SettingsName}>
                             <AllowRealHardware>false</AllowRealHardware>
                             <RealHardwarePort>COM30;COM42</RealHardwarePort>
-                            <PathToLocalCLRInstance>Old</PathToLocalCLRInstance>
+                            <PathToLocalNanoCLR>Old</PathToLocalNanoCLR>
                             <CLRVersion>1.2.3</CLRVersion>
                             <MaxVirtualDevices>1</MaxVirtualDevices>
                             <Logging>Verbose</Logging>
@@ -395,7 +381,7 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                     logger);
             if (withLogger)
             {
-                Assert.AreEqual(0, logger.Messages.Count);
+                logger.AssertEqual("");
             }
 
             logger = withLogger ? new LogMessengerMock() : null;
@@ -409,7 +395,7 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                         <{TestFrameworkConfiguration.SettingsName}>
                             <AllowRealHardware>false</AllowRealHardware>
                             <RealHardwarePort>COM11;COM31</RealHardwarePort>
-                            <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
+                            <PathToLocalNanoCLR>New</PathToLocalNanoCLR>
                             <CLRVersion>3.2.1</CLRVersion>
                             <MaxVirtualDevices>1</MaxVirtualDevices>
                             <Logging>Detailed</Logging>
@@ -420,7 +406,7 @@ $@"Detailed: PathToLocalCLRInstance: found at '{mockCLRInstanceFilePath}'
                 );
             if (withLogger)
             {
-                Assert.AreEqual(0, logger.Messages.Count);
+                logger.AssertEqual("");
             }
 
             // Save to XML and read back
@@ -440,7 +426,7 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
     <{TestFrameworkConfiguration.SettingsName}>
         <AllowRealHardware>false</AllowRealHardware>
         <RealHardwarePort>COM11;COM31</RealHardwarePort>
-        <PathToLocalCLRInstance>New</PathToLocalCLRInstance>
+        <PathToLocalNanoCLR>New</PathToLocalNanoCLR>
         <CLRVersion>3.2.1</CLRVersion>
         <MaxVirtualDevices>1</MaxVirtualDevices>
         <Logging>Detailed</Logging>
@@ -462,14 +448,8 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
             AssertConfiguration(new TestFrameworkConfiguration(), actual);
             if (withLogger)
             {
-                Assert.AreEqual(
-$@"Error: The .runsettings configuration is not valid XML: Data at the root level is invalid. Line 1, position 1.
-".Replace("\r\n", "\n"),
-                    string.Join("\n",
-                            from m in logger.Messages
-                            select $"{m.level}: {m.message}"
-                        ) + '\n'
-                );
+                logger.AssertEqual(
+$@"Error: The .runsettings configuration is not valid XML: Data at the root level is invalid. Line 1, position 1.");
             }
 
             logger = withLogger ? new LogMessengerMock() : null;
@@ -481,26 +461,22 @@ $@"Error: The .runsettings configuration is not valid XML: Data at the root leve
             Assert.IsTrue(object.ReferenceEquals(toModify, actual));
             if (withLogger)
             {
-                Assert.AreEqual(
-$@"Error: The .runsettings configuration is not valid XML: Data at the root level is invalid. Line 1, position 1.
-".Replace("\r\n", "\n"),
-                    string.Join("\n",
-                            from m in logger.Messages
-                            select $"{m.level}: {m.message}"
-                        ) + '\n'
-                );
+                logger.AssertEqual(
+$@"Error: The .runsettings configuration is not valid XML: Data at the root level is invalid. Line 1, position 1.");
             }
         }
         #endregion
 
         #region Helpers
-        private static void AssertConfiguration(TestFrameworkConfiguration expected, TestFrameworkConfiguration actual)
+        private static void AssertConfiguration(TestFrameworkConfiguration expected, TestFrameworkConfiguration actual, int? expectedTestSessionTimeout = null)
         {
             Assert.IsNotNull(actual);
+            Assert.AreEqual(expectedTestSessionTimeout, actual.TestSessionTimeout);
             Assert.AreEqual(expected.AllowRealHardware, actual.AllowRealHardware);
             Assert.AreEqual(string.Join(",", expected.RealHardwarePort), string.Join(",", actual.RealHardwarePort));
-            Assert.AreEqual(expected.PathToLocalCLRInstance, actual.PathToLocalCLRInstance);
+            Assert.AreEqual(expected.PathToLocalNanoCLR, actual.PathToLocalNanoCLR);
             Assert.AreEqual(expected.CLRVersion, actual.CLRVersion);
+            Assert.AreEqual(expected.PathToLocalCLRInstance, actual.PathToLocalCLRInstance);
             Assert.AreEqual(expected.MaxVirtualDevices, actual.MaxVirtualDevices);
             Assert.AreEqual(expected.Logging, actual.Logging);
         }

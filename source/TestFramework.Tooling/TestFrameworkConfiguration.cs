@@ -92,7 +92,25 @@ namespace nanoFramework.TestFramework.Tooling
         public IReadOnlyList<string> RealHardwarePort { get; set; } = new string[] { };
 
         /// <summary>
-        /// Path to a local nanoCLR instance to use to run Unit Tests.
+        /// Path to a local version of nanoclr.exe to use to run Unit Tests.
+        /// If the path is specified as a relative path and the tests of a single assembly
+        /// are being executed, the path is assumed to be relative to the assembly
+        /// being executed. If no such file exists, the path is then assumed to be
+        /// relative to the solution directory. If that file also does not exist, the
+        /// test will not be executed.
+        /// Is an empty string if no value has been specified.
+        /// </summary>
+        public string PathToLocalNanoCLR { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Version of the global nanoCLR instance to use when running Unit Tests.
+        /// This setting is ignored if <see cref="PathToLocalNanoCLR"/> is specified.
+        /// Is an empty string if no value has been specified.
+        /// </summary>
+        public string CLRVersion { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Path to a local CLR instance to use to run Unit Tests.
         /// If the path is specified as a relative path and the tests of a single assembly
         /// are being executed, the path is assumed to be relative to the assembly
         /// being executed. If no such file exists, the path is then assumed to be
@@ -101,13 +119,6 @@ namespace nanoFramework.TestFramework.Tooling
         /// Is an empty string if no value has been specified.
         /// </summary>
         public string PathToLocalCLRInstance { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Version of the global nanoCLR instance to use when running Unit Tests.
-        /// This setting is ignored if <see cref="PathToLocalCLRInstance"/> is specified.
-        /// Is an empty string if no value has been specified.
-        /// </summary>
-        public string CLRVersion { get; set; } = string.Empty;
 
         /// <summary>
         /// Set to a number other than 1 tp allow the parallel execution of tests on a Virtual Device.
@@ -119,6 +130,16 @@ namespace nanoFramework.TestFramework.Tooling
         /// Level of logging for Unit Test execution.
         /// </summary>
         public LoggingLevel Logging { get; set; } = LoggingLevel.None;
+
+        /// <summary>
+        /// Allows users to terminate a test session when it exceeds a given timeout, specified in milliseconds.
+        /// Setting a timeout ensures that resources are well consumed and test sessions are constrained to a set time.
+        /// </summary>
+        public int? TestSessionTimeout
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Get the run configuration settings that have been read from the (template for)
@@ -144,10 +165,10 @@ namespace nanoFramework.TestFramework.Tooling
         /// If <paramref name="defaultConfiguration"/> is not <c>null</c>, the result is a modified version of that configuration.</returns>
         public static TestFrameworkConfiguration Read(string configuration, TestFrameworkConfiguration defaultConfiguration, LogMessenger logger)
         {
-            defaultConfiguration ??= new TestFrameworkConfiguration();
+            TestFrameworkConfiguration combinedConfiguration = defaultConfiguration ?? new TestFrameworkConfiguration();
             if (string.IsNullOrEmpty(configuration))
             {
-                return defaultConfiguration;
+                return combinedConfiguration;
             }
             var doc = new XmlDocument();
             try
@@ -157,12 +178,12 @@ namespace nanoFramework.TestFramework.Tooling
             catch (Exception ex)
             {
                 logger?.Invoke(LoggingLevel.Error, $"The .runsettings configuration is not valid XML: {ex.Message}");
-                return defaultConfiguration;
+                return combinedConfiguration;
             }
-            defaultConfiguration.ModifyConfiguration(doc.DocumentElement?.SelectSingleNode(SettingsName));
+            combinedConfiguration.ModifyConfiguration(doc.DocumentElement?.SelectSingleNode(SettingsName));
 
             // Also remember the RunConfiguration settings except the ones we care about.
-            XmlNode runConfiguration = doc.DocumentElement.SelectSingleNode(nameof(defaultConfiguration.RunConfiguration));
+            XmlNode runConfiguration = doc.DocumentElement.SelectSingleNode(nameof(combinedConfiguration.RunConfiguration));
             if (!(runConfiguration is null))
             {
                 // Remove fixed settings
@@ -176,23 +197,35 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     if (node.NodeType == XmlNodeType.Element && !s_requiredRunConfigurationNodes.ContainsKey(node.Name))
                     {
-                        XmlNode old = defaultConfiguration.RunConfiguration?.SelectSingleNode(node.Name);
+                        XmlNode old = combinedConfiguration.RunConfiguration?.SelectSingleNode(node.Name);
                         if (!(old is null))
                         {
-                            defaultConfiguration.RunConfiguration.RemoveChild(old);
+                            combinedConfiguration.RunConfiguration.RemoveChild(old);
                         }
-                        if (defaultConfiguration.RunConfiguration is null)
+                        if (combinedConfiguration.RunConfiguration is null)
                         {
                             var newDoc = new XmlDocument();
                             newDoc.AppendChild(newDoc.CreateElement(nameof(RunConfiguration)));
-                            defaultConfiguration.RunConfiguration = newDoc.DocumentElement;
+                            combinedConfiguration.RunConfiguration = newDoc.DocumentElement;
                         }
-                        XmlNode copy = defaultConfiguration.RunConfiguration.OwnerDocument.ImportNode(node, true);
-                        defaultConfiguration.RunConfiguration.AppendChild(copy);
+                        XmlNode copy = combinedConfiguration.RunConfiguration.OwnerDocument.ImportNode(node, true);
+                        combinedConfiguration.RunConfiguration.AppendChild(copy);
+
+                        if (node.Name == nameof(TestSessionTimeout))
+                        {
+                            if (int.TryParse(copy.InnerText, out int timeout))
+                            {
+                                combinedConfiguration.TestSessionTimeout = timeout;
+                            }
+                            else
+                            {
+                                combinedConfiguration.TestSessionTimeout = null;
+                            }
+                        }
                     }
                 }
             }
-            return defaultConfiguration;
+            return combinedConfiguration;
         }
 
         /// <summary>
@@ -240,6 +273,12 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         Logging = logging;
                     }
+                }
+
+                XmlNode pathToLocalNanoCLR = node.SelectSingleNode(nameof(PathToLocalNanoCLR))?.FirstChild;
+                if (pathToLocalNanoCLR != null && pathToLocalNanoCLR.NodeType == XmlNodeType.Text)
+                {
+                    PathToLocalNanoCLR = pathToLocalNanoCLR.Value;
                 }
 
                 XmlNode clrVersion = node.SelectSingleNode(nameof(CLRVersion))?.FirstChild;
@@ -293,57 +332,70 @@ namespace nanoFramework.TestFramework.Tooling
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(PathToLocalCLRInstance))
+            bool ResolveRelativePath(string name, string path)
             {
                 bool found = false;
-                if (!Path.IsPathRooted(PathToLocalCLRInstance))
+                if (!Path.IsPathRooted(path))
                 {
                     if (!string.IsNullOrWhiteSpace(assemblyFilePath))
                     {
                         string assemblyDirectory = Path.GetDirectoryName(assemblyFilePath);
-                        string candidate = Path.Combine(assemblyDirectory, PathToLocalCLRInstance);
+                        string candidate = Path.Combine(assemblyDirectory, path);
                         if (File.Exists(candidate))
                         {
-                            PathToLocalCLRInstance = candidate;
+                            path = candidate;
                             found = true;
                         }
                         else
                         {
-                            logger?.Invoke(LoggingLevel.Detailed, $"{nameof(PathToLocalCLRInstance)} '{PathToLocalCLRInstance}' is not relative to the assembly directory '{assemblyDirectory}'");
+                            logger?.Invoke(LoggingLevel.Detailed, $"{name} '{path}' is not relative to the assembly directory '{assemblyDirectory}'");
                         }
                     }
 
                     if (!found && !string.IsNullOrWhiteSpace(solutionDirectory))
                     {
-                        string candidate = Path.Combine(solutionDirectory, PathToLocalCLRInstance);
+                        string candidate = Path.Combine(solutionDirectory, path);
                         if (File.Exists(candidate))
                         {
-                            PathToLocalCLRInstance = candidate;
+                            path = candidate;
                             found = true;
                         }
                         else
                         {
-                            logger?.Invoke(LoggingLevel.Detailed, $"{nameof(PathToLocalCLRInstance)} '{PathToLocalCLRInstance}' is not relative to the solution directory '{solutionDirectory}'");
+                            logger?.Invoke(LoggingLevel.Detailed, $"{name} '{path}' is not relative to the solution directory '{solutionDirectory}'");
                         }
                     }
 
                     if (found)
                     {
-                        logger?.Invoke(LoggingLevel.Detailed, $"{nameof(PathToLocalCLRInstance)}: found at '{PathToLocalCLRInstance}'");
+                        logger?.Invoke(LoggingLevel.Detailed, $"{name}: found at '{path}'");
                     }
                 }
                 else
                 {
-                    found = File.Exists(PathToLocalCLRInstance);
+                    found = File.Exists(path);
                 }
-                if (!found)
+                return found;
+            }
+
+            if (!string.IsNullOrWhiteSpace(PathToLocalNanoCLR))
+            {
+                if (!ResolveRelativePath(nameof(PathToLocalNanoCLR), PathToLocalNanoCLR))
                 {
-                    logger?.Invoke(LoggingLevel.Error, $"Local CLR instance not found at {nameof(PathToLocalCLRInstance)} = '{PathToLocalCLRInstance}'");
+                    logger?.Invoke(LoggingLevel.Error, $"Local nanoclr.exe not found at {nameof(PathToLocalNanoCLR)} = '{PathToLocalNanoCLR}'");
                     isValid = false;
                 }
                 if (!string.IsNullOrWhiteSpace(CLRVersion))
                 {
                     logger?.Invoke(LoggingLevel.Verbose, $"{nameof(CLRVersion)} is ignored because the path to a local CLR instance is specified.");
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(PathToLocalCLRInstance))
+            {
+                if (!ResolveRelativePath(nameof(PathToLocalCLRInstance), PathToLocalCLRInstance))
+                {
+                    logger?.Invoke(LoggingLevel.Error, $"Local CLR instance not found at {nameof(PathToLocalCLRInstance)} = '{PathToLocalCLRInstance}'");
+                    isValid = false;
                 }
             }
 
@@ -452,14 +504,19 @@ namespace nanoFramework.TestFramework.Tooling
                 AddNode(nameof(RealHardwarePort), string.Join(";", RealHardwarePort));
             }
 
-            if (PathToLocalCLRInstance != defaultConfiguration.PathToLocalCLRInstance)
+            if (PathToLocalNanoCLR != defaultConfiguration.PathToLocalNanoCLR)
             {
-                AddNode(nameof(PathToLocalCLRInstance), PathToLocalCLRInstance);
+                AddNode(nameof(PathToLocalNanoCLR), PathToLocalNanoCLR);
             }
 
             if (CLRVersion != defaultConfiguration.CLRVersion)
             {
                 AddNode(nameof(CLRVersion), CLRVersion);
+            }
+
+            if (PathToLocalCLRInstance != defaultConfiguration.PathToLocalCLRInstance)
+            {
+                AddNode(nameof(PathToLocalCLRInstance), PathToLocalCLRInstance);
             }
 
             if (MaxVirtualDevices != defaultConfiguration.MaxVirtualDevices)

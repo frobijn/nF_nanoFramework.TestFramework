@@ -4,6 +4,12 @@
 using System;
 using System.Reflection;
 
+//======================================================================
+//
+// This file is generated. Changes to the code will be lost.
+//
+//======================================================================
+
 namespace nanoFramework.TestFramework.Tools
 {
     /// <summary>
@@ -11,48 +17,54 @@ namespace nanoFramework.TestFramework.Tools
     /// </summary>
     public partial class UnitTestLauncher
     {
+        #region Fields
         private readonly string _reportPrefix;
+        #endregion
 
-        public UnitTestLauncher(string assemblyName, string reportPrefix)
+        #region Entry point
+        /// <summary>
+        /// Run the selected unit tests from the test assembly
+        /// </summary>
+        /// <param name="reportPrefix">Prefix to use for messages from the unit test launcher
+        /// about the execution of the unit tests</param>
+        public static void Run(string reportPrefix)
+        {
+            new UnitTestLauncher(reportPrefix).RunUnitTests();
+        }
+        #endregion
+
+        #region Construction
+        private UnitTestLauncher(string reportPrefix)
         {
             _reportPrefix = reportPrefix;
-            Assembly test;
-            try
-            {
-                test = Assembly.Load(assemblyName);
-            }
-            catch
-            {
-                Console.WriteLine($"{_reportPrefix}:Error:Cannot load assembly {assemblyName}");
-                return;
-            }
-            RunUnitTests();
         }
+        #endregion
 
         #region Selection of tests
         /// <summary>
-        /// Get test class information for a candidate test class
-        /// The isTestClass method will be generated based on the selection of tests
+        /// Get test class information for a candidate test class.
+        /// The <see cref="RunUnitTests"/> method will be generated based on the selection of tests.
         /// </summary>
-        partial void RunUnitTests();
+        private partial void RunUnitTests();
         #endregion
 
-        public delegate void RunTestMethods(object testClassInstance, ForTestMethod runTestMethod, ForDataRowTestMethod runDataRowTest);
+        #region Execution of unit tests
+        public delegate void RunTestMethods(ForTestMethod runTestMethod, ForDataRowTestMethod runDataRowTest);
 
         public delegate void SetupCleanup(object testClassInstance);
 
-        public delegate void ForTestMethod(Action testMethod, int testMethodIndex);
+        public delegate void ForTestMethod(string testMethodName);
 
-        public delegate void ForDataRowTestMethod(string testMethodName, int testMethodIndex, params int[] dataRowIndices);
-
+        public delegate void ForDataRowTestMethod(string testMethodName, params int[] dataRowIndices);
 
         /// <summary>
         /// Run the unit tests in the assembly
         /// </summary>
-        public void ForClass(Type testClass, int classIndex, bool instantiate, SetupCleanup setup, SetupCleanup cleanup, RunTestMethods runMethods)
+        public void ForClass(Type testClass, bool instantiate, string setupMethodName, string cleanupMethodName, RunTestMethods runMethods)
         {
             #region Create and setup the test class instance
-            Console.WriteLine($"{_reportPrefix}:C{classIndex}:0:Start");
+            string prefix = _reportPrefix + ":C:" + testClass.FullName;
+            Console.WriteLine($"{prefix}:0:{Communication.Start}");
             object testClassInstance = null;
             long startTime = DateTime.UtcNow.Ticks;
 
@@ -63,79 +75,116 @@ namespace nanoFramework.TestFramework.Tools
                     ConstructorInfo constructor = testClass.GetConstructor(s_defaultConstructor);
                     if (constructor is null)
                     {
-                        Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:SetupError:Class does not have a public default constructor");
+                        Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.MethodError}:Class does not have a public default constructor");
                         return;
                     }
                     else
                     {
-                        Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:Instantiate");
+                        Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Instantiate}");
                     }
                     testClassInstance = constructor.Invoke(null);
                 }
 
-                if (setup is not null)
+                if (setupMethodName is not null)
                 {
-                    Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:Setup");
-                    setup(testClassInstance);
+                    MethodInfo method = testClass.GetMethod(setupMethodName);
+                    if (method is null)
+                    {
+                        Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.MethodError}:Method '{setupMethodName}' not found");
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Setup}");
+                        method.Invoke(testClassInstance, s_noArguments);
+                    }
                 }
-                Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:SetupComplete");
+                if (instantiate || setupMethodName is not null)
+                {
+                    Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.SetupComplete}");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:SetupError:{ex.Message}");
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.SetupFail}:{ex.Message}");
                 return;
             }
             #endregion
 
             #region Run the test methods
             runMethods(
-                testClassInstance,
+                (testMethodName)
+                    => RunTestMethod(testClass, testClassInstance, testMethodName),
 
-                (testMethod, testMethodIndex)
-                    => RunTestMethod($"{_reportPrefix}:C{classIndex}T{testMethodIndex}", testMethod),
-
-                (testMethodName, testMethodIndex, dataRowIndices)
-                    => RunDataRowTests($"{_reportPrefix}:C{classIndex}T{testMethodIndex}", testClass, testClassInstance, testMethodName, dataRowIndices)
+                (testMethodName, dataRowIndices)
+                    => RunDataRowTests(testClass, testClassInstance, testMethodName, dataRowIndices)
             );
             #endregion
 
             #region Cleanup and disposal
-            Console.WriteLine($"{_reportPrefix}:C{classIndex}:0:TestsComplete");
             startTime = DateTime.UtcNow.Ticks;
             try
             {
-                if (cleanup is not null)
+                if (cleanupMethodName is not null)
                 {
-                    Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:Cleanup");
-                    cleanup(testClassInstance);
+                    MethodInfo method = testClass.GetMethod(cleanupMethodName);
+                    if (method is null)
+                    {
+                        Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.MethodError}:Method '{cleanupMethodName}' not found");
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Cleanup}");
+                        method.Invoke(testClassInstance, s_noArguments);
+                    }
                 }
                 if (testClassInstance is IDisposable disposable)
                 {
-                    Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:Dispose");
+                    Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Dispose}");
                     disposable.Dispose();
                 }
-
-                Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:Done");
+                Console.WriteLine($"{prefix}:0:{Communication.Done}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{_reportPrefix}:C{classIndex}:{DateTime.UtcNow.Ticks - startTime}:CleanupError:{ex.Message}");
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.CleanupFail}:{ex.Message}");
                 return;
             }
             #endregion
         }
         private static readonly Type[] s_defaultConstructor = new Type[] { };
 
-        private void RunDataRowTests(string prefix, Type testClass, object testClassInstance, string testMethodName, int[] dataRowIndices)
+
+        private void RunTestMethod(Type testClass, object testClassInstance, string testMethodName)
         {
+            string prefix = _reportPrefix + ":M:" + testClass.FullName + '.' + testMethodName;
+            MethodInfo testMethod = testClass.GetMethod(testMethodName);
+
+            if (testMethod is null)
+            {
+                Console.WriteLine($"{prefix}:0:{Communication.MethodError}:Test method '{testMethodName}' not found");
+            }
+            else
+            {
+                RunTest(
+                    prefix,
+                    () => testMethod.Invoke(testClassInstance, s_noArguments)
+                );
+            }
+        }
+        private static readonly object[] s_noArguments = new object[] { };
+
+        private void RunDataRowTests(Type testClass, object testClassInstance, string testMethodName, int[] dataRowIndices)
+        {
+            string prefix = _reportPrefix + ":D:" + testClass.FullName + '.' + testMethodName + "#";
             MethodInfo testMethod = testClass.GetMethod(testMethodName);
 
             if (testMethod is null)
             {
                 foreach (int dataRowIndex in dataRowIndices)
                 {
-                    Console.WriteLine($"{prefix}D{dataRowIndex}:0:Start");
-                    Console.WriteLine($"{prefix}D{dataRowIndex}:0:SetupError:Test method not found");
+                    Console.WriteLine($"{prefix}{dataRowIndex}:0:{Communication.MethodError}:Test method '{testMethodName}' not found");
                 }
             }
             else
@@ -151,8 +200,8 @@ namespace nanoFramework.TestFramework.Tools
                         {
                             if (idx == dataRowIndex)
                             {
-                                RunTestMethod(
-                                    $"{prefix}D{dataRowIndex}",
+                                RunTest(
+                                    prefix + dataRowIndex.ToString(),
                                     () => testMethod.Invoke(testClassInstance, dataRow.MethodParameters)
                                 );
                                 break;
@@ -163,28 +212,33 @@ namespace nanoFramework.TestFramework.Tools
             }
         }
 
-        private void RunTestMethod(string prefix, Action testMethod)
+        private void RunTest(string prefix, Action testMethod)
         {
             long startTime = DateTime.UtcNow.Ticks;
-            Console.WriteLine($"{prefix}:0:Start");
+            Console.WriteLine($"{prefix}:0:{Communication.Start}");
             try
             {
                 testMethod();
-                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:Success");
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Pass}");
             }
-            catch (InconclusiveException ex)
+            catch (SkipTestException ex)
             {
-                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:SetupError:{ex.Message}");
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Skipped}:{ex.Message}");
+            }
+            catch (SetupFailedException ex)
+            {
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.SetupFail}:{ex.Message}");
             }
             catch (CleanupFailedException ex)
             {
-                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:CleanUpError:{ex.Message}");
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.CleanupFail}:{ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:Failed:{ex.Message}");
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Fail}:{ex.Message}");
             }
         }
+        #endregion
     }
 }
 

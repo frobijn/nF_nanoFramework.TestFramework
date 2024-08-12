@@ -163,5 +163,22 @@ namespace nanoFramework.TestFramework.Tooling
             }
         }
         #endregion
+
+        #region Helpers
+        /// <summary>
+        /// Remove the device or device type identification from the
+        /// display name.
+        /// </summary>
+        /// <param name="displayName">Display name of a test case</param>
+        public static string DisplayNameWithoutDevice(string displayName)
+        {
+            if (displayName?.EndsWith("]") ?? false)
+            {
+                int idx = displayName.LastIndexOf('[');
+                return displayName.Substring(0, idx).Trim();
+            }
+            return displayName;
+        }
+        #endregion
     }
 }

@@ -130,7 +130,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         public void Test()
         {
             OutputHelper.WriteLine($"Test method of {GetType().FullName}");
-            Assert.Inconclusive();
+            Assert.SkipTest();
         }
 
         [Cleanup]

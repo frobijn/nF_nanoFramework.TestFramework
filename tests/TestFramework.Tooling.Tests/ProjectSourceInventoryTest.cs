@@ -74,14 +74,7 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
                 ("SomeOtherTest.cs", sourceCode2)
             }, logger);
 
-            Assert.AreEqual(
-$@"
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+            logger.AssertEqual("");
 
             // All classes
             Assert.AreEqual(
@@ -247,19 +240,19 @@ TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes in {path
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
             var logger = new LogMessengerMock();
             string actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", "Release", "NFUnitTest.dll"), logger);
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual("");
             Assert.AreEqual(projectFilePath, actual);
 
             projectFilePath = TestProjectHelper.FindProjectFilePath();
             logger = new LogMessengerMock();
             actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", "Debug", "net48", Path.ChangeExtension(projectFilePath, ".dll")), logger);
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual("");
             Assert.IsNull(actual);
 
             // Project directory with invalid project file
             logger = new LogMessengerMock();
             actual = ProjectSourceInventory.FindProjectFilePath(Path.Combine(Path.GetDirectoryName(projectFilePath), GetType().Name, "bin", "NFUnitTest.dll"), logger);
-            Assert.AreEqual(1, logger.Messages.Count);
+            logger.AssertEqual($"Detailed: Cannot read the XML for the project '{Path.Combine(Path.GetDirectoryName(projectFilePath), "ProjectSourceInventoryTest", "InvalidProject.nfproj")}': Data at the root level is invalid. Line 1, position 1.");
             Assert.IsNull(actual);
 
             // Same without logger

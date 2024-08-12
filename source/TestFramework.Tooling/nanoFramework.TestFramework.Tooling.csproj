@@ -22,14 +22,40 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="MetaDataProcessor\Mono.Cecil.dll" />
+    <None Remove="MetaDataProcessor\Mono.Cecil.Mdb.dll" />
+    <None Remove="MetaDataProcessor\Mono.Cecil.Mdb.pdb" />
+    <None Remove="MetaDataProcessor\Mono.Cecil.pdb" />
+    <None Remove="MetaDataProcessor\Mono.Cecil.Pdb.dll" />
+    <None Remove="MetaDataProcessor\Mono.Cecil.Pdb.pdb" />
+    <None Remove="MetaDataProcessor\Mono.Cecil.Rocks.dll" />
+    <None Remove="MetaDataProcessor\Mono.Cecil.Rocks.pdb" />
+    <None Remove="MetaDataProcessor\mustache-sharp.dll" />
+    <None Remove="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.Core.dll" />
+    <None Remove="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.Core.pdb" />
+    <None Remove="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.exe" />
+    <None Remove="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.exe.config" />
+    <None Remove="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.pdb" />
+  </ItemGroup>
+
+  <ItemGroup>
      <PackageReference Include="CliWrap" Version="3.6.1" />
      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
+     <!-- <PackageReference Include="nanoFramework.Tools.MetadataProcessor" Version="1.12.1" GeneratePathProperty="true" /> -->
      <PackageReference Include="Nerdbank.GitVersioning">
       <Version>3.6.139</Version>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
+  
+  <!-- <ItemGroup> -->
+    <!-- <Content Include="$(PkgnanoFramework_Tools_MetadataProcessor)\content\nanoFramework.Tools.MetaDataProcessor.exe"> -->
+      <!-- <Link>MetaDataProcessor\nanoFramework.Tools.MetaDataProcessor.exe</Link> -->
+      <!-- <CopyToOutputDirectory>Always</CopyToOutputDirectory> -->
+      <!-- <CopyToPublishDirectory>Always</CopyToPublishDirectory> -->
+    <!-- </Content> -->
+  <!-- </ItemGroup> -->
   
   <ItemGroup>
 	<Compile Include="../TestFramework/ICleanup.cs">
@@ -87,8 +113,62 @@
 	<Compile Include="TestFrameworkConfiguration.cs" />
 	<Compile Include="TestResult.cs" />
 	<Compile Include="TestRunner.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.RunUnitTests.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.Main.cs" />
+	<Compile Include="UnitTestsOutputParser.cs" />
+	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
 	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
 	<Compile Include="UnitTestLauncherGenerator.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="MetaDataProcessor\Mono.Cecil.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\Mono.Cecil.Mdb.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\Mono.Cecil.Mdb.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\Mono.Cecil.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\Mono.Cecil.Pdb.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\Mono.Cecil.Pdb.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\Mono.Cecil.Rocks.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\Mono.Cecil.Rocks.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\mustache-sharp.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.Core.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Framework" />
   </ItemGroup>
   
 </Project>

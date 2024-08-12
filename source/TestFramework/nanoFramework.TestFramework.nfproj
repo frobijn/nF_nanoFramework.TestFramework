@@ -51,7 +51,7 @@
     <Compile Include="DataRowAttribute.cs" />
     <Compile Include="ICleanup.cs" />
     <Compile Include="IDataRow.cs" />
-    <Compile Include="InconclusiveException.cs" />
+    <Compile Include="SetupFailedException.cs" />
     <Compile Include="ISetup.cs" />
     <Compile Include="ITestClass.cs" />
     <Compile Include="ITestOnVirtualDevice.cs" />

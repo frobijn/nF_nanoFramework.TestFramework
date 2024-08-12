@@ -132,16 +132,11 @@ namespace nanoFramework.TestFramework.Tooling
                 bool testCaseFound = false;
                 bool testCaseNotSelected = false;
 
-                string displayBaseName;
+                string displayBaseName = TestCase.DisplayNameWithoutDevice(testCaseDisplayName);
                 string displayNameForVirtualDevice = null;
                 string displayNameForRealHardware = null;
-                if (testCaseDisplayName.EndsWith("]"))
+                if (displayBaseName == testCaseDisplayName)
                 {
-                    displayBaseName = testCaseDisplayName.Substring(0, testCaseDisplayName.IndexOf('[')).Trim();
-                }
-                else
-                {
-                    displayBaseName = testCaseDisplayName;
                     if (allowTestOnRealHardware)
                     {
                         displayNameForVirtualDevice = $"{displayBaseName} [{VIRTUALDEVICE}]";
@@ -415,7 +410,7 @@ namespace nanoFramework.TestFramework.Tooling
                     ? TestOnRealHardwareProxy.Collect(testAllOnRealHardware, classAttributes.OfType<TestOnRealHardwareProxy>())
                     : (null, null);
 
-                var group = new TestCaseGroup(testGroupIndex);
+                var group = new TestCaseGroup(testGroupIndex, classType.FullName, classType.IsAbstract && classType.IsSealed);
                 #endregion
 
                 #region A method is turned into zero or more test cases
@@ -441,6 +436,7 @@ namespace nanoFramework.TestFramework.Tooling
                         else
                         {
                             hasSetup = true;
+                            group.SetupMethodName = method.Name;
                             group.SetupMethodIndex = methodIndex;
                             group.SetupSourceCodeLocation = setup.Source;
                         }
@@ -455,6 +451,7 @@ namespace nanoFramework.TestFramework.Tooling
                         else
                         {
                             hasCleanup = true;
+                            group.CleanupMethodName = method.Name;
                             group.CleanupMethodIndex = methodIndex;
                             group.CleanupSourceCodeLocation = cleanup.Source;
                         }

@@ -35,7 +35,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             #region TestOnTarget (assembly attribute)
             TestCase actual = (from tc in testCases.TestCases
                                where tc.ShouldRunOnRealHardware
-                                     && tc.FullyQualifiedName == "TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test"
+                                     && tc.FullyQualifiedName == "TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test1"
                                select tc).FirstOrDefault();
             if (actual is null)
             {

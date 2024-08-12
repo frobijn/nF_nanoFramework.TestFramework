@@ -28,7 +28,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual ("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
@@ -50,7 +50,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual ("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(2, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
@@ -99,7 +99,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual ("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
@@ -118,7 +118,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
 
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual ("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());

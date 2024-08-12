@@ -80,6 +80,9 @@
     <Compile Include="../../source/TestFramework/Tools/TestDeviceProxy.cs">
       <Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
     </Compile>
+    <Compile Include="Helpers\TestDirectoryHelper.cs" />
+    <Compile Include="Helpers\TestResultsHelper.cs" />
+    <Compile Include="Helpers\TestUsingTestFrameworkToolingTestsDiscovery_v3.cs" />
     <Compile Include="NanoCLRHelperTest.cs" />
     <Compile Include="TestCaseCollectionTest.cs" />
     <Compile Include="Helpers\TestProjectHelper.cs" />
@@ -98,6 +101,7 @@
     <Compile Include="TestFrameworkProxy\TraitsProxyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitTestLauncherGeneratorTest.cs" />
+    <Compile Include="UnitTestsOutputParserTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

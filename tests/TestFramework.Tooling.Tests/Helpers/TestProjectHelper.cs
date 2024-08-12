@@ -113,14 +113,7 @@ namespace TestFramework.Tooling.Tests.Helpers
 
             if (failOnError)
             {
-                Assert.AreEqual(
-$@"
-".Replace("\r\n", "\n"),
-                string.Join("\n",
-                        from m in logger.Messages
-                        select $"{m.level}: {m.message}"
-                    ) + '\n'
-            );
+                logger.AssertEqual("");
                 Assert.IsNotNull(actual);
             }
             else if (logger.Messages.Count > 0)

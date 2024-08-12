@@ -28,7 +28,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TestMethodProxy), actual[0].GetType());
@@ -47,7 +47,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
-            Assert.AreEqual(0, logger.Messages.Count);
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TestMethodProxy), actual[0].GetType());
@@ -79,10 +79,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            CollectionAssert.AreEqual(
-                new object[] { LoggingLevel.Error },
-                (from msg in logger.Messages select msg.level).ToList()
-            );
+            logger.AssertEqual(@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.TestMethodProxyTest: Attribute implementing 'ITestMethod' can only be applied to a method. Attribute is ignored.");
             Assert.AreEqual(0, actual?.Count ?? -1);
         }
 

@@ -10,7 +10,7 @@ namespace nanoFramework.TestFramework
     /// A test should be marked as inconclusive if the conditions to consider running the test are met,
     /// but initialising the setup fails before the test proper could be started.
     /// </summary>
-    public class InconclusiveException : TestFrameworkException
+    public class SetupFailedException : TestFrameworkException
     {
         /// <summary>
         /// Initializes a new instance of the InconclusiveException class with a specified error message
@@ -18,7 +18,7 @@ namespace nanoFramework.TestFramework
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException"></param>
-        public InconclusiveException(string message = null, Exception innerException = null) : base(message, innerException)
+        public SetupFailedException(string message = null, Exception innerException = null) : base(message, innerException)
         { }
     }
 }
