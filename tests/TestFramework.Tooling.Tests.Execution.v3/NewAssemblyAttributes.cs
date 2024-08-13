@@ -3,5 +3,4 @@
 
 using nanoFramework.TestFramework;
 
-[assembly: TestOnTarget("test")]
 [assembly: TestOnVirtualDevice]

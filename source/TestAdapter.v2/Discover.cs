@@ -1,17 +1,20 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿//
+// Copyright (c) .NET Foundation and Contributors
+// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
+// See LICENSE file in the project root for full license information.
+//
 
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using nanoFramework.TestAdapter;
+using nanoFramework.TestFramework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using nanoFramework.TestAdapter;
-using nanoFramework.TestFramework;
 
 namespace nanoFramework.TestPlatform.TestAdapter
 {
@@ -19,7 +22,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
     /// A Test Discoverer class
     /// </summary>
     [DefaultExecutorUri(TestsConstants.NanoExecutor)]
-    // [FileExtension(".exe")] There are no test assemblies with *.exe
+    [FileExtension(".exe")]
     [FileExtension(".dll")]
     public class TestDiscoverer : ITestDiscoverer
     {
@@ -29,23 +32,6 @@ namespace nanoFramework.TestPlatform.TestAdapter
         /// <inheritdoc/>
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
         {
-            // MessageBox.Show("DiscoverTests" + Environment.NewLine + string.Join(Environment.NewLine, sources), Process.GetCurrentProcess().Id.ToString());
-
-            //try
-            //{
-            //    var msg = new StringBuilder();
-            //    var x = new nanoFramework.TestFramework.Tooling.TestCaseCollection(sources, (a) => nanoFramework.TestFramework.Tooling.ProjectSourceInventory.FindProjectFilePath(a, null), false,
-            //        (l, m) =>
-            //        {
-            //            msg.AppendLine($"{l}: {m}");
-            //        });
-            //    MessageBox.Show("DiscoverTests x" + Environment.NewLine + msg.ToString());
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show($"DiscoverTests ex {ex.Message}");
-            //}
-
             _testCases = new List<TestCase>();
 
             var settingsProvider = discoveryContext.RunSettings.GetSettings(TestsConstants.SettingsName) as SettingsProvider;
@@ -75,7 +61,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                     Settings.LoggingLevel.Verbose);
             }
 
-            foreach (string sourceFile in sources)
+            foreach (var sourceFile in sources)
             {
                 _logger.LogMessage(
                     $"  New file processed: {sourceFile}",
@@ -90,7 +76,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                     continue;
                 }
 
-                List<TestCase> cases = ComposeTestCases(sourceFile);
+                var cases = ComposeTestCases(sourceFile);
                 if (cases.Count > 0)
                 {
                     _logger.LogMessage(
@@ -101,7 +87,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                 }
             }
 
-            foreach (TestCase testCase in _testCases)
+            foreach (var testCase in _testCases)
             {
                 discoverySink.SendTestCase(testCase);
             }
@@ -121,45 +107,45 @@ namespace nanoFramework.TestPlatform.TestAdapter
             List<TestCase> collectionOfTestCases = new List<TestCase>();
 
             // try to find nfproj file for this unit test assembly
-            FileInfo[] nfprojFile = FindNfprojFile(sourceFile);
+            var nfprojFile = FindNfprojFile(sourceFile);
 
             if (!nfprojFile.Any())
             {
                 return collectionOfTestCases;
             }
 
-            string[] allCsFiles = GetAllCsFiles(nfprojFile);
+            var allCsFiles = GetAllCsFiles(nfprojFile);
 
             // developer note: we have to use LoadFile() and not Load() which loads the assembly into the caller domain
             Assembly test = Assembly.LoadFile(sourceFile);
             AppDomain.CurrentDomain.AssemblyResolve += App_AssemblyResolve;
             AppDomain.CurrentDomain.Load(test.GetName());
 
-            IEnumerable<Type> typeCandidatesForTests = test.GetTypes()
+            var typeCandidatesForTests = test.GetTypes()
                                             .Where(x => x.IsClass);
 
-            foreach (Type typeCandidate in typeCandidatesForTests)
+            foreach (var typeCandidate in typeCandidatesForTests)
             {
-                IEnumerable<object> testClasses = typeCandidate.GetCustomAttributes(true)
+                var testClasses = typeCandidate.GetCustomAttributes(true)
                                       .Where(x => x.GetType().FullName == typeof(TestClassAttribute).FullName);
 
-                foreach (object testClassAttrib in testClasses)
+                foreach (var testClassAttrib in testClasses)
                 {
-                    MethodInfo[] methods = typeCandidate.GetMethods();
+                    var methods = typeCandidate.GetMethods();
 
                     // First we look at Setup
-                    foreach (MethodInfo method in methods)
+                    foreach (var method in methods)
                     {
-                        object[] methodAttribs = method.GetCustomAttributes(true);
+                        var methodAttribs = method.GetCustomAttributes(true);
                         methodAttribs = Helper.RemoveTestMethodIfDataRowExists(methodAttribs);
 
-                        object[] testMethodsToItterate = methodAttribs.Where(x => IsTestMethod(x)).ToArray();
+                        var testMethodsToItterate = methodAttribs.Where(x => IsTestMethod(x)).ToArray();
 
                         for (int i = 0; i < testMethodsToItterate.Length; i++)
                         {
-                            object testMethodAttrib = testMethodsToItterate[i];
+                            var testMethodAttrib = testMethodsToItterate[i];
 
-                            TestCase testCase = BuildTestCaseFromSourceFile(
+                            var testCase = BuildTestCaseFromSourceFile(
                                 allCsFiles,
                                 typeCandidate,
                                 method);
@@ -180,7 +166,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
 
         private static bool IsTestMethod(object attrib)
         {
-            string attributeName = attrib.GetType().FullName;
+            var attributeName = attrib.GetType().FullName;
 
             if (attributeName == typeof(SetupAttribute).FullName)
             {
@@ -225,14 +211,14 @@ namespace nanoFramework.TestPlatform.TestAdapter
         {
             List<string> allCsFiles = new List<string>();
 
-            foreach (FileInfo nfproj in nfprojFiles)
+            foreach (var nfproj in nfprojFiles)
             {
                 // read nfproj file content
-                string nfprojContent = File.ReadAllText(nfproj.FullName);
+                var nfprojContent = File.ReadAllText(nfproj.FullName);
 
                 // get all Compile items from the project file
                 string compilePattern = "(?><Compile Include=\")(?<source_file>.+)(?>\")";
-                MatchCollection compileItems = Regex.Matches(nfprojContent, compilePattern, RegexOptions.IgnoreCase);
+                var compileItems = Regex.Matches(nfprojContent, compilePattern, RegexOptions.IgnoreCase);
 
                 foreach (System.Text.RegularExpressions.Match compileItem in compileItems)
                 {
@@ -283,9 +269,9 @@ namespace nanoFramework.TestPlatform.TestAdapter
         {
             TestCase testCase = new TestCase();
 
-            foreach (string sourceFile in csFiles)
+            foreach (var sourceFile in csFiles)
             {
-                string fileContent = File.ReadAllText(sourceFile);
+                var fileContent = File.ReadAllText(sourceFile);
 
                 if (!fileContent.Contains($"class {className.Name}"))
                 {
@@ -300,7 +286,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                 // We've found the file
                 int lineNumber = 1;
 
-                foreach (string line in fileContent.Split('\r'))
+                foreach (var line in fileContent.Split('\r'))
                 {
                     if (line.Contains($" {method.Name}("))
                     {

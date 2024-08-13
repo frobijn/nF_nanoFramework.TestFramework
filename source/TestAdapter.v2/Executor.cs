@@ -1,6 +1,18 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿//
+// Copyright (c) .NET Foundation and Contributors
+// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
+// See LICENSE file in the project root for full license information.
+//
 
+using CliWrap;
+using CliWrap.Buffered;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using nanoFramework.TestAdapter;
+using nanoFramework.Tools.Debugger;
+using nanoFramework.Tools.Debugger.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,15 +23,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using CliWrap;
-using CliWrap.Buffered;
-using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.CSharp;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using nanoFramework.TestAdapter;
-using nanoFramework.Tools.Debugger;
-using nanoFramework.Tools.Debugger.Extensions;
 
 namespace nanoFramework.TestPlatform.TestAdapter
 {
@@ -74,14 +77,13 @@ namespace nanoFramework.TestPlatform.TestAdapter
         /// <inheritdoc/>
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
-            // MessageBox.Show("RunTests (sources)" + Environment.NewLine + string.Join(Environment.NewLine, sources), Process.GetCurrentProcess().Id.ToString());
             try
             {
                 InitializeLogger(runContext, frameworkHandle);
 
-                foreach (string source in sources)
+                foreach (var source in sources)
                 {
-                    List<TestCase> testsCases = TestDiscoverer.ComposeTestCases(source);
+                    var testsCases = TestDiscoverer.ComposeTestCases(source);
 
                     RunTests(testsCases, runContext, frameworkHandle);
                 }
@@ -95,19 +97,18 @@ namespace nanoFramework.TestPlatform.TestAdapter
         /// <inheritdoc/>
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
-            // MessageBox.Show("RunTests (tests)" + Environment.NewLine + string.Join(Environment.NewLine, new HashSet<string>(from t in tests select t.Source)), Process.GetCurrentProcess().Id.ToString());
             try
             {
                 InitializeLogger(runContext, frameworkHandle);
-                IEnumerable<string> uniqueSources = tests.Select(m => m.Source).Distinct();
+                var uniqueSources = tests.Select(m => m.Source).Distinct();
 
                 _logger.LogMessage(
                     "Test sources enumerated",
                     Settings.LoggingLevel.Verbose);
 
-                foreach (string source in uniqueSources)
+                foreach (var source in uniqueSources)
                 {
-                    IEnumerable<TestCase> groups = tests.Where(m => m.Source == source);
+                    var groups = tests.Where(m => m.Source == source);
 
                     _logger.LogMessage(
                         $"Test group is '{source}'",
@@ -128,7 +129,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                             _logger).GetAwaiter().GetResult();
                     }
 
-                    foreach (TestResult result in results)
+                    foreach (var result in results)
                     {
                         frameworkHandle.RecordResult(result);
                     }
@@ -156,7 +157,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                 // get TestSessionTimeout from runsettings
                 var xml = new XmlDocument();
                 xml.LoadXml(runContext.RunSettings.SettingsXml);
-                XmlNode timeout = xml.SelectSingleNode("RunSettings//RunConfiguration//TestSessionTimeout");
+                var timeout = xml.SelectSingleNode("RunSettings//RunConfiguration//TestSessionTimeout");
                 if (timeout != null && timeout.NodeType == XmlNodeType.Element)
                 {
                     int.TryParse(timeout.InnerText, out _testSessionTimeout);
@@ -319,7 +320,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
             // erase the device
             _logger.LogMessage($"Erase deployment block storage. Attempt {retryCount}/{_numberOfRetries}.", Settings.LoggingLevel.Verbose);
 
-            bool eraseResult = device.Erase(
+            var eraseResult = device.Erase(
                     EraseOptions.Deployment,
                     null,
                     null);
@@ -423,9 +424,9 @@ namespace nanoFramework.TestPlatform.TestAdapter
                 // build a list with the full path for each DLL, referenced DLL and EXE
                 List<DeploymentAssembly> assemblyList = new List<DeploymentAssembly>();
 
-                string source = tests.First().Source;
-                string workingDirectory = Path.GetDirectoryName(source);
-                string[] allPeFiles = Directory.GetFiles(workingDirectory, "*.pe");
+                var source = tests.First().Source;
+                var workingDirectory = Path.GetDirectoryName(source);
+                var allPeFiles = Directory.GetFiles(workingDirectory, "*.pe");
 
                 var decompilerSettings = new DecompilerSettings
                 {
@@ -436,7 +437,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                 foreach (string assemblyPath in allPeFiles)
                 {
                     // load assembly in order to get the versions
-                    string file = Path.Combine(workingDirectory, assemblyPath.Replace(".pe", ".dll"));
+                    var file = Path.Combine(workingDirectory, assemblyPath.Replace(".pe", ".dll"));
                     if (!File.Exists(file))
                     {
                         // Check with an exe
@@ -444,11 +445,11 @@ namespace nanoFramework.TestPlatform.TestAdapter
                     }
 
                     var decompiler = new CSharpDecompiler(file, decompilerSettings); ;
-                    string assemblyProperties = decompiler.DecompileModuleAndAssemblyAttributesToString();
+                    var assemblyProperties = decompiler.DecompileModuleAndAssemblyAttributesToString();
 
                     // AssemblyVersion
                     string pattern = @"(?<=AssemblyVersion\("")(.*)(?=\""\)])";
-                    MatchCollection match = Regex.Matches(assemblyProperties, pattern, RegexOptions.IgnoreCase);
+                    var match = Regex.Matches(assemblyProperties, pattern, RegexOptions.IgnoreCase);
                     string assemblyVersion = match[0].Value;
 
                     // AssemblyNativeVersion
@@ -591,11 +592,11 @@ namespace nanoFramework.TestPlatform.TestAdapter
         {
             List<TestResult> results = new List<TestResult>();
 
-            foreach (TestCase test in tests)
+            foreach (var test in tests)
             {
                 TestResult result = new TestResult(test) { Outcome = TestOutcome.None };
 
-                foreach (Trait t in result.Traits)
+                foreach (var t in result.Traits)
                 {
                     result.Traits.Add(new Trait(t.Name, ""));
                 }
@@ -631,7 +632,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
             }
 
             // update nanoCLR instance, if not running a local one
-            if (string.IsNullOrEmpty(_settings.PathToLocalNanoCLR))
+            if (string.IsNullOrEmpty(_settings.PathToLocalCLRInstance))
             {
                 NanoCLRHelper.UpdateNanoCLRInstance(
                     _settings.CLRVersion,
@@ -642,9 +643,9 @@ namespace nanoFramework.TestPlatform.TestAdapter
                 "Processing assemblies to load into test runner...",
                 Settings.LoggingLevel.Verbose);
 
-            string source = tests.First().Source;
-            string workingDirectory = Path.GetDirectoryName(source);
-            string[] allPeFiles = Directory.GetFiles(workingDirectory, "*.pe");
+            var source = tests.First().Source;
+            var workingDirectory = Path.GetDirectoryName(source);
+            var allPeFiles = Directory.GetFiles(workingDirectory, "*.pe");
 
             // prepare launch of nanoCLR CLI
             StringBuilder arguments = new StringBuilder();
@@ -652,15 +653,15 @@ namespace nanoFramework.TestPlatform.TestAdapter
             // assemblies to load
             arguments.Append("run --assemblies ");
 
-            foreach (string pe in allPeFiles)
+            foreach (var pe in allPeFiles)
             {
                 arguments.Append($" \"{Path.Combine(workingDirectory, pe)}\"");
             }
 
             // should we use a local nanoCLR instance?
-            if (!string.IsNullOrEmpty(_settings.PathToLocalNanoCLR))
+            if (!string.IsNullOrEmpty(_settings.PathToLocalCLRInstance))
             {
-                arguments.Append($"  --localinstance \"{_settings.PathToLocalNanoCLR}\"");
+                arguments.Append($"  --localinstance \"{_settings.PathToLocalCLRInstance}\"");
             }
 
             // if requested, set diagnostic output
@@ -674,18 +675,18 @@ namespace nanoFramework.TestPlatform.TestAdapter
                 Settings.LoggingLevel.Verbose);
 
             // launch nanoCLR
-            Command cmd = Cli.Wrap("nanoclr")
+            var cmd = Cli.Wrap("nanoclr")
                  .WithArguments(arguments.ToString())
                  .WithValidation(CommandResultValidation.None);
 
             // setup cancellation token with the timeout from settings
             using (var cts = new CancellationTokenSource(_testSessionTimeout))
             {
-                BufferedCommandResult cliResult = await cmd.ExecuteBufferedAsync(cts.Token);
-                int exitCode = cliResult.ExitCode;
+                var cliResult = await cmd.ExecuteBufferedAsync(cts.Token);
+                var exitCode = cliResult.ExitCode;
 
                 // read standard output
-                string output = cliResult.StandardOutput;
+                var output = cliResult.StandardOutput;
 
                 if (exitCode == 0)
                 {
@@ -702,7 +703,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
                             results.First().ErrorMessage = output;
                         }
 
-                        IEnumerable<TestResult> notPassedOrFailed = results.Where(m => m.Outcome != TestOutcome.Failed
+                        var notPassedOrFailed = results.Where(m => m.Outcome != TestOutcome.Failed
                                                                    && m.Outcome != TestOutcome.Passed
                                                                    && m.Outcome != TestOutcome.Skipped);
 
@@ -737,7 +738,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
 
         private void ParseTestResults(string rawOutput, List<TestResult> results)
         {
-            string[] outputStrings = Regex.Replace(
+            var outputStrings = Regex.Replace(
                 rawOutput,
                 @"^\s+$[\r\n]*",
                 "",
@@ -754,7 +755,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
             TestResult testResult = new TestResult(new TestCase());
             string[] resultDataSet = default;
 
-            foreach (string line in outputStrings)
+            foreach (var line in outputStrings)
             {
                 if ((line.Contains(TestPassed)
                     || (line.Contains(TestFailed))
@@ -825,16 +826,16 @@ namespace nanoFramework.TestPlatform.TestAdapter
                         testOutput.ToString()));
 
                     // If this is a Steup Test, set all the other tests from the class to skipped as well
-                    Trait trait = testResult.TestCase.Traits.FirstOrDefault();
+                    var trait = testResult.TestCase.Traits.FirstOrDefault();
 
                     if (trait != null)
                     {
                         if (trait.Value == "Setup" && trait.Name == "Type")
                         {
                             // A test name is the full qualify name of the metho.methodname, finding the list . index will give all the familly name
-                            string testCasesToSkipName = testResult.TestCase.FullyQualifiedName.Substring(0, testResult.TestCase.FullyQualifiedName.LastIndexOf('.'));
-                            IEnumerable<TestResult> allTestToSkip = results.Where(m => m.TestCase.FullyQualifiedName.Contains(testCasesToSkipName));
-                            foreach (TestResult testToSkip in allTestToSkip)
+                            var testCasesToSkipName = testResult.TestCase.FullyQualifiedName.Substring(0, testResult.TestCase.FullyQualifiedName.LastIndexOf('.'));
+                            var allTestToSkip = results.Where(m => m.TestCase.FullyQualifiedName.Contains(testCasesToSkipName));
+                            foreach (var testToSkip in allTestToSkip)
                             {
                                 if (testToSkip.TestCase.FullyQualifiedName == resultDataSet[1])
                                 {

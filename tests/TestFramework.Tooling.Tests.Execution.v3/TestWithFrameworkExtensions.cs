@@ -2,9 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using nanoFramework.TestFramework;
-using TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions;
+using TestFramework.Tooling.Execution.Tests.TestFrameworkExtensions;
 
-namespace TestFramework.Tooling.Tests.NFUnitTest
+namespace TestFramework.Tooling.Execution.Tests
 {
     [TestClass]
     public class TestWithFrameworkExtensions

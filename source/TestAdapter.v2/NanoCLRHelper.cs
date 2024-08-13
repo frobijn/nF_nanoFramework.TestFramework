@@ -1,15 +1,17 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿//
+// Copyright (c) .NET Foundation and Contributors
+// See LICENSE file in the project root for full license information.
+//
 
+using CliWrap;
+using CliWrap.Buffered;
+using nanoFramework.TestPlatform.TestAdapter;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
-using CliWrap;
-using CliWrap.Buffered;
-using nanoFramework.TestPlatform.TestAdapter;
-using Newtonsoft.Json;
 
 namespace nanoFramework.TestAdapter
 {
@@ -27,7 +29,7 @@ namespace nanoFramework.TestAdapter
                 Settings.LoggingLevel.Verbose);
 
             // get installed tool version (if installed)
-            Command cmd = Cli.Wrap("nanoclr")
+            var cmd = Cli.Wrap("nanoclr")
                 .WithArguments("--help")
                 .WithValidation(CommandResultValidation.None);
 
@@ -38,11 +40,11 @@ namespace nanoFramework.TestAdapter
 
             try
             {
-                BufferedCommandResult cliResult = cmd.ExecuteBufferedAsync(cts.Token).Task.Result;
+                var cliResult = cmd.ExecuteBufferedAsync(cts.Token).Task.Result;
 
                 if (cliResult.ExitCode == 0)
                 {
-                    Match regexResult = Regex.Match(cliResult.StandardOutput, @"(?'version'\d+\.\d+\.\d+)", RegexOptions.RightToLeft);
+                    var regexResult = Regex.Match(cliResult.StandardOutput, @"(?'version'\d+\.\d+\.\d+)", RegexOptions.RightToLeft);
 
                     if (regexResult.Success)
                     {
@@ -78,7 +80,7 @@ namespace nanoFramework.TestAdapter
                             }
                         }
 
-                        NuGetPackage package = JsonConvert.DeserializeObject<NuGetPackage>(responseContent);
+                        var package = JsonConvert.DeserializeObject<NuGetPackage>(responseContent);
                         Version latestPackageVersion = new Version(package.Versions[package.Versions.Length - 1]);
 
                         // check if we are running the latest one
@@ -118,7 +120,7 @@ namespace nanoFramework.TestAdapter
                 // setup cancellation token with a timeout of 1 minute
                 using (var cts1 = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
                 {
-                    BufferedCommandResult cliResult = cmd.ExecuteBufferedAsync(cts1.Token).Task.Result;
+                    var cliResult = cmd.ExecuteBufferedAsync(cts1.Token).Task.Result;
 
                     if (cliResult.ExitCode == 0)
                     {
@@ -126,7 +128,7 @@ namespace nanoFramework.TestAdapter
                         // Tool 'nanoclr' was successfully updated from version '1.0.205' to version '1.0.208'.
                         // or (update becoming reinstall with same version, if there is no new version):
                         // Tool 'nanoclr' was reinstalled with the latest stable version (version '1.0.208').
-                        Match regexResult = Regex.Match(cliResult.StandardOutput, @"((?>version ')(?'version'\d+\.\d+\.\d+)(?>'))");
+                        var regexResult = Regex.Match(cliResult.StandardOutput, @"((?>version ')(?'version'\d+\.\d+\.\d+)(?>'))");
 
                         if (regexResult.Success)
                         {
@@ -168,24 +170,24 @@ namespace nanoFramework.TestAdapter
             LogMessenger logger)
         {
             logger.LogMessage(
-                "Update nanoCLR instance",
+                "Upate nanoCLR instance",
                 Settings.LoggingLevel.Verbose);
 
-            string arguments = "instance --update";
+            var arguments = "instance --update";
 
             if (!string.IsNullOrEmpty(clrVersion))
             {
                 arguments += $" --clrversion {clrVersion}";
             }
 
-            Command cmd = Cli.Wrap("nanoclr")
+            var cmd = Cli.Wrap("nanoclr")
                 .WithArguments(arguments)
                 .WithValidation(CommandResultValidation.None);
 
             // setup cancellation token with a timeout of 1 minute
             using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
             {
-                BufferedCommandResult cliResult = cmd.ExecuteBufferedAsync(cts.Token).Task.Result;
+                var cliResult = cmd.ExecuteBufferedAsync(cts.Token).Task.Result;
 
                 if (cliResult.ExitCode == 0)
                 {
@@ -193,7 +195,7 @@ namespace nanoFramework.TestAdapter
                     // Updated to v1.8.1.102
                     // or (on same version):
                     // Already at v1.8.1.102
-                    Match regexResult = Regex.Match(cliResult.StandardOutput, @"((?>v)(?'version'\d+\.\d+\.\d+\.\d+))");
+                    var regexResult = Regex.Match(cliResult.StandardOutput, @"((?>v)(?'version'\d+\.\d+\.\d+\.\d+))");
 
                     if (regexResult.Success)
                     {

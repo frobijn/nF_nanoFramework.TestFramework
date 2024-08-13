@@ -115,18 +115,20 @@ namespace nanoFramework.TestFramework.Tools
             actual.GenerateAsApplication(assemblyDirectoryPath, logger);
 
             logger.AssertEqual(
-@"Error: CS0234 The type or namespace name 'TestAllCurrentAttributes' does not exist in the namespace 'TestFramework.Tooling.Tests.NFUnitTest' (are you missing an assembly reference?) @ SourceFile([608..632))
-Error: CS0234 The type or namespace name 'TestAllCurrentAttributes' does not exist in the namespace 'TestFramework.Tooling.Tests.NFUnitTest' (are you missing an assembly reference?) @ SourceFile([665..736))
-Error: CS0234 The type or namespace name 'TestAllCurrentAttributes' does not exist in the namespace 'TestFramework.Tooling.Tests.NFUnitTest' (are you missing an assembly reference?) @ SourceFile([769..840))
-Error: CS0234 The type or namespace name 'TestAllCurrentAttributes' does not exist in the namespace 'TestFramework.Tooling.Tests.NFUnitTest' (are you missing an assembly reference?) @ SourceFile([933..1004))
-Error: CS0234 The type or namespace name 'TestAllCurrentAttributes' does not exist in the namespace 'TestFramework.Tooling.Tests.NFUnitTest' (are you missing an assembly reference?) @ SourceFile([1051..1122))
-Error: CS0117 'TestWithMethods' does not contain a definition for 'Test' @ SourceFile([1488..1492))");
+@"Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([591..596))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([665..700))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([769..804))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([933..968))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1051..1086))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1256..1261))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1425..1460))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1528..1563))");
         }
 
         [TestMethod]
         public void UnitTestLauncher_GeneratedApplication()
         {
-            var (_, actual) = UnitTestLauncher_GenerateApplication(true);
+            (UnitTestLauncherGenerator _, UnitTestLauncherGenerator.Application actual) = UnitTestLauncher_GenerateApplication(true);
 
             Assert.IsNotNull(actual?.ReportPrefix);
             Assert.AreNotEqual(0, actual.Assemblies.Count);
@@ -150,7 +152,7 @@ Error: CS0117 'TestWithMethods' does not contain a definition for 'Test' @ Sourc
 
             logger = new LogMessengerMock();
             var outputCollector = new StringBuilder();
-            var result = nanoClr.RunAssembliesAsync(actual.Assemblies, null, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger)
+            bool result = nanoClr.RunAssembliesAsync(actual.Assemblies, null, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger)
                                 .GetAwaiter().GetResult();
             logger.AssertEqual("", LoggingLevel.Error);
             Assert.IsTrue(result);
@@ -225,7 +227,7 @@ ErrorMessage: ''
             #endregion
 
             logger = new LogMessengerMock();
-            var application = generator.GenerateAsApplication(assemblyDirectoryPath, logger);
+            UnitTestLauncherGenerator.Application application = generator.GenerateAsApplication(assemblyDirectoryPath, logger);
 
             logger.AssertEqual("");
             Assert.IsTrue(File.Exists(assemblyFilePath));

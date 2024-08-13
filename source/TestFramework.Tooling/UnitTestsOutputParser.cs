@@ -133,7 +133,7 @@ namespace nanoFramework.TestFramework.Tooling
                 else
                 {
                     UnitTestLauncher.Communication communication;
-                    if (int.TryParse(match.Groups["com"].Value, out var comValue))
+                    if (int.TryParse(match.Groups["com"].Value, out int comValue))
                     {
                         // It is more readable to use the names of the enums. But on nanoCRL the default
                         // for a string representation of an enum value is a number. That is more compact.

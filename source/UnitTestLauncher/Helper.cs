@@ -17,7 +17,7 @@ namespace nanoFramework.TestFramework
 
         private static bool Any(this object[] array, AnyDelegateType predicate)
         {
-            foreach (var item in array)
+            foreach (object item in array)
             {
                 if (predicate(item))
                     return true;
@@ -37,12 +37,12 @@ namespace nanoFramework.TestFramework
             if (attribs.Any(x => x.GetType().FullName == typeof(TestMethodAttribute).FullName) &&
                 attribs.Any(x => x.GetType().FullName == typeof(DataRowAttribute).FullName))
             {
-                var newAttribs = new object[attribs.Length - 1];
+                object[] newAttribs = new object[attribs.Length - 1];
 
-                var newAttribsIndex = 0;
+                int newAttribsIndex = 0;
                 for (int i = 0; i < attribs.Length; i++)
                 {
-                    var attrib = attribs[i];
+                    object attrib = attribs[i];
                     if (attrib.GetType().FullName == typeof(TestMethodAttribute).FullName)
                     {
                         continue;

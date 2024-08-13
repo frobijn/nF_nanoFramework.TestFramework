@@ -4,7 +4,7 @@
 using System.Threading;
 using nanoFramework.TestFramework;
 
-namespace TestFramework.Tooling.Tests.NFUnitTest
+namespace TestFramework.Tooling.Execution.Tests
 {
     /// <summary>
     /// This class uses only the current TestFramework attributes but is

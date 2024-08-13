@@ -48,92 +48,92 @@ namespace nanoFramework.TestFramework.Tools
         private partial void RunUnitTests()
         {
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInSetup), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.FailInSetup), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInSetup.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInSetup.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInTest), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.FailInTest), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInTest.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.InconclusiveInTest), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.InconclusiveInTest), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.InconclusiveInTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.InconclusiveInTest.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.CleanupFailedInTest), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.CleanupFailedInTest), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.CleanupFailedInTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.CleanupFailedInTest.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInCleanUp), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.FailInCleanUp), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInCleanUp.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInCleanUp.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInDispose), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.FailInDispose), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInDispose.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInDispose.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.NonFailingTest), true,
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Setup),
-                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.FailInConstructor.Cleanup),
+                typeof(global::TestFramework.Tooling.Execution.Tests.NonFailingTest), true,
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup),
+                nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.NonFailingTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonFailingTest.Test));
                 }
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods), true,
+                typeof(global::TestFramework.Tooling.Execution.Tests.TestWithMethods), true,
                 null, null,
                 (frm, fdr) =>
                 {
-                    fdr(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test1), 0, 1);
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2));
+                    fdr(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithMethods.Test1), 0, 1);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithMethods.Test2));
                 }
             );
         }

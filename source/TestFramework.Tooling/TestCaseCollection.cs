@@ -237,11 +237,6 @@ namespace nanoFramework.TestFramework.Tooling
                 selectionIndex++;
             }
 
-            foreach (TestCaseSelection selection in _testsOnVirtualDevice)
-            {
-
-            }
-
             static List<TestCaseSelection> KeepSelectionOnly(List<TestCaseSelection> all)
             {
                 List<TestCaseSelection> result = new List<TestCaseSelection>();

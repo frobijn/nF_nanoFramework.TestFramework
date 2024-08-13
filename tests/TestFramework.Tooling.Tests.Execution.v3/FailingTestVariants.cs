@@ -4,7 +4,7 @@
 using System;
 using nanoFramework.TestFramework;
 
-namespace TestFramework.Tooling.Tests.NFUnitTest
+namespace TestFramework.Tooling.Execution.Tests
 {
     [TestClass]
     public class FailInConstructor : IDisposable

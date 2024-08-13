@@ -96,6 +96,7 @@
 	<Compile Include="TestCase.cs" />
 	<Compile Include="TestCaseGroup.cs" />
 	<Compile Include="TestCaseSelection.cs" />
+	<Compile Include="DebugTestCasesSpecification.cs" />
 	<Compile Include="TestFrameworkProxy\AttributeProxy.cs" />
 	<Compile Include="TestFrameworkProxy\CleanupProxy.cs" />
 	<Compile Include="TestFrameworkProxy\DataRowProxy.cs" />

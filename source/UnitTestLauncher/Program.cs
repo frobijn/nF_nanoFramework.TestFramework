@@ -24,26 +24,26 @@ namespace nanoFramework.TestFramework
 
             Type[] allTypes = test.GetTypes();
 
-            foreach (var type in allTypes)
+            foreach (Type type in allTypes)
             {
                 if (!type.IsClass)
                 {
                     continue;
                 }
 
-                var typeAttribs = type.GetCustomAttributes(true);
+                object[] typeAttribs = type.GetCustomAttributes(true);
 
-                foreach (var typeAttrib in typeAttribs)
+                foreach (object typeAttrib in typeAttribs)
                 {
                     if (typeof(TestClassAttribute) != typeAttrib.GetType())
                     {
                         continue;
                     }
 
-                    var methods = type.GetMethods();
+                    MethodInfo[] methods = type.GetMethods();
 
                     // First we look at Setup
-                    var continueTests = RunTest(methods, typeof(SetupAttribute));
+                    bool continueTests = RunTest(methods, typeof(SetupAttribute));
 
                     if (continueTests)
                     {
@@ -66,15 +66,15 @@ namespace nanoFramework.TestFramework
             long totalTicks;
             bool isSetupMethod = attribToRun == typeof(SetupAttribute);
 
-            foreach (var method in methods)
+            foreach (MethodInfo method in methods)
             {
-                var attribs = method.GetCustomAttributes(true);
+                object[] attribs = method.GetCustomAttributes(true);
                 attribs = Helper.RemoveTestMethodIfDataRowExists(attribs);
 
                 for (int i = 0; i < attribs.Length; i++)
                 {
-                    var attrib = attribs[i];
-                    var methodName = $"{method.DeclaringType.FullName}.{method.Name}.{i}";
+                    object attrib = attribs[i];
+                    string methodName = $"{method.DeclaringType.FullName}.{method.Name}.{i}";
 
                     if (attribToRun != attrib.GetType())
                     {

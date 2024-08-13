@@ -80,6 +80,7 @@
     <Compile Include="../../source/TestFramework/Tools/TestDeviceProxy.cs">
       <Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
     </Compile>
+    <Compile Include="DebugTestCasesSpecificationTest.cs" />
     <Compile Include="Helpers\TestDirectoryHelper.cs" />
     <Compile Include="Helpers\TestResultsHelper.cs" />
     <Compile Include="Helpers\TestUsingTestFrameworkToolingTestsDiscovery_v3.cs" />

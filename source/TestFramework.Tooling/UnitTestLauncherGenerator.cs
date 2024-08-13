@@ -48,7 +48,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="logger">Method to pass process information to the caller.</param>
         public UnitTestLauncherGenerator(IEnumerable<TestCaseSelection> selection, bool communicateByNames, LogMessenger logger)
         {
-            var code = GetSourceCode("UnitTestLauncher.cs", logger);
+            string code = GetSourceCode("UnitTestLauncher.cs", logger);
             if (communicateByNames)
             {
                 if (!(code is null))

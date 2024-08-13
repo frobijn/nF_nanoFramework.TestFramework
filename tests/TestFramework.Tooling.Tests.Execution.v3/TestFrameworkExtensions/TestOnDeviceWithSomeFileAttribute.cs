@@ -4,7 +4,7 @@
 using System;
 using nanoFramework.TestFramework;
 
-namespace TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions
+namespace TestFramework.Tooling.Execution.Tests.TestFrameworkExtensions
 {
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
     public class TestOnDeviceWithSomeFileAttribute : Attribute, ITestOnRealHardware

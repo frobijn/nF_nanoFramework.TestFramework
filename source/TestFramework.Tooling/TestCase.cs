@@ -82,6 +82,10 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Indicates whether the test should be executed on the Virtual Device.
         /// </summary>
+        /// <remarks>
+        /// Either <see cref="ShouldRunOnVirtualDevice"/> or <see cref="ShouldRunOnRealHardware"/>
+        /// is true, not both.
+        /// </remarks>
         public bool ShouldRunOnVirtualDevice
         {
             get;
@@ -91,6 +95,10 @@ namespace nanoFramework.TestFramework.Tooling
         /// Indicates whether the test should be executed on real hardware. Call <see cref="SelectDevicesForExecution(IEnumerable{ITestDevice})"/>
         /// to determine whether real hardware is suited to execute the test.
         /// </summary>
+        /// <remarks>
+        /// Either <see cref="ShouldRunOnVirtualDevice"/> or <see cref="ShouldRunOnRealHardware"/>
+        /// is true, not both.
+        /// </remarks>
         public bool ShouldRunOnRealHardware
             => !(_testOnRealHardware is null);
 

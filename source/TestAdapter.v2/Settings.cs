@@ -27,7 +27,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
         /// <summary>
         /// Path to a local nanoCLR instance to use to run Unit Tests.
         /// </summary>
-        public string PathToLocalNanoCLR { get; set; } = string.Empty;
+        public string PathToLocalCLRInstance { get; set; } = string.Empty;
 
         /// <summary>
         /// Version of nanoCLR instance to use when running Unit Tests.
@@ -50,19 +50,19 @@ namespace nanoFramework.TestPlatform.TestAdapter
 
             if (node.Name == TestsConstants.SettingsName)
             {
-                XmlNode isrealhard = node.SelectSingleNode(nameof(IsRealHardware))?.FirstChild;
+                var isrealhard = node.SelectSingleNode(nameof(IsRealHardware))?.FirstChild;
                 if (isrealhard != null && isrealhard.NodeType == XmlNodeType.Text)
                 {
                     settings.IsRealHardware = isrealhard.Value.ToLower() == "true" ? true : false;
                 }
 
-                XmlNode realhardport = node.SelectSingleNode(nameof(RealHardwarePort))?.FirstChild;
+                var realhardport = node.SelectSingleNode(nameof(RealHardwarePort))?.FirstChild;
                 if (realhardport != null && realhardport.NodeType == XmlNodeType.Text)
                 {
                     settings.RealHardwarePort = realhardport.Value;
                 }
 
-                XmlNode loggingLevel = node.SelectSingleNode(nameof(Logging))?.FirstChild;
+                var loggingLevel = node.SelectSingleNode(nameof(Logging))?.FirstChild;
                 if (loggingLevel != null && loggingLevel.NodeType == XmlNodeType.Text)
                 {
                     if (Enum.TryParse(loggingLevel.Value, out LoggingLevel logging))
@@ -71,16 +71,16 @@ namespace nanoFramework.TestPlatform.TestAdapter
                     }
                 }
 
-                XmlNode clrversion = node.SelectSingleNode(nameof(CLRVersion))?.FirstChild;
+                var clrversion = node.SelectSingleNode(nameof(CLRVersion))?.FirstChild;
                 if (clrversion != null && clrversion.NodeType == XmlNodeType.Text)
                 {
                     settings.CLRVersion = clrversion.Value;
                 }
 
-                XmlNode PathToLocalNanoCLR = node.SelectSingleNode(nameof(PathToLocalNanoCLR))?.FirstChild;
-                if (PathToLocalNanoCLR != null && PathToLocalNanoCLR.NodeType == XmlNodeType.Text)
+                var pathtolocalclrinstance = node.SelectSingleNode(nameof(PathToLocalCLRInstance))?.FirstChild;
+                if (pathtolocalclrinstance != null && pathtolocalclrinstance.NodeType == XmlNodeType.Text)
                 {
-                    settings.PathToLocalNanoCLR = PathToLocalNanoCLR.Value;
+                    settings.PathToLocalCLRInstance = pathtolocalclrinstance.Value;
                 }
             }
 
