@@ -35,21 +35,21 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             #region TestOnTarget (assembly attribute)
             TestCase actual = (from tc in testCases.TestCases
                                where tc.ShouldRunOnRealHardware
-                                     && tc.FullyQualifiedName == "TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test1"
+                                     && tc.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware"
                                select tc).FirstOrDefault();
             if (actual is null)
             {
                 Assert.Inconclusive();
             }
 
-            var testDevice = new TestDeviceProxy(new TestDeviceMock("test", "any"));
+            var testDevice = new TestDeviceProxy(new TestDeviceMock("any", "esp32"));
             Assert.IsNotNull(actual.SelectDevicesForExecution(new TestDeviceProxy[] { testDevice }).FirstOrDefault());
             #endregion
 
             #region Custom ITestOnRealHardware implementation, ShouldTestOnDevice has some code for remote devices
             actual = (from tc in testCases.TestCases
                       where tc.ShouldRunOnRealHardware
-                            && tc.FullyQualifiedName == "TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestDeviceWithSomeFile"
+                            && tc.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile"
                       select tc).FirstOrDefault();
             if (actual is null)
             {

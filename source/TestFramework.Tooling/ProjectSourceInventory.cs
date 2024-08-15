@@ -451,15 +451,14 @@ namespace nanoFramework.TestFramework.Tooling
         /// An enumeration of the custom attributes and corresponding source code locations. The source code location is unreliable if attributes with the same name are inherited
         /// from a base class.
         /// </returns>
-        public static IEnumerable<(Attribute attribute, ElementDeclaration sourceLocation)> EnumerateCustomAttributes(ICustomAttributeProvider element, IEnumerable<ElementDeclaration> sourceLocations)
+        public static IEnumerable<(object attribute, ElementDeclaration sourceLocation)> EnumerateCustomAttributes(ICustomAttributeProvider element, IEnumerable<ElementDeclaration> sourceLocations)
         {
             if (!(element is null))
             {
                 List<ElementDeclaration> remainingSourceLocations = sourceLocations is null ? null : new List<ElementDeclaration>(sourceLocations);
 
-
-#pragma warning disable IDE0220 // Add explicit cast - GetCustomAttributes is very old .NET and would have returned Attribute[] if it were newer
-                foreach (Attribute attribute in element.GetCustomAttributes(true))
+                object[] attributes = element.GetCustomAttributes(true);
+                foreach (object attribute in attributes)
                 {
                     #region Find the position in the source
                     string fullName = attribute.GetType().FullName;
@@ -492,7 +491,6 @@ namespace nanoFramework.TestFramework.Tooling
 
                     yield return (attribute, attributeInSource);
                 }
-#pragma warning restore IDE0220 // Add explicit cast
             }
         }
         #endregion

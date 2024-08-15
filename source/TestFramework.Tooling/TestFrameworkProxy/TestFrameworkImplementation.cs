@@ -13,6 +13,9 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
     public sealed class TestFrameworkImplementation
     {
         internal PropertyInfo _property_IDataRow_MethodParameters;
+        internal PropertyInfo _property_IDeploymentConfiguration_ConfigurationKeys;
+        internal PropertyInfo _property_ITestClass_CreateInstancePerTestMethod;
+        internal PropertyInfo _property_ITestClass_SetupCleanupPerTestMethod;
         internal PropertyInfo _property_ITestMethod_CanBeRun;
         internal PropertyInfo _property_ITestOnRealHardware_Description;
         internal MethodInfo _method_ITestOnRealHardware_ShouldTestOnDevice;

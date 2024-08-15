@@ -28,6 +28,9 @@
     <Compile Include="../../source/TestFramework.Tooling/UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs">
       <Link>TestFramework.Tooling/UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs</Link>
     </Compile>
+    <Compile Include="../../source/TestFramework.Tooling/UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs">
+      <Link>TestFramework.Tooling/UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib">

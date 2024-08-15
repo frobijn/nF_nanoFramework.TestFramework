@@ -21,14 +21,14 @@ namespace TestFramework.Tooling.Execution.Tests.TestFrameworkExtensions
 
         public bool ShouldTestOnDevice(ITestDevice testDevice)
         {
-            string content = testDevice.GetStorageFileContentAsString(_fileName);
+            string content = testDevice.GetDeploymentConfigurationValue(_fileName);
             return !string.IsNullOrEmpty(content);
         }
 
         public bool AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2)
         {
-            string content1 = testDevice1.GetStorageFileContentAsString(_fileName);
-            string content2 = testDevice2.GetStorageFileContentAsString(_fileName);
+            string content1 = testDevice1.GetDeploymentConfigurationValue(_fileName);
+            string content2 = testDevice2.GetDeploymentConfigurationValue(_fileName);
             return content1 == content2;
         }
     }

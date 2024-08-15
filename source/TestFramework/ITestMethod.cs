@@ -8,7 +8,7 @@ namespace nanoFramework.TestFramework
     /// The class that defines the method should have an attribute that implements the
     /// <see cref="ITestClass"/> interface.
     /// </summary>
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public

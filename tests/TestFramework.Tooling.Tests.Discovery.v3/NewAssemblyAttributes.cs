@@ -3,5 +3,8 @@
 
 using nanoFramework.TestFramework;
 
-[assembly: TestOnTarget("test")]
-[assembly: TestOnVirtualDevice]
+[TestOnTarget("test")]
+[TestOnVirtualDevice]
+public sealed class NewAssemblyAttributes : IAssemblyAttributes
+{
+}

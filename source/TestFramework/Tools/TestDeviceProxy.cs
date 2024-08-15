@@ -15,7 +15,7 @@ namespace nanoFramework.TestFramework.Tools
     /// implementation of <see cref="ITestDevice"/>, and delegates all calls to the interface
     /// from the other assembly.
     /// </summary>
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public
@@ -26,8 +26,8 @@ namespace nanoFramework.TestFramework.Tools
         private readonly object _testDevice;
         private readonly MethodInfo _targetName;
         private readonly MethodInfo _platform;
-        private readonly MethodInfo _getStorageFileContentAsBytes;
-        private readonly MethodInfo _getStorageFileContentAsString;
+        private readonly MethodInfo _getDeploymentConfigurationValue;
+        private readonly MethodInfo _getDeploymentConfigurationFile;
         #endregion
 
         #region Construction
@@ -44,16 +44,15 @@ namespace nanoFramework.TestFramework.Tools
             _testDevice = testDevice;
             _targetName = otherITestDevice.GetMethod(nameof(ITestDevice.TargetName));
             _platform = otherITestDevice.GetMethod(nameof(ITestDevice.Platform));
-            _getStorageFileContentAsBytes = otherITestDevice.GetMethod(nameof(ITestDevice.GetStorageFileContentAsBytes));
-            _getStorageFileContentAsString = otherITestDevice.GetMethod(nameof(ITestDevice.GetStorageFileContentAsString));
+            _getDeploymentConfigurationValue = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationValue));
+            _getDeploymentConfigurationFile = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationFile));
             if (testDevice is null
                 || _targetName is null || _platform is null
-                || _getStorageFileContentAsBytes is null
-                || _getStorageFileContentAsString is null)
+                || _getDeploymentConfigurationValue is null
+                || _getDeploymentConfigurationFile is null)
             {
                 throw new ArgumentException();
             }
-
         }
         #endregion
 
@@ -67,12 +66,12 @@ namespace nanoFramework.TestFramework.Tools
             => (string)_platform.Invoke(_testDevice, null);
 
         /// <inheritdoc/>>
-        public byte[] GetStorageFileContentAsBytes(string filePath)
-            => (byte[])_getStorageFileContentAsBytes.Invoke(_testDevice, new object[] { filePath });
+        public byte[] GetDeploymentConfigurationFile(string filePath)
+            => (byte[])_getDeploymentConfigurationFile.Invoke(_testDevice, new object[] { filePath });
 
         /// <inheritdoc/>>
-        public string GetStorageFileContentAsString(string filePath)
-            => (string)_getStorageFileContentAsString.Invoke(_testDevice, new object[] { filePath });
+        public string GetDeploymentConfigurationValue(string filePath)
+            => (string)_getDeploymentConfigurationValue.Invoke(_testDevice, new object[] { filePath });
         #endregion
     }
 }

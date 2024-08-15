@@ -10,10 +10,12 @@ using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
 using nfTest = nanoFramework.TestFramework;
 
-[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TraitsProxyTest.TraitsMock("In assembly")]
-
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
+    [TraitsProxyTest.TraitsMock("In assembly")]
+    public abstract class TraitsProxyTest_AssemblyAttributes : nfTest.IAssemblyAttributes
+    {
+    }
 
     [TestClass]
     [TraitsMock("In test class")]
@@ -26,9 +28,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
@@ -48,9 +50,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(2, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
@@ -76,7 +78,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TraitsProxyCreatedForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { },
@@ -97,9 +99,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TraitsProxyCreatedForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
@@ -116,9 +118,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var logger = new LogMessengerMock();
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
@@ -131,7 +133,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         #region TraitsMockAttribute
-        [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
+        [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
         internal sealed class TraitsMockAttribute : Attribute, nfTest.ITraits
         {
             public TraitsMockAttribute(params string[] traits)

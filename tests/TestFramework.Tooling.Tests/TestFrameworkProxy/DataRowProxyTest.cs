@@ -10,10 +10,14 @@ using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
 using nfTest = nanoFramework.TestFramework;
 
-[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.DataRowProxyTest.DataRowMock(42)] // This is not correct!
 
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
+
+    [DataRowProxyTest.DataRowMock(42)] // This is not correct!
+    public sealed class DataRowProxyTest_AssemblyAttributes : nfTest.IAssemblyAttributes
+    {
+    }
 
     [TestClass]
     [DataRowMock(42)] // This is not correct!
@@ -26,7 +30,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual("");
             Assert.IsNotNull(actual);
@@ -49,7 +53,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
             logger.AssertEqual("");
             Assert.IsNotNull(actual);
@@ -79,7 +83,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void DataRowProxyErrorForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { LoggingLevel.Error },
@@ -94,14 +98,14 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void DataRowProxyErrorForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            logger.AssertEqual(@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.DataRowProxyTest: Attribute implementing 'IDataRow' can only be applied to a method. Attribute is ignored.");
+            logger.AssertEqual(@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.DataRowProxyTest: Error: Attribute implementing 'IDataRow' can only be applied to a method. Attribute is ignored.");
             Assert.AreEqual(0, actual?.Count ?? -1);
         }
 
         #region DataRowMockAttribute
-        [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
+        [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
         internal sealed class DataRowMockAttribute : Attribute, nfTest.IDataRow
         {
             public DataRowMockAttribute(params object[] methodParameters)

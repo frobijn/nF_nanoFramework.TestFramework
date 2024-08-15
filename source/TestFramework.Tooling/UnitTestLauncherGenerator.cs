@@ -53,19 +53,20 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 if (!(code is null))
                 {
-                    code = _ReplaceCommunicationValues.Replace(code, "${value}");
+                    code = s_replaceCommunicationValues.Replace(code, "${value}");
                 }
             }
             else
             {
                 _sourceFiles["UnitTestLauncher.Communication.cs"] = GetSourceCode("UnitTestLauncher.Communication.cs", logger);
             }
+            _sourceFiles["UnitTestLauncher.TestClassInitialisation.cs"] = GetSourceCode("UnitTestLauncher.TestClassInitialisation.cs", logger);
             _sourceFiles["UnitTestLauncher.cs"] = code;
             _sourceFiles[RUNUNITTESTS_SOURCEFILENAME] = GetSourceCode(RUNUNITTESTS_SOURCEFILENAME, logger);
 
             AddTestCases(selection, new string(' ', 12));
         }
-        private static readonly Regex _ReplaceCommunicationValues = new Regex(@"\{Communication\.(?<value>[A-Z0-9_]+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex s_replaceCommunicationValues = new Regex(@"\{Communication\.(?<value>[A-Z0-9_]+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private string GetSourceCode(string sourceFile, LogMessenger logger)
         {
@@ -194,15 +195,30 @@ namespace nanoFramework.TestFramework.Tooling
 
                 foreach (KeyValuePair<TestCaseGroup, List<TestCase>> testGroup in perGroup)
                 {
+                    int instantiation = (int)testGroup.Key.Instantiation
+                        + (int)(testGroup.Key.SetupCleanupPerTestMethod
+                                    ? Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerTestMethod
+                                    : Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerClass);
+
                     code.AppendLine($"{indent}ForClass(");
-                    code.AppendLine($"{indent}    typeof(global::{testGroup.Key.FullyQualifiedName}), {(testGroup.Key.IsStatic ? "false" : "true")},");
+                    code.AppendLine($"{indent}    typeof(global::{testGroup.Key.FullyQualifiedName}), {instantiation},");
                     if (testGroup.Key.SetupMethodName is null)
                     {
-                        code.AppendLine($"{indent}    null,");
+                        code.AppendLine($"{indent}    null, null,");
                     }
                     else
                     {
                         code.AppendLine($"{indent}    nameof(global::{testGroup.Key.FullyQualifiedName}.{testGroup.Key.SetupMethodName}),");
+                        if (testGroup.Key.ConfigurationKeys.Count > 0)
+                        {
+                            // TODO: deployment configuration
+                            code.AppendLine($"{indent}    TODO,");
+
+                        }
+                        else
+                        {
+                            code.AppendLine($"{indent}    null,");
+                        }
                     }
                     if (testGroup.Key.CleanupMethodName is null)
                     {

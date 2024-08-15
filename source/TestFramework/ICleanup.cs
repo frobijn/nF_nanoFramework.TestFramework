@@ -5,11 +5,11 @@ namespace nanoFramework.TestFramework
 {
     /// <summary>
     /// Interface implemented by attributes that mark a method that should be called to clean up after the tests.
-    /// The <see cref="ITestClass"/> determines whether a cleanup is done after each test method or once all
-    /// test methods have been executed.
+    /// The <see cref="ITestClass"/>/<see cref="TestClassAttribute"/> determines whether
+    /// a cleanup is done after each test method or once all test methods have been executed.
     /// A test class can have at most one cleanup method.
     /// </summary>
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public

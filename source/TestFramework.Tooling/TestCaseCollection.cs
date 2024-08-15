@@ -66,7 +66,7 @@ namespace nanoFramework.TestFramework.Tooling
                 string projectFilePath = getProjectFilePath?.Invoke(assemblyFilePath);
                 if (projectFilePath is null)
                 {
-                    logger?.Invoke(LoggingLevel.Verbose, $"Project file for assembly '{assemblyFilePath}' not found");
+                    logger?.Invoke(LoggingLevel.Verbose, $"Project file for assembly '{assemblyFilePath}' not found.");
                 }
                 ProjectSourceInventory sourceCode = projectFilePath is null ? null : new ProjectSourceInventory(projectFilePath, logger);
 
@@ -367,7 +367,7 @@ namespace nanoFramework.TestFramework.Tooling
                 : null;
 
             // Defaults for the assembly
-            List<AttributeProxy> assemblyAttributes = AttributeProxy.GetAttributeProxies(assembly, framework, logger);
+            List<AttributeProxy> assemblyAttributes = AttributeProxy.GetAssemblyAttributeProxies(assembly, framework, logger);
             HashSet<string> allTestsTraits = TraitsProxy.Collect(null, assemblyAttributes.OfType<TraitsProxy>());
             bool testAllOnVirtualDevice = assemblyAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
             (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testAllOnRealHardware = allowTestOnRealHardware
@@ -385,7 +385,7 @@ namespace nanoFramework.TestFramework.Tooling
                 in ProjectSourceInventory.EnumerateNonAbstractClasses(assembly, sourceCode))
             {
                 #region A class is modelled as a group
-                List<AttributeProxy> classAttributes = AttributeProxy.GetAttributeProxies(classType, framework, classSourceLocation?.Attributes, logger);
+                List<AttributeProxy> classAttributes = AttributeProxy.GetClassAttributeProxies(classType, framework, classSourceLocation?.Attributes, logger);
                 TestClassProxy testClassAttribute = classAttributes.OfType<TestClassProxy>().FirstOrDefault();
                 if (testClassAttribute is null)
                 {
@@ -395,7 +395,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     if (attribute != testClassAttribute)
                     {
-                        logger?.Invoke(LoggingLevel.Verbose, $"{attribute.Source?.ForMessage() ?? classType.FullName}: Only one attribute that implements '{nameof(ITestClass)}' is allowed. Only the first one is used, subsequent attributes are ignored.");
+                        logger?.Invoke(LoggingLevel.Verbose, $"{attribute.Source?.ForMessage() ?? classType.FullName}: Warning: Only one attribute that implements '{nameof(ITestClass)}' is allowed. Only the first one is used, subsequent attributes are ignored.");
                     }
                 }
 
@@ -405,7 +405,14 @@ namespace nanoFramework.TestFramework.Tooling
                     ? TestOnRealHardwareProxy.Collect(testAllOnRealHardware, classAttributes.OfType<TestOnRealHardwareProxy>())
                     : (null, null);
 
-                var group = new TestCaseGroup(testGroupIndex, classType.FullName, classType.IsAbstract && classType.IsSealed);
+                var group = new TestCaseGroup(
+                    classType.FullName,
+                    classType.IsAbstract && classType.IsSealed
+                        ? TestCaseGroup.InstantiationType.NoInstantiation
+                        : testClassAttribute.CreateInstancePerTestMethod
+                            ? TestCaseGroup.InstantiationType.InstantiatePerTestMethod
+                            : TestCaseGroup.InstantiationType.InstantiateForAllMethods,
+                    testClassAttribute.SetupCleanupPerTestMethod);
                 #endregion
 
                 #region A method is turned into zero or more test cases
@@ -414,26 +421,54 @@ namespace nanoFramework.TestFramework.Tooling
                 var previousDisplayNames = new HashSet<string>();
                 foreach ((int methodIndex, MethodInfo method, ProjectSourceInventory.MethodDeclaration sourceLocation) in enumerateMethods())
                 {
-                    List<AttributeProxy> methodAttributes = AttributeProxy.GetAttributeProxies(method, framework, sourceLocation?.Attributes, logger);
+                    List<AttributeProxy> methodAttributes = AttributeProxy.GetMethodAttributeProxies(method, framework, sourceLocation?.Attributes, logger);
                     if (methodAttributes.Count == 0)
                     {
                         continue;
                     }
 
                     #region Setup / cleanup
-                    SetupProxy setup = methodAttributes.OfType<SetupProxy>().FirstOrDefault();
+                    DeploymentConfigurationProxy deploymentProxy = methodAttributes.OfType<DeploymentConfigurationProxy>().FirstOrDefault();
+                    SetupProxy setup = deploymentProxy is null
+                        ? methodAttributes.OfType<SetupProxy>().FirstOrDefault()
+                        : deploymentProxy;
                     if (!(setup is null))
                     {
                         if (hasSetup)
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"{setup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Only one method of a class can have attribute implements '{nameof(ISetup)}'. Subsequent attribute is ignored.");
+                            logger?.Invoke(LoggingLevel.Verbose, $"{setup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: Only one method of a class can have attribute implements '{nameof(ISetup)}'. Subsequent attribute is ignored.");
                         }
                         else
                         {
                             hasSetup = true;
                             group.SetupMethodName = method.Name;
-                            group.SetupMethodIndex = methodIndex;
                             group.SetupSourceCodeLocation = setup.Source;
+
+                            if (!(deploymentProxy is null))
+                            {
+                                string[] keys = deploymentProxy.ConfigurationKeys;
+                                ParameterInfo[] arguments = method.GetParameters();
+                                if (keys.Length != arguments.Length)
+                                {
+                                    logger?.Invoke(LoggingLevel.Error, $"{setup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements '{nameof(IDeploymentConfiguration)}'.");
+                                }
+                                else if ((from a in arguments
+                                          where a.ParameterType != typeof(byte[]) && a.ParameterType != typeof(string)
+                                          select a).Any())
+                                {
+                                    logger?.Invoke(LoggingLevel.Error, $"{setup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Error: An argument of the method must be of type 'byte[]' or 'string'.");
+                                }
+                                else
+                                {
+                                    var configurationKeys = new List<(string key, bool asBytes)>();
+                                    for (int i = 0; i < arguments.Length; i++)
+                                    {
+                                        configurationKeys.Add((keys[i], arguments[i].ParameterType == typeof(byte[])));
+                                    }
+                                    group.ConfigurationKeys = configurationKeys;
+                                }
+                            }
+                            group.ConfigurationKeys ??= new (string, bool)[] { };
                         }
                     }
                     CleanupProxy cleanup = methodAttributes.OfType<CleanupProxy>().FirstOrDefault();
@@ -441,13 +476,12 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (hasCleanup)
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"{cleanup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Only one method of a class can have attribute that implements '{nameof(ICleanup)}'. Subsequent attribute is ignored.");
+                            logger?.Invoke(LoggingLevel.Verbose, $"{cleanup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: Only one method of a class can have attribute that implements '{nameof(ICleanup)}'. Subsequent attribute is ignored.");
                         }
                         else
                         {
                             hasCleanup = true;
                             group.CleanupMethodName = method.Name;
-                            group.CleanupMethodIndex = methodIndex;
                             group.CleanupSourceCodeLocation = cleanup.Source;
                         }
                     }
@@ -468,7 +502,7 @@ namespace nanoFramework.TestFramework.Tooling
                             string methodInSource = sourceLocation is null
                                 ? $"{method.ReflectedType.Assembly.GetName().Name}:{method.ReflectedType.FullName}.{method.Name}"
                                 : sourceLocation.ForMessage();
-                            logger?.Invoke(LoggingLevel.Detailed, $"{methodInSource}: Method, class and assembly have no attributes to indicate on what device the test should be run.");
+                            logger?.Invoke(LoggingLevel.Detailed, $"{methodInSource}: Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.");
 
                             // The defaults are:
                             testOnVirtualDevice = true;
@@ -500,12 +534,13 @@ namespace nanoFramework.TestFramework.Tooling
                                 }
                                 displayNameBase = $"{method.Name}{methodParametersAsString} #{i}";
                             }
+                            string testCaseId = dataRowIndex < 0 ? $"G{testGroupIndex:000}T{methodIndex:000}" : $"G{testGroupIndex:000}T{methodIndex:000}D{dataRowIndex:00}";
 
                             if (testOnVirtualDevice)
                             {
                                 testsOnVirtualDevice._testCases.Add((-1,
                                     new TestCase(
-                                        methodIndex,
+                                        testCaseId,
                                         dataRowIndex,
                                         assemblyFilePath,
                                         group,
@@ -522,7 +557,7 @@ namespace nanoFramework.TestFramework.Tooling
                                 traits.Add($"@{s_realHardwareDescription}");
                                 testsOnRealHardware._testCases.Add((-1,
                                     new TestCase(
-                                        methodIndex,
+                                        testCaseId,
                                         dataRowIndex,
                                         assemblyFilePath,
                                         group,
@@ -537,9 +572,20 @@ namespace nanoFramework.TestFramework.Tooling
                         }
                         #endregion
                     }
-                    else if (methodAttributes.Count > (setup is null ? 0 : 1) + (cleanup is null ? 0 : 1))
+                    else
                     {
-                        logger?.Invoke(LoggingLevel.Verbose, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: No other attributes are allowed when the attributes that implement '{nameof(ICleanup)}'/'{nameof(ISetup)}' are present. Extra attributes are ignored.");
+                        if ((from a in methodAttributes
+                             where !(a is SetupProxy) && !(a is CleanupProxy)
+                             select a).Any())
+                        {
+                            logger?.Invoke(LoggingLevel.Verbose, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: No other attributes are allowed when the attributes that implement '{nameof(ICleanup)}'/'{nameof(IDeploymentConfiguration)}'/'{nameof(ISetup)}' are present. Extra attributes are ignored.");
+                        }
+                        if ((from a in methodAttributes
+                             where a is DeploymentConfigurationProxy
+                             select a).Count() > 1)
+                        {
+                            logger?.Invoke(LoggingLevel.Verbose, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: Only one attribute is allowed that implements '{nameof(IDeploymentConfiguration)}'. The first attribute will be used.");
+                        }
                     }
                 }
                 #endregion

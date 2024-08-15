@@ -36,10 +36,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\source\TestFramework\nanoFramework.TestFramework.nfproj" />
-    <ProjectReference Include="..\..\source\UnitTestLauncher\nanoFramework.UnitTestLauncher.nfproj" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="nano.runsettings" />
     <None Include="packages.config" />
   </ItemGroup>
@@ -53,6 +49,9 @@
     <Reference Include="nanoFramework.System.Runtime">
       <HintPath>..\packages\nanoFramework.System.Runtime.1.0.27\lib\nanoFramework.System.Runtime.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\source\TestFramework\nanoFramework.TestFramework.nfproj" />
   </ItemGroup>
   <Target Name="CopyTestAdapter" AfterTargets="Build">
     <Message Text="Copying TestAdapter" Importance="High" />

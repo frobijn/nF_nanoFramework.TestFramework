@@ -20,17 +20,18 @@ namespace nanoFramework.TestFramework
     /// will be selected for execution.
     /// </para>
     /// <para>
-    /// An assembly can have attributes that implement <see cref="ITestOnRealHardware"/>.
+    /// The class implementing <see cref="IAssemblyAttributes"/> can have attributes that implement <see cref="ITestOnRealHardware"/>.
     /// If, for an available test device, one of the attributes
     /// indicates the test can be run on that device, by default all tests in the assembly will be selected for execution.
     /// </para>
     /// <para>
-    /// Currently there is no facility to deselection a test for execution on a device if the tests of
-    /// its test class or its assembly can be executed by default on that device.
+    /// Currently there is no facility to deselection a test for execution on a device if
+    /// its test class or the <see cref="IAssemblyAttributes"/> implementation states a test can be executed on that device.
     /// </para>
     /// <para>
     /// For each test method, the attributes that implement <see cref="ITestOnRealHardware"/>
-    /// and <see cref="ITestOnVirtualDevice"/> of the method, its test class and its assembly are collected.
+    /// and <see cref="ITestOnVirtualDevice"/> of the method, its test class and the
+    /// <see cref="IAssemblyAttributes"/> implementation are collected.
     /// If the set of unique <see cref="ITestOnRealHardware.Description"/> (and "Virtual Device") for
     /// <see cref="ITestOnVirtualDevice"/>) consists of more than one name, a test case is created for each
     /// name. The test framework also adds a trait to test case to make it selectable.
@@ -41,7 +42,7 @@ namespace nanoFramework.TestFramework
     /// if execution on real hardware is allowed, on a single real hardware device.
     /// </para>
     /// </summary>
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public

@@ -32,18 +32,18 @@ namespace TestFramework.Tooling.Tests
 
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
-$@"Detailed: {pathPrefix}TestAllCurrentAttributes.cs(13,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestAllCurrentAttributes.cs(19,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestWithMethods.cs(9,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have no attributes to indicate on what device the test should be run.");
+$@"Detailed: {pathPrefix}TestAllCurrentAttributes.cs(13,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix}TestAllCurrentAttributes.cs(19,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix}TestWithMethods.cs(9,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix}TestWithMethods.cs(14,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
-G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
-G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
-G1T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
-G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
+$@"G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
+G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
+G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
+G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
+G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -54,11 +54,11 @@ G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-G1T0 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
-G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
+$@"G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
+G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -69,16 +69,16 @@ G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
 
             // Assert run information
             Assert.AreEqual(
-$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G1T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G1T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+$@"G000T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G000T001D00 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G000T001D01 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G001T000 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G001T001 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
                     orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
-                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodName} GDC={(tc.Group?.ConfigurationKeys?.Count ?? 0)} GC={tc.Group?.CleanupMethodName} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -103,23 +103,23 @@ G1T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
 
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
-$@"Detailed: {pathPrefix}TestAllCurrentAttributes.cs(13,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestAllCurrentAttributes.cs(19,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestWithMethods.cs(9,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix}TestWithMethods.cs(14,21): Method, class and assembly have no attributes to indicate on what device the test should be run.");
+$@"Detailed: {pathPrefix}TestAllCurrentAttributes.cs(13,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix}TestAllCurrentAttributes.cs(19,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix}TestWithMethods.cs(9,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix}TestWithMethods.cs(14,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
-G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
-G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
-G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
-G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
-G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
-G1T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
-G1T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
-G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
-G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
+$@"G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
+G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
+G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
+G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
+G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
+G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
+G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
+G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
+G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
+G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -130,16 +130,16 @@ G1T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real h
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Real hardware'
-G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Real hardware'
-G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Real hardware'
-G1T0 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
-G1T0 @{pathPrefix}TestWithMethods.cs(9,21) '@Real hardware'
-G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
-G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Real hardware'
+$@"G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Real hardware'
+G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Real hardware'
+G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Real hardware'
+G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device'
+G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '@Real hardware'
+G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device'
+G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '@Real hardware'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -150,21 +150,21 @@ G1T1 @{pathPrefix}TestWithMethods.cs(14,21) '@Real hardware'
 
             // Assert run information
             Assert.AreEqual(
-$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G0T0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D1 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G1T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G1T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G1T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-G1T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+$@"G000T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G000T000 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G000T001D00 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G000T001D00 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G000T001D01 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G000T001D01 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G001T000 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G001T000 RH=True VD=False GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G001T001 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G001T001 RH=True VD=False GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
                     orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
-                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodName} GDC={(tc.Group?.ConfigurationKeys?.Count ?? 0)} GC={tc.Group?.CleanupMethodName} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -198,39 +198,41 @@ G1T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
 
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
-$@"Verbose: {pathPrefix}TestWithALotOfErrors.cs(10,6): Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(19,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(31,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(39,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(38,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.");
+$@"Verbose: {pathPrefix}TestWithALotOfErrors.cs(10,6): Warning: Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
+Error: {pathPrefix}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(19,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(31,10): Warning: Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(39,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(38,10): Warning: Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): Warning: No other attributes are allowed when the attributes that implement 'ICleanup'/'IDeploymentConfiguration'/'ISetup' are present. Extra attributes are ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(55,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
-G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
-G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
-G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
-G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
-G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
-G1T0 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Virtual Device]'
-G1T0 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Real hardware]'
-G2T0 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Virtual Device]'
-G2T0 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Real hardware]'
-G2T1 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Virtual Device]'
-G2T1 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Real hardware]'
-G4T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Virtual Device]'
-G4T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Real hardware]'
-G4T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Virtual Device]'
-G4T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Real hardware]'
-G5T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
-G5T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
-G5T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
-G5T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
-G6T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Virtual Device]'
-G6T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Real hardware]'
-G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Virtual Device]'
-G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Real hardware]'
+$@"G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
+G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
+G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
+G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
+G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
+G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
+G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Virtual Device]'
+G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Real hardware]'
+G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Virtual Device]'
+G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Real hardware]'
+G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Virtual Device]'
+G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Real hardware]'
+G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Virtual Device]'
+G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Real hardware]'
+G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Virtual Device]'
+G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Real hardware]'
+G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
+G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
+G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
+G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Virtual Device]'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Real hardware]'
+G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Virtual Device]'
+G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Real hardware]'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -241,30 +243,30 @@ G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.Met
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@test', '@Real hardware'
-G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@test', '@Real hardware'
-G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@test', '@Real hardware'
-G1T0 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
-G1T0 @{pathPrefix}TestClassVariants.cs(13,28) '@test', '@Real hardware'
-G2T0 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
-G2T0 @{pathPrefix}TestClassVariants.cs(33,21) '@test', '@Real hardware'
-G2T1 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
-G2T1 @{pathPrefix}TestClassVariants.cs(40,21) '@test', '@Real hardware'
-G4T0 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
-G4T0 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@test', '@Real hardware'
-G4T1 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
-G4T1 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@test', '@DeviceWithSomeFile', '@Real hardware'
-G5T0 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
-G5T0 @{pathPrefix}TestWithMethods.cs(13,21) '@test', '@Real hardware'
-G5T1 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
-G5T1 @{pathPrefix}TestWithMethods.cs(18,21) '@test', '@Real hardware'
-G6T0 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
-G6T0 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@test', '@Real hardware'
-G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
-G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@test', '@esp32', '@Real hardware'
+$@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@test', '@Real hardware'
+G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@test', '@Real hardware'
+G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@test', '@Real hardware'
+G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
+G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@test', '@Real hardware'
+G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
+G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@test', '@Real hardware'
+G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
+G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@test', '@Real hardware'
+G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
+G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@test', '@Real hardware'
+G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
+G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@test', '@DeviceWithSomeFile', '@Real hardware'
+G006T000 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
+G006T000 @{pathPrefix}TestWithMethods.cs(13,21) '@test', '@Real hardware'
+G006T001 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
+G006T001 @{pathPrefix}TestWithMethods.cs(18,21) '@test', '@Real hardware'
+G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
+G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@test', '@Real hardware'
+G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
+G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@test', '@esp32', '@Real hardware'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -275,35 +277,35 @@ G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@test', '@esp32', 
 
             // Assert run information
             Assert.AreEqual(
-$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G0T0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D1 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G1T0 RH=False VD=True GS=1 GC=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
-G1T0 RH=True VD=False GS=1 GC=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
-G2T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
-G2T0 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
-G2T1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
-G2T1 RH=True VD=False GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
-G4T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-G4T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-G4T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-G4T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-G5T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G5T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G5T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-G5T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-G6T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
-G6T0 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
-G6T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
-G6T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
+$@"G001T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G001T000 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G001T001D00 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G001T001D00 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G001T001D01 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G001T001D01 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G002T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
+G002T000 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
+G003T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
+G003T000 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
+G003T001 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
+G003T001 RH=True VD=False GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
+G005T000 RH=False VD=True GS=Setup GDC=1 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
+G005T000 RH=True VD=False GS=Setup GDC=1 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
+G005T001 RH=False VD=True GS=Setup GDC=1 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+G005T001 RH=True VD=False GS=Setup GDC=1 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+G006T000 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G006T000 RH=True VD=False GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G006T001 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G006T001 RH=True VD=False GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G007T000 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G007T000 RH=True VD=False GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G007T001 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
+G007T001 RH=True VD=False GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
                     orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
-                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodName} GDC={(tc.Group?.ConfigurationKeys?.Count ?? 0)} GC={tc.Group?.CleanupMethodName} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -335,27 +337,29 @@ G6T1 RH=True VD=False GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
 
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
-$@"Verbose: {pathPrefix}TestWithALotOfErrors.cs(10,6): Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(19,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(31,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(39,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(38,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.");
+$@"Verbose: {pathPrefix}TestWithALotOfErrors.cs(10,6): Warning: Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
+Error: {pathPrefix}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(19,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(31,10): Warning: Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(39,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(38,10): Warning: Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(41,21): Warning: No other attributes are allowed when the attributes that implement 'ICleanup'/'IDeploymentConfiguration'/'ISetup' are present. Extra attributes are ignored.
+Verbose: {pathPrefix}TestWithALotOfErrors.cs(55,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.");
 
             // Assert collection, index, FQN and name
             Assert.AreEqual(
-$@"G0T0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
-G0T1D0 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
-G0T1D1 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
-G1T0 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method'
-G2T0 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1'
-G2T1 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2'
-G4T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray'
-G4T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile'
-G5T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
-G5T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
-G6T0 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits'
-G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods'
+$@"G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
+G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
+G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
+G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method'
+G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1'
+G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2'
+G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray'
+G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile'
+G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
+G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits'
+G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -366,18 +370,18 @@ G6T1 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.Met
 
             // Assert source location and traits
             Assert.AreEqual(
-$@"G0T0 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
-G0T1D0 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
-G0T1D1 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
-G1T0 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
-G2T0 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
-G2T1 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
-G4T0 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
-G4T1 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
-G5T0 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
-G5T1 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
-G6T0 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
-G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
+$@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device'
+G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device'
+G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device'
+G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device'
+G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device'
+G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device'
+G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device'
+G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device'
+G006T000 @{pathPrefix}TestWithMethods.cs(13,21) '@Virtual Device'
+G006T001 @{pathPrefix}TestWithMethods.cs(18,21) '@Virtual Device'
+G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device'
+G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -388,23 +392,23 @@ G6T1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(20,21) '@Virtual Device'
 
             // Assert run information
             Assert.AreEqual(
-$@"G0T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G0T1D0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G0T1D1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G1T0 RH=False VD=True GS=1 GC=2 FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
-G2T0 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
-G2T1 RH=False VD=True GS=2 GC=3 FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
-G4T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-G4T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-G5T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G5T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-G6T0 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
-G6T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
+$@"G001T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+G001T001D00 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G001T001D01 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
+G002T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
+G003T000 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
+G003T001 RH=False VD=True GS=Setup GDC=0 GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
+G005T000 RH=False VD=True GS=Setup GDC=1 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
+G005T001 RH=False VD=True GS=Setup GDC=1 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+G006T000 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+G006T001 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+G007T000 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G007T001 RH=False VD=True GS= GDC=0 GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
                     orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
-                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodIndex} GC={tc.Group?.CleanupMethodIndex} FQN={tc.FullyQualifiedName}"
+                    select $"{tc.TestCaseId} RH={tc.ShouldRunOnRealHardware} VD={tc.ShouldRunOnVirtualDevice} GS={tc.Group?.SetupMethodName} GDC={(tc.Group?.ConfigurationKeys?.Count ?? 0)} GC={tc.Group?.CleanupMethodName} FQN={tc.FullyQualifiedName}"
                 ) + '\n'
             );
 
@@ -437,17 +441,19 @@ G6T1 RH=False VD=True GS=-1 GC=-1 FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
                                                 logger);
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
-$@"Detailed: {pathPrefix1}TestAllCurrentAttributes.cs(13,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix1}TestAllCurrentAttributes.cs(19,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix1}TestWithMethods.cs(9,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Detailed: {pathPrefix1}TestWithMethods.cs(14,21): Method, class and assembly have no attributes to indicate on what device the test should be run.
-Verbose: {pathPrefix2}TestWithALotOfErrors.cs(10,6): Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
-Verbose: {pathPrefix2}TestWithALotOfErrors.cs(19,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix2}TestWithALotOfErrors.cs(31,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix2}TestWithALotOfErrors.cs(39,10): Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix2}TestWithALotOfErrors.cs(38,10): Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
-Verbose: {pathPrefix2}TestWithALotOfErrors.cs(41,21): No other attributes are allowed when the attributes that implement 'ICleanup'/'ISetup' are present. Extra attributes are ignored.
-Verbose: Project file for assembly '{assemblyFilePath3}' not found");
+$@"Detailed: {pathPrefix1}TestAllCurrentAttributes.cs(13,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix1}TestAllCurrentAttributes.cs(19,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix1}TestWithMethods.cs(9,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Detailed: {pathPrefix1}TestWithMethods.cs(14,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
+Verbose: {pathPrefix2}TestWithALotOfErrors.cs(10,6): Warning: Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
+Error: {pathPrefix2}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.
+Verbose: {pathPrefix2}TestWithALotOfErrors.cs(19,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix2}TestWithALotOfErrors.cs(31,10): Warning: Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix2}TestWithALotOfErrors.cs(39,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix2}TestWithALotOfErrors.cs(38,10): Warning: Only one method of a class can have attribute that implements 'ICleanup'. Subsequent attribute is ignored.
+Verbose: {pathPrefix2}TestWithALotOfErrors.cs(41,21): Warning: No other attributes are allowed when the attributes that implement 'ICleanup'/'IDeploymentConfiguration'/'ISetup' are present. Extra attributes are ignored.
+Verbose: {pathPrefix2}TestWithALotOfErrors.cs(55,10): Warning: Only one method of a class can have attribute implements 'ISetup'. Subsequent attribute is ignored.
+Verbose: Project file for assembly 'C:\Projects\GH\nanoFramework\Contributions\Test attributes\nF_nanoFramework.TestFramework\tests\TestFramework.Tooling.Tests\bin\Debug\nanoFramework.TestFramework.Tooling.dll' not found.");
 
             // Check only the number of test cases
             Assert.AreEqual(
@@ -548,7 +554,7 @@ $@"{assemblyFilePath1} #5
 
             // Select all test cases
             var selectionSpecification = (from tc in original.TestCases
-                                          orderby tc.AssemblyFilePath, tc.ShouldRunOnVirtualDevice ? 0 : 1, -tc.TestIndex
+                                          orderby tc.AssemblyFilePath, tc.ShouldRunOnVirtualDevice ? 0 : 1, tc.TestCaseId.GetHashCode()
                                           select (tc.AssemblyFilePath, tc.DisplayName, tc.FullyQualifiedName)).ToList();
             logger = new LogMessengerMock();
             var actual = new TestCaseCollection(selectionSpecification,
@@ -655,9 +661,9 @@ Verbose: Test case 'Method2 [Real hardware]' (TestFramework.Tooling.Tests.NFUnit
 
             // Assert that the selected test case are present
             Assert.AreEqual(
-@"G0T1D0 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [Real hardware]
-G6T0 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Virtual Device]
-G6T0 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Real hardware]
+@"G000T001D00 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [Real hardware]
+G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Virtual Device]
+G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Real hardware]
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases

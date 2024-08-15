@@ -6,10 +6,11 @@ using System;
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// Mark a test method, all test methods of a test class or all tests in an assembly as intended to be executed on
+    /// Mark a test, all methods of a test class or all tests in a assembly (when applied to a class implementing the
+    /// <see cref="IAssemblyAttributes"/> interface) as intended to be executed on
     /// the Virtual Device.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
     public sealed class TestOnVirtualDeviceAttribute : Attribute, ITestOnVirtualDevice
     {
         #region Construction

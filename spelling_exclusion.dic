@@ -11,3 +11,5 @@ dotnet
 nanoclr'
 clrversion
 csproj
+vstest
+mscorlib

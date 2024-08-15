@@ -54,7 +54,7 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// <param name="filePath"></param>
         /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
         /// or if the device does not support file storage.</returns>
-        public byte[] GetStorageFileContentAsBytes(string filePath)
+        public byte[] GetDeploymentConfigurationFile(string filePath)
         {
             if (!_storageFileContent.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
             {
@@ -73,7 +73,7 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// <param name="filePath"></param>
         /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
         /// or if the device does not support file storage.</returns>
-        public string GetStorageFileContentAsString(string filePath)
+        public string GetDeploymentConfigurationValue(string filePath)
         {
             if (!_storageFileContent.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
             {

@@ -10,8 +10,8 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     [TestClass2]
     public class TestWithALotOfErrors
     {
-        [Setup]
-        public void Setup1()
+        [DeploymentConfiguration("some", "key", "invalid_type")]
+        public void Setup1(byte[] some, string key, int invalid)
         {
 
         }
@@ -45,8 +45,17 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
 
 
         [AttributeUsage(AttributeTargets.Class)]
-        private class TestClass2Attribute : Attribute, ITestClass
+        public sealed class TestClass2Attribute : Attribute, ITestClass
         {
+            bool ITestClass.CreateInstancePerTestMethod => true;
+
+            bool ITestClass.SetupCleanupPerTestMethod => true;
+        }
+
+        [DeploymentConfiguration("too_many")]
+        public void Setup3()
+        {
+
         }
     }
 }

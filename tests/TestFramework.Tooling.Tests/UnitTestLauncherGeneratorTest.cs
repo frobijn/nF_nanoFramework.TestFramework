@@ -73,8 +73,9 @@ namespace nanoFramework.TestFramework.Tools
         private partial void RunUnitTests()
         {
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes), true,
+                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes), 1,
                 nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.Setup),
+                null,
                 nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.Cleanup),
                 (frm, fdr) =>
                 {
@@ -83,8 +84,8 @@ namespace nanoFramework.TestFramework.Tools
                 }
             );
             ForClass(
-                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods), true,
-                null,
+                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods), 1,
+                null, null,
                 null,
                 (frm, fdr) =>
                 {
@@ -116,13 +117,13 @@ namespace nanoFramework.TestFramework.Tools
 
             logger.AssertEqual(
 @"Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([591..596))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([665..700))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([769..804))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([933..968))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1051..1086))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1256..1261))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1425..1460))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1528..1563))");
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([662..697))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([789..824))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([953..988))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1071..1106))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1276..1281))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1448..1483))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1551..1586))");
         }
 
         [TestMethod]

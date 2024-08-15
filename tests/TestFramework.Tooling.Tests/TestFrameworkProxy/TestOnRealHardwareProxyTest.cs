@@ -10,10 +10,13 @@ using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
 using nfTest = nanoFramework.TestFramework;
 
-[assembly: TestFramework.Tooling.Tests.TestFrameworkProxy.TestOnRealHardwareProxyTest.TestOnPlatformMock("assembly")]
-
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
+    [TestOnRealHardwareProxyTest.TestOnPlatformMock("assembly")]
+    public abstract class TestOnRealHardwareProxyTest_AssemblyAttributes : nfTest.IAssemblyAttributes
+    {
+    }
+
     [TestClass]
     [TestCategory("nF test attributes")]
     [TestOnPlatformMock("class")]
@@ -23,7 +26,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestOnRealHardwareProxyCreatedForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
+            List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { },
@@ -43,9 +46,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestOnRealHardwareProxyCreatedForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
@@ -60,9 +63,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
@@ -81,9 +84,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
@@ -117,9 +120,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
+            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
-            logger.AssertEqual ("");
+            logger.AssertEqual("");
             Assert.IsNotNull(actual);
             Assert.AreEqual(1, actual.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
@@ -158,7 +161,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         /// <summary>
         /// Test implementation of <see cref="nfTest.ITestOnRealHardware"/>, for devices that match a platform
         /// </summary>
-        [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
+        [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
         internal sealed class TestOnPlatformMockAttribute : Attribute, nfTest.ITestOnRealHardware
         {
             #region Construction
@@ -201,10 +204,10 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                 => _fileThatMustExist;
 
             bool nfTest.ITestOnRealHardware.ShouldTestOnDevice(nfTest.ITestDevice testDevice)
-                => !(testDevice.GetStorageFileContentAsBytes(_fileThatMustExist) is null);
+                => !(testDevice.GetDeploymentConfigurationFile(_fileThatMustExist) is null);
 
             bool nfTest.ITestOnRealHardware.AreDevicesEqual(nfTest.ITestDevice testDevice1, nfTest.ITestDevice testDevice2)
-                => testDevice1.GetStorageFileContentAsString(_fileThatMustExist) == testDevice2.GetStorageFileContentAsString(_fileThatMustExist);
+                => testDevice1.GetDeploymentConfigurationValue(_fileThatMustExist) == testDevice2.GetDeploymentConfigurationValue(_fileThatMustExist);
             #endregion
         }
         #endregion

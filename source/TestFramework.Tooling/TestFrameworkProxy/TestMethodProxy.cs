@@ -11,7 +11,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
     public sealed class TestMethodProxy : AttributeProxy
     {
         #region Fields
-        private readonly Attribute _attribute;
+        private readonly object _attribute;
         private readonly TestFrameworkImplementation _framework;
         #endregion
 
@@ -22,7 +22,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="attribute">Matching attribute of the nanoCLR platform</param>
         /// <param name="framework">Information about the implementation of the test framework</param>
         /// <param name="interfaceType">Matching interface for the nanoCLR platform</param>
-        internal TestMethodProxy(Attribute attribute, TestFrameworkImplementation framework, Type interfaceType)
+        internal TestMethodProxy(object attribute, TestFrameworkImplementation framework, Type interfaceType)
         {
             _attribute = attribute;
             _framework = framework;

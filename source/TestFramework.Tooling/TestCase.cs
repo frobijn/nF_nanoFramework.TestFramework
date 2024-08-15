@@ -15,7 +15,7 @@ namespace nanoFramework.TestFramework.Tooling
         #endregion
 
         #region Construction
-        internal TestCase(int testIndex,
+        internal TestCase(string testCaseId,
             int dataRowIndex,
             string assemblyFilePath,
             TestCaseGroup group,
@@ -26,7 +26,7 @@ namespace nanoFramework.TestFramework.Tooling
             HashSet<string> traits)
         {
             AssemblyFilePath = assemblyFilePath;
-            TestIndex = testIndex;
+            TestCaseId = testCaseId;
             DataRowIndex = dataRowIndex;
             DisplayName = displayName;
             FullyQualifiedName = $"{method.ReflectedType.FullName}.{method.Name}";
@@ -103,18 +103,6 @@ namespace nanoFramework.TestFramework.Tooling
             => !(_testOnRealHardware is null);
 
         /// <summary>
-        /// Get the 0-based index of the test case (in the set of all test cases in a <see cref="TestCaseGroup"/>).
-        /// The index does not have to be contiguous.
-        /// </summary>
-        /// <remarks>
-        /// In the current implementation, the index is the position of the test method in the list of class methods.
-        /// </remarks>
-        public int TestIndex
-        {
-            get;
-        }
-
-        /// <summary>
         /// Get the 0-based index of the <see cref="IDataRow"/> that is related to this test case,
         /// </summary>
         /// <remarks>
@@ -140,7 +128,9 @@ namespace nanoFramework.TestFramework.Tooling
         /// if the device is ignored (the equivalent test on another device has the same identifier).
         /// </summary>
         public string TestCaseId
-            => DataRowIndex < 0 ? $"G{Group.TestGroupIndex}T{TestIndex}" : $"G{Group.TestGroupIndex}T{TestIndex}D{DataRowIndex}";
+        {
+            get;
+        }
         #endregion
 
         #region Methods

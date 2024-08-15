@@ -9,6 +9,13 @@ namespace TestFramework.Tooling.Execution.Tests
     [TestClass]
     public class TestWithFrameworkExtensions
     {
+        [DeploymentConfiguration("data.bin", "data.txt")]
+        public void Setup(byte[] binary, string text)
+        {
+            Assert.IsNotNull(binary);
+            Assert.IsFalse(string.IsNullOrEmpty(text));
+        }
+
         [TestOnDeviceWithSomeFile(@"xyzzy")]
         public void TestDeviceWithSomeFile()
         {

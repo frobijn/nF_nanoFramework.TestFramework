@@ -15,12 +15,12 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Create the instance
         /// </summary>
-        /// <param name="testGroupIndex"></param>
-        internal TestCaseGroup(int testGroupIndex, string fullyQualifiedName, bool isStatic)
+        internal TestCaseGroup(string fullyQualifiedName, InstantiationType instantiation, bool setupCleanupPerTestMethod)
         {
-            TestGroupIndex = testGroupIndex;
             FullyQualifiedName = fullyQualifiedName;
-            IsStatic = isStatic;
+            Instantiation = instantiation;
+            SetupCleanupPerTestMethod = setupCleanupPerTestMethod
+                || Instantiation == InstantiationType.InstantiatePerTestMethod;
         }
         #endregion
 
@@ -34,23 +34,36 @@ namespace nanoFramework.TestFramework.Tooling
         }
 
         /// <summary>
+        /// Indicates how the test class should be instantiated
+        /// </summary>
+        public enum InstantiationType
+        {
+            /// <summary>
+            /// Not - it is a static test class
+            /// </summary>
+            NoInstantiation = Tools.UnitTestLauncher.TestClassInitialisation.NoInstantiation,
+            /// <summary>
+            /// One instance for all test methods
+            /// </summary>
+            InstantiateForAllMethods = Tools.UnitTestLauncher.TestClassInitialisation.InstantiateForAllMethods,
+            /// <summary>
+            /// One instance per test method
+            /// </summary>
+            InstantiatePerTestMethod = Tools.UnitTestLauncher.TestClassInitialisation.InstantiatePerTestMethod,
+        }
+        /// <summary>
         /// Indicates whether the test class is a static class.
         /// </summary>
-        public bool IsStatic
+        public InstantiationType Instantiation
         {
             get;
         }
 
         /// <summary>
-        /// Get a 0-based index of the group of test cases (in the set of all test cases in a collection of test assemblies).
-        /// The index does not have to be contiguous.
+        /// Indicates whether the setup and cleanup methods of the test class should be
+        /// called for each test method of the test class, rather than once for all test methods.
         /// </summary>
-        /// <remarks>
-        /// In the current implementation, the index matches the index of the related test class
-        /// in the list of classes in the assembly. That is not the same index when run on the
-        /// nanoFramework/nanoCLR.
-        /// </remarks>
-        public int TestGroupIndex
+        public bool SetupCleanupPerTestMethod
         {
             get;
         }
@@ -65,15 +78,17 @@ namespace nanoFramework.TestFramework.Tooling
             internal set;
         }
 
-        // <summary>
-        /// Get the index of the setup method within the methods of its class.
-        /// If there is no setup method, the value is -1.
+        /// <summary>
+        /// Get the keys that identify what part of the deployment configuration
+        /// should be passed to the setup method. Each key should have a corresponding
+        /// argument of the setup method that is of type <c>byte[]</c> or <c>string</c>,
+        /// as indicated for the key.
         /// </summary>
-        public int SetupMethodIndex
+        public IReadOnlyList<(string key, bool asBytes)> ConfigurationKeys
         {
             get;
             internal set;
-        } = -1;
+        }
 
         /// <summary>
         /// Get the location in the source code of the setup method that is run before the test(s).
@@ -94,16 +109,6 @@ namespace nanoFramework.TestFramework.Tooling
             get;
             internal set;
         }
-
-        /// <summary>
-        /// Get the index of the cleanup method within the methods of its class.
-        /// If there is no setup method, the value is -1.
-        /// </summary>
-        public int CleanupMethodIndex
-        {
-            get;
-            internal set;
-        } = -1;
 
         /// <summary>
         /// Get the location in the source code of the cleanup method that is run after the test(s).

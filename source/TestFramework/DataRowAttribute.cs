@@ -9,7 +9,7 @@ namespace nanoFramework.TestFramework
     /// Data row attribute. Used for passing multiple parameters into same test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public
@@ -25,8 +25,8 @@ namespace nanoFramework.TestFramework
         /// Initializes a new instance of the DataRowAttribute class.
         /// </summary>
         /// <param name="methodParameters">Parameters which should be stored for future execution of test method</param>
-        /// <exception cref="ArgumentNullException">Thrown when methodParameters is null</exception>
-        /// <exception cref="ArgumentException">Thrown when methodParameters is empty</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="methodParameters"/> is null</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="methodParameters"/> is empty</exception>
         public DataRowAttribute(params object[] methodParameters)
         {
             if (methodParameters == null)

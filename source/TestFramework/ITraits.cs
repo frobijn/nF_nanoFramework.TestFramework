@@ -8,9 +8,10 @@ namespace nanoFramework.TestFramework
     /// as a characterization of the test. The categories are listed under 'traits' in
     /// the Visual Studio test explorer. If no attribute that implements this interface
     /// is applied to a <see cref="TestMethodAttribute"/>, a default category is
-    /// assigned.
+    /// assigned. The interface can be implemented by attributes applicable to test methods,
+    /// test classes and the class implementing <see cref="IAssemblyAttributes"/>.
     /// </summary>
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public

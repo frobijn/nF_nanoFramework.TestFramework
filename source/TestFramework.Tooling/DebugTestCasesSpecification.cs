@@ -101,78 +101,81 @@ namespace nanoFramework.TestFramework.Tooling
         /// does not use the device dependent information, it does not matter which one is selected.</returns>
         public IEnumerable<TestCaseSelection> SelectTestCases(TestCaseCollection testCases)
         {
-            #region Determine which methods to select
-            var testMethodFQN = new HashSet<string>();
-            var dataRowFQN = new Dictionary<string, HashSet<int>>();
-            foreach (KeyValuePair<string, Dictionary<string, TestMethodList>> ns in TestCases)
+            if (!(TestCases is null) && !(testCases is null))
             {
-                foreach (KeyValuePair<string, TestMethodList> cls in ns.Value)
+                #region Determine which methods to select
+                var testMethodFQN = new HashSet<string>();
+                var dataRowFQN = new Dictionary<string, HashSet<int>>();
+                foreach (KeyValuePair<string, Dictionary<string, TestMethodList>> ns in TestCases)
                 {
-                    foreach (TestMethodSpecification testMethod in cls.Value.TestMethods)
+                    foreach (KeyValuePair<string, TestMethodList> cls in ns.Value)
                     {
-                        string fqn = $"{ns.Key}.{cls.Key}.{testMethod.MethodName}";
-                        if (testMethod.DataRowAttributes is null)
+                        foreach (TestMethodSpecification testMethod in cls.Value.TestMethods)
                         {
-                            testMethodFQN.Add(fqn);
-                        }
-                        else
-                        {
-                            if (!dataRowFQN.TryGetValue(fqn, out HashSet<int> indices))
+                            string fqn = $"{ns.Key}.{cls.Key}.{testMethod.MethodName}";
+                            if (testMethod.DataRowAttributes is null)
                             {
-                                dataRowFQN[fqn] = indices = new HashSet<int>();
+                                testMethodFQN.Add(fqn);
                             }
-                            indices.UnionWith(testMethod.DataRowAttributes);
+                            else
+                            {
+                                if (!dataRowFQN.TryGetValue(fqn, out HashSet<int> indices))
+                                {
+                                    dataRowFQN[fqn] = indices = new HashSet<int>();
+                                }
+                                indices.UnionWith(testMethod.DataRowAttributes);
+                            }
                         }
                     }
                 }
-            }
-            #endregion
+                #endregion
 
-            #region Find the methods in the test cases
-            int selectionIndex = 0;
-            foreach (KeyValuePair<string, List<TestCase>> selection in testCases.TestCases
-                                                                                    .GroupBy(tc => tc.AssemblyFilePath)
-                                                                                    .ToDictionary(
-                                                                                        g => g.Key,
-                                                                                        g => g.ToList()))
-            {
-                TestCaseSelection result = null;
-                var fqnIncluded = new HashSet<string>();
-
-                foreach (TestCase testCase in selection.Value)
+                #region Find the methods in the test cases
+                int selectionIndex = 0;
+                foreach (KeyValuePair<string, List<TestCase>> selection in testCases.TestCases
+                                                                                        .GroupBy(tc => tc.AssemblyFilePath)
+                                                                                        .ToDictionary(
+                                                                                            g => g.Key,
+                                                                                            g => g.ToList()))
                 {
-                    if (!(ToBeRunOnVirtualDevice ?? true) && testCase.ShouldRunOnVirtualDevice)
+                    TestCaseSelection result = null;
+                    var fqnIncluded = new HashSet<string>();
+
+                    foreach (TestCase testCase in selection.Value)
                     {
-                        continue;
-                    }
-                    if (!(ToBeRunOnRealHardware ?? true) && testCase.ShouldRunOnRealHardware)
-                    {
-                        continue;
+                        if (!(ToBeRunOnVirtualDevice ?? true) && testCase.ShouldRunOnVirtualDevice)
+                        {
+                            continue;
+                        }
+                        if (!(ToBeRunOnRealHardware ?? true) && testCase.ShouldRunOnRealHardware)
+                        {
+                            continue;
+                        }
+
+                        string testCaseFQN = $"{testCase.FullyQualifiedName}#{testCase.DataRowIndex}";
+                        if (fqnIncluded.Add(testCaseFQN))
+                        {
+                            if (testMethodFQN.Contains(testCase.FullyQualifiedName))
+                            {
+                                result ??= new TestCaseSelection(selection.Key);
+                                result._testCases.Add((++selectionIndex, testCase));
+                            }
+                            else if (dataRowFQN.TryGetValue(testCase.FullyQualifiedName, out HashSet<int> indices)
+                                    && indices.Contains(testCase.DataRowIndex))
+                            {
+                                result ??= new TestCaseSelection(selection.Key);
+                                result._testCases.Add((++selectionIndex, testCase));
+                            }
+                        }
                     }
 
-                    string testCaseFQN = $"{testCase.FullyQualifiedName}#{testCase.DataRowIndex}";
-                    if (fqnIncluded.Add(testCaseFQN))
+                    if (!(result is null))
                     {
-                        if (testMethodFQN.Contains(testCase.FullyQualifiedName))
-                        {
-                            result ??= new TestCaseSelection(selection.Key);
-                            result._testCases.Add((++selectionIndex, testCase));
-                        }
-                        else if (dataRowFQN.TryGetValue(testCase.FullyQualifiedName, out HashSet<int> indices)
-                                && indices.Contains(testCase.DataRowIndex))
-                        {
-                            result ??= new TestCaseSelection(selection.Key);
-                            result._testCases.Add((++selectionIndex, testCase));
-                        }
+                        yield return result;
                     }
                 }
-
-                if (!(result is null))
-                {
-                    yield return result;
-                }
+                #endregion
             }
-            #endregion
         }
         #endregion
 
@@ -180,17 +183,17 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Parse the JSON representation of a <see cref="DebugTestCasesSpecification"/>.
         /// </summary>
-        /// <param name="json"></param>
-        /// <returns></returns>
+        /// <param name="json">JSON specification</param>
+        /// <returns>The deserialized specification</returns>
         public static DebugTestCasesSpecification Parse(string json)
         {
-            return JsonConvert.DeserializeObject<DebugTestCasesSpecification>(json) as DebugTestCasesSpecification;
+            return JsonConvert.DeserializeObject<DebugTestCasesSpecification>(json);
         }
 
         /// <summary>
         /// Convert the specification into JSON
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The JSON for this specification</returns>
         public string ToJson()
         {
             return JsonConvert.SerializeObject(this, new JsonSerializerSettings()
@@ -325,38 +328,40 @@ namespace nanoFramework.TestFramework.Tooling
         /// Generate a JSON schema for the test cases, to assist the developer
         /// entering the correct values.
         /// </summary>
-        /// <param name="testCases"></param>
-        /// <returns></returns>
+        /// <param name="testCases">All available test cases. Pass <c>null</c> if there are no test cases available.</param>
+        /// <returns>The JSON schema</returns>
         public static string GenerateJsonSchema(TestCaseCollection testCases)
         {
             #region Group the test cases
             var allTestCases = new Dictionary<string, Dictionary<string, Dictionary<string, HashSet<int>>>>();
-            foreach (TestCase testCase in from t in testCases.TestCases
-                                          orderby t.Group.FullyQualifiedName
-                                          select t)
+            if (!(testCases is null))
             {
-                int idx = testCase.Group.FullyQualifiedName.LastIndexOf('.');
-                string namespaceName = idx < 0 ? "(none)" : testCase.Group.FullyQualifiedName.Substring(0, idx);
-                if (!allTestCases.TryGetValue(namespaceName, out Dictionary<string, Dictionary<string, HashSet<int>>> classList))
+                foreach (TestCase testCase in from t in testCases.TestCases
+                                              orderby t.Group.FullyQualifiedName
+                                              select t)
                 {
-                    allTestCases[namespaceName] = classList = new Dictionary<string, Dictionary<string, HashSet<int>>>();
-                }
+                    int idx = testCase.Group.FullyQualifiedName.LastIndexOf('.');
+                    string namespaceName = idx < 0 ? "(none)" : testCase.Group.FullyQualifiedName.Substring(0, idx);
+                    if (!allTestCases.TryGetValue(namespaceName, out Dictionary<string, Dictionary<string, HashSet<int>>> classList))
+                    {
+                        allTestCases[namespaceName] = classList = new Dictionary<string, Dictionary<string, HashSet<int>>>();
+                    }
 
-                string className = idx < 0 ? testCase.Group.FullyQualifiedName : testCase.Group.FullyQualifiedName.Substring(idx + 1);
-                if (!classList.TryGetValue(className, out Dictionary<string, HashSet<int>> methodList))
-                {
-                    classList[className] = methodList = new Dictionary<string, HashSet<int>>();
-                }
+                    string className = idx < 0 ? testCase.Group.FullyQualifiedName : testCase.Group.FullyQualifiedName.Substring(idx + 1);
+                    if (!classList.TryGetValue(className, out Dictionary<string, HashSet<int>> methodList))
+                    {
+                        classList[className] = methodList = new Dictionary<string, HashSet<int>>();
+                    }
 
-                string methodName = testCase.FullyQualifiedName.Substring(testCase.FullyQualifiedName.LastIndexOf('.') + 1);
-                if (!methodList.TryGetValue(methodName, out HashSet<int> dataRowIndexList))
-                {
-                    methodList[methodName] = dataRowIndexList = new HashSet<int>();
+                    string methodName = testCase.FullyQualifiedName.Substring(testCase.FullyQualifiedName.LastIndexOf('.') + 1);
+                    if (!methodList.TryGetValue(methodName, out HashSet<int> dataRowIndexList))
+                    {
+                        methodList[methodName] = dataRowIndexList = new HashSet<int>();
+                    }
+                    dataRowIndexList.Add(testCase.DataRowIndex);
                 }
-                dataRowIndexList.Add(testCase.DataRowIndex);
             }
             #endregion
-
 
             #region Create the schema types for namespaces and methods
             int typeIndex = 0;

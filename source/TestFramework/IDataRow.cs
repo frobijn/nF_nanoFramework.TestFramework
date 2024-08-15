@@ -9,7 +9,7 @@ namespace nanoFramework.TestFramework
     /// attributes that implement <see cref="IDataRow"/>. Each instance of an attribute
     /// corresponds to a test run.
     /// </summary>
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public
@@ -17,7 +17,7 @@ namespace nanoFramework.TestFramework
      interface IDataRow
     {
         /// <summary>
-        /// Array containing all passed parameters
+        /// Array containing all passed parameters.
         /// </summary>
         object[] MethodParameters { get; }
     }

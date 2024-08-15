@@ -5,11 +5,11 @@ namespace nanoFramework.TestFramework
 {
     /// <summary>
     /// Interface implemented by attributes that mark a method that should be called to setup
-    /// the test context before the tests. The <see cref="ITestClass"/> determines whether a
+    /// the test context before the tests. The <see cref="ITestClass"/>/<see cref="TestClassAttribute"/> determines whether a
     /// setup method is called before each test method or once before all test methods.
     /// A test class can have at most one setup method.
     /// </summary>
-#if REFERENCED_IN_NFUNITMETADATA
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public

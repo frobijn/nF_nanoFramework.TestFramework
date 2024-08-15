@@ -49,8 +49,11 @@
     <Compile Include="CleanupAttribute.cs" />
     <Compile Include="CollectionAssert.cs" />
     <Compile Include="DataRowAttribute.cs" />
+    <Compile Include="DeploymentConfigurationAttribute.cs" />
+    <Compile Include="IAssemblyAttributes.cs" />
     <Compile Include="ICleanup.cs" />
     <Compile Include="IDataRow.cs" />
+    <Compile Include="IDeploymentConfiguration.cs" />
     <Compile Include="SetupFailedException.cs" />
     <Compile Include="ISetup.cs" />
     <Compile Include="ITestClass.cs" />

@@ -6,11 +6,12 @@ using System;
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// Mark a test as intended to be executed on real hardware that has the specified firmware installed.
+    /// Mark a test, all methods of a test class or all tests in a assembly (when applied to a class implementing the
+    /// <see cref="IAssemblyAttributes"/> interface) as intended to be executed on real hardware that has the specified firmware installed.
     /// This is also visible in the Visual Studio test explorer via a trait. The test will be
     /// executed on at only one the available devices with the specified firmware. 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
     public sealed class TestOnTargetAttribute : Attribute, ITestOnRealHardware
     {
         #region Fields

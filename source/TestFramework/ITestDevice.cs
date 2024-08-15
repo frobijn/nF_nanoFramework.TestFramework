@@ -3,41 +3,45 @@
 
 namespace nanoFramework.TestFramework
 {
+    // Developer's note:
     // The interface uses methods for TargetName, Platform and IsRealHardware
     // because reflection in the nanoFramework does not support properties
     // at the time of writing. Reflection is needed for Tools.TestDeviceProxy.
 
     /// <summary>
-    /// Access to the properties of the device that can be used to run a test on.
+    /// Access to selected properties and deployment configuration of the device
+    /// that is available to run a tests on. 
     /// </summary>
     public interface ITestDevice
     {
         /// <summary>
-        /// Target name.
+        /// Target name that denotes the firmware installed on the device.
         /// </summary>
         string TargetName();
 
         /// <summary>
-        /// Target platform.
+        /// Platform that describes the family the device belongs to.
         /// </summary>
         string Platform();
 
         /// <summary>
-        /// Get the content of a file that is stored on the device
-        /// as an array of bytes.
+        /// Get the part of the deployment configuration identified by a key.
+        /// The result is either a string value, if the configuration is specified as key = value pair,
+        /// or the textual content of a configuration file.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
-        /// or if the device does not support file storage.</returns>
-        byte[] GetStorageFileContentAsBytes(string filePath);
+        /// <param name="configurationKey"></param>
+        /// <returns>Returns the content of a text file or a string value if the deployment configuration
+        /// contains data for the <paramref name="configurationKey"/>. Returns <c>null</c> if no configuration
+        /// data is specified.</returns>
+        string GetDeploymentConfigurationValue(string configurationKey);
 
         /// <summary>
-        /// Get the content of a file that is stored on the device
-        /// as a string
+        /// Get the part of the deployment configuration identified by a key.
+        /// The result is binary data if a file has been specified for the key in the deployment configuration.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
-        /// or if the device does not support file storage.</returns>
-        string GetStorageFileContentAsString(string filePath);
+        /// <param name="configurationKey"></param>
+        /// <returns>Returns the content of a binary file if the deployment configuration has specified a file
+        /// for the <paramref name="configurationKey"/>. Returns <c>null</c> otherwise.</returns>
+        byte[] GetDeploymentConfigurationFile(string configurationKey);
     }
 }

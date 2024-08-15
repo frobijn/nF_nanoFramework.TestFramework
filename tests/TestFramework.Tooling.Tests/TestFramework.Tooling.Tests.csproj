@@ -23,7 +23,7 @@
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DefineConstants>$(DefineConstants);REFERENCED_IN_NFUNITMETADATA</DefineConstants>
+    <DefineConstants>$(DefineConstants);NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -33,7 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DefineConstants>$(DefineConstants);REFERENCED_IN_NFUNITMETADATA</DefineConstants>
+    <DefineConstants>$(DefineConstants);NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -53,11 +53,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../../source/TestFramework/IAssemblyAttributes.cs">
+      <Link>TestFramework/IAssemblyAttributes.cs</Link>
+    </Compile>
     <Compile Include="../../source/TestFramework/ICleanup.cs">
       <Link>TestFramework/ICleanup.cs</Link>
     </Compile>
     <Compile Include="../../source/TestFramework/IDataRow.cs">
       <Link>TestFramework/IDataRow.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/IDeploymentConfiguration.cs">
+      <Link>TestFramework/IDeploymentConfiguration.cs</Link>
     </Compile>
     <Compile Include="../../source/TestFramework/ISetup.cs">
       <Link>TestFramework/ISetup.cs</Link>
@@ -81,6 +87,7 @@
       <Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
     </Compile>
     <Compile Include="DebugTestCasesSpecificationTest.cs" />
+    <Compile Include="DeploymentConfigurationTest.cs" />
     <Compile Include="Helpers\TestDirectoryHelper.cs" />
     <Compile Include="Helpers\TestResultsHelper.cs" />
     <Compile Include="Helpers\TestUsingTestFrameworkToolingTestsDiscovery_v3.cs" />
@@ -93,6 +100,7 @@
     <Compile Include="TestFrameworkProxy\DataRowProxyTest.cs" />
     <Compile Include="Helpers\LogMessengerMock.cs" />
     <Compile Include="Helpers\TestDeviceMock.cs" />
+    <Compile Include="TestFrameworkProxy\DeploymentConfigurationProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\SetupProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TestClassProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TestOnRealHardwareProxyTest.cs" />
@@ -112,18 +120,6 @@
     <ProjectReference Include="..\..\source\TestFramework.Tooling\nanoFramework.TestFramework.Tooling.csproj">
       <Project>{D10594AF-5494-4A91-8456-D7CDC4CA0459}</Project>
       <Name>nanoFramework.TestFramework.Tooling</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestFramework.Tooling.Tests.Discovery.v2\TestFramework.Tooling.Tests.Discovery.v2.nfproj">
-      <Project>{d3285fb9-f3d3-4396-b837-852450ed9640}</Project>
-      <Name>TestFramework.Tooling.Tests.Discovery.v2</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestFramework.Tooling.Tests.Discovery.v3\TestFramework.Tooling.Tests.Discovery.v3.nfproj">
-      <Project>{7088d760-fce7-4cdf-bccc-e87c44082f26}</Project>
-      <Name>TestFramework.Tooling.Tests.Discovery.v3</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestFramework.Tooling.Tests.Execution.v3\TestFramework.Tooling.Tests.Execution.v3.nfproj">
-      <Project>{c2fe1cfd-3fb9-48f4-b832-a8ae79920ab7}</Project>
-      <Name>TestFramework.Tooling.Tests.Execution.v3</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

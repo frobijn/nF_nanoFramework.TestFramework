@@ -19,5 +19,11 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         public void TestOnDeviceWithSomeFile()
         {
         }
+
+        [DeploymentConfiguration("configKey")]
+        public void Setup(string config)
+        {
+            Assert.IsNotNull(config);
+        }
     }
 }

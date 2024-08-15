@@ -6,12 +6,13 @@ using System;
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// Mark a test as intended to be executed on real hardware. This is also visible in the
+    /// Mark a test, all methods of a test class or all tests in a assembly (when applied to a class implementing the
+    /// <see cref="IAssemblyAttributes"/> interface) as intended to be executed on real hardware. This is also visible in the
     /// Visual Studio test explorer via a trait. The test will be executed on at least one
     /// of the available devices that are not the Virtual Device.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-#if REFERENCED_IN_NFUNITMETADATA
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
+#if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else
     public

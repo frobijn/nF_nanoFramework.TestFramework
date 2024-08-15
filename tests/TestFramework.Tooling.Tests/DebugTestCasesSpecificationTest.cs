@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
@@ -13,7 +14,6 @@ namespace TestFramework.Tooling.Tests
     public sealed class DebugTestCasesSpecificationTest
     {
         #region Json (de)serialization
-        [TestMethod]
         [DataRow(@"{
   ""TestCases"": {
     ""TestFramework.Tooling.Tests"": {
@@ -82,7 +82,9 @@ namespace TestFramework.Tooling.Tests
             var testCases = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath2, assemblyFilePath3 },
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
                 true, logger);
-            logger.AssertEqual("", LoggingLevel.Error);
+            logger.AssertEqual(
+                $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.",
+                LoggingLevel.Error);
             #endregion
 
             string actual = DebugTestCasesSpecification.GenerateJsonSchema(testCases);
@@ -265,7 +267,9 @@ namespace TestFramework.Tooling.Tests
             var testCases = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath2, assemblyFilePath3 },
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
                 true, logger);
-            logger.AssertEqual("", LoggingLevel.Error);
+            logger.AssertEqual(
+                $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.",
+                LoggingLevel.Error);
             #endregion
 
             var selection = DebugTestCasesSpecification.Parse(
@@ -357,7 +361,9 @@ TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToR
             var testCases = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath2, assemblyFilePath3 },
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
                 true, logger);
-            logger.AssertEqual("", LoggingLevel.Error);
+            logger.AssertEqual(
+                $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.",
+                LoggingLevel.Error);
             #endregion
 
             var selection = DebugTestCasesSpecification.Parse(
