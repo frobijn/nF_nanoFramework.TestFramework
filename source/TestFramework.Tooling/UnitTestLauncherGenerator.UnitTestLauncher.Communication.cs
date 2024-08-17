@@ -16,7 +16,7 @@ namespace nanoFramework.TestFramework.Tools
             Instantiate,
             /// <summary>About to run the setup method</summary>
             Setup,
-            /// <summary>Initialisation of the test class complete</summary>
+            /// <summary>Initialisation complete of the test class or before a test</summary>
             SetupComplete,
             /// <summary>Error occurred while initialising a test or the test class</summary>
             SetupFail,
@@ -36,6 +36,8 @@ namespace nanoFramework.TestFramework.Tools
             Dispose,
             /// <summary>Error occurred in the cleanup phase of a test or group</summary>
             CleanupFail,
+            /// <summary>Cleanup complete of the test class or after a test</summary>
+            CleanUpComplete,
 
             /// <summary>Processing of the test class has been completed</summary>
             Done,

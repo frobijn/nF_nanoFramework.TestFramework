@@ -60,9 +60,17 @@ While working on the implementation of the must-have requirements, it turned out
 
     In v2 the assembly name of a unit test has to be NFUnitTest.dll. In v3 there is no need for that. If a developer wants to debug tests from multiple assemblies via the same debug project (a special project type introduced in v3), the assembly names should *not* be the same for all unit test projects.s
 
+- Default constructor and `IDisposable` as alternative for setup/cleanup methods; setup/cleanup per test method.
+
+    Using a default constructor instead of setup and `IDisposable` for cleanup is a common pattern in test frameworks (e.g, NUnit, xUnit). It is also possible to specify whether an instance should be created per test method or setup/cleanup should be executed for each test method (as some test frameworks do), so that every test method is started with the same context even if other test methods result in a modified context.
+
 - Extensible test framework
 
     The interaction between the attributes describing the tests and the test framework is no longer based on the names of attributes but on the interfaces the attributes implement. That makes it easy for a developer to create custom attributes. One use case is to define attributes with the same type as a .NET framework (MSTest, NUnit, xUnit) so that not only the source code but also unit tests can be shared between nanoFramework and .NET projects.
+
+- Monitoring test progress on real hardware
+
+    While developing code for a (new) hardware/IoT device connected to a MCU, a development board may be used to connect the hardware to. The board may have extra features (e.g., RGB LED, small display) that could be used to monitor the progress of the tests. This is not supported out of the box, but the extensibility of the test framework allows for the creation of custom test monitors that run on real hardware and are only included if the required extra features are present according to the "make and model" information.
 
 - Test framework exceptions are easily discernible from other exceptions
 
@@ -75,10 +83,6 @@ While working on the implementation of the must-have requirements, it turned out
 - Test adapter should not be limited by its test host
 
     To resolve assembly version conflicts, the test framework uses a separate host for discovering and directing the execution of the tests. As a result, the TestFramework.Tooling can use updates for NuGet packages that previously prevented running the test adapter (underlying [VSTest issue](https://github.com/microsoft/vstest/issues/4775)).
-
-- Default constructor and `IDisposable` as alternative for setup/cleanup methods; setup/cleanup per test method.
-
-    Using a default constructor instead of setup and `IDisposable` for cleanup is a common pattern in test frameworks (e.g, NUnit, xUnit). It is also possible to specify whether an instance should be created per test method or setup/cleanup should be executed for each test method (as some test frameworks do), so that every test method is started with the same context even if other test methods result in a modified context.
 
 ## Backward compatibility 
 The v3 version is backward compatible with v2. A v2 test project does not have to be changed to work with the v3 test adapter and test framework; updating the NuGet packages should be sufficient to profit from most of the improvements. To benefit from all improvement, the project has to be modified but that can be done in stages if needed. The documentation includes a migration guide for v2 projects to v3. 
@@ -195,6 +199,10 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 - Test framework interfaces are implemented explicitly
 
     The test adapter uses the interfaces defined in the test framework rather than the names of the attributes. For each interface the test framework has one or more attributes that implement the interface. As an attribute's properties are not supposed to be used directly by custom code, the interfaces as implemented explicitly. It hides the implementation of an attribute: in a future version of the test framework the implementation of the attribute can be changed without breaking any code of nanoFramework users. An exception is made for the `DataRow` attribute, as that already exposed a property in v2 and hiding it would be a breaking change.
+
+- The `DeploymentConfigurationAttribute` has a weird constructor
+
+    Its argument is `params object[]` instead of `params string[]` because the latter results in a invalid typecast exception in `GetCustomAttributes`. 
 
 - The unit test launcher uses the type of test classes and the name of methods
 

@@ -15,12 +15,12 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
 
         }
 
-        [TestOnDeviceWithSomeFile(@"xyzzy")]
+        [TestOnDeviceWithSomeFile("xyzzy")]
         public void TestOnDeviceWithSomeFile()
         {
         }
 
-        [DeploymentConfiguration("configKey")]
+        [Setup, DeploymentConfiguration("xyzzy")]
         public void Setup(string config)
         {
             Assert.IsNotNull(config);

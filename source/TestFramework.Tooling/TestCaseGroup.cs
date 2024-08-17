@@ -84,7 +84,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// argument of the setup method that is of type <c>byte[]</c> or <c>string</c>,
         /// as indicated for the key.
         /// </summary>
-        public IReadOnlyList<(string key, bool asBytes)> ConfigurationKeys
+        public IReadOnlyList<(string key, bool asBytes)> RequiredConfigurationKeys
         {
             get;
             internal set;

@@ -24,7 +24,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
     {
         [TestMethod]
         [TestMethodMock(true)]
-        public void TestMethodProxyCreatedForMethod()
+        public void TestMethodProxy_CreatedForMethod()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
@@ -42,7 +42,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [TestMethod]
         [TestCategory("Source code")]
         [TestMethodMock(true)]
-        public void TestMethodProxyCreatedForMethodWithSource()
+        public void TestMethodProxy_CreatedForMethodWithSource()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
@@ -61,7 +61,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        public void TestMethodProxyErrorForAssembly()
+        public void TestMethodProxy_ErrorForAssembly()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
@@ -76,7 +76,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        public void TestMethodProxyErrorForClass()
+        public void TestMethodProxy_ErrorForClass()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);

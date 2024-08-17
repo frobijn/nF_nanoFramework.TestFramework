@@ -46,7 +46,7 @@ namespace TestFramework.Tooling.Tests
 }";
             #endregion
 
-            DeploymentConfiguration actual = DeploymentConfiguration.Parse(json, jsonDirectoryPath);
+            DeploymentConfiguration actual = DeploymentConfiguration.Parse(json, jsonDirectoryPath, null);
 
             string actualJson = actual.ToJson();
             Assert.AreEqual(@"{
@@ -77,6 +77,56 @@ namespace TestFramework.Tooling.Tests
 
             CollectionAssert.AreEqual(testBinary, actual.GetDeploymentConfigurationFile("Binary file key"));
             Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("Missing file key"));
+        }
+
+        [TestMethod]
+        public void DeploymentConfiguration_WithDefault()
+        {
+            #region Defaults
+            string json1 = @"{
+    ""DisplayName"": ""First configuration"",
+    ""Configuration"":
+    {
+        ""First key"": ""Value from first configuration"",
+        ""Second key"": ""Second value""
+    }
+}";
+            DeploymentConfiguration defaultConfig = DeploymentConfiguration.Parse(json1, null, null);
+
+            #endregion
+
+            #region Overwrite some values, keep some
+            string json2 = @"{
+    ""Configuration"":
+    {
+        ""First key"": ""Value from second configuration""
+    }
+}";
+            DeploymentConfiguration actual1 = DeploymentConfiguration.Parse(json2, null, defaultConfig);
+            Assert.AreEqual(@"{
+  ""DisplayName"": ""First configuration"",
+  ""Configuration"": {
+    ""First key"": ""Value from second configuration"",
+    ""Second key"": ""Second value""
+  }
+}".Replace("\r\n", "\n") + '\n',
+                actual1.ToJson().Replace("\r\n", "\n") + '\n');
+            #endregion
+
+            #region Overwrite DisplayName
+            string json3 = @"{
+  ""DisplayName"": ""Other device"",
+}";
+            DeploymentConfiguration actual2 = DeploymentConfiguration.Parse(json3, null, actual1);
+            Assert.AreEqual(@"{
+  ""DisplayName"": ""Other device"",
+  ""Configuration"": {
+    ""First key"": ""Value from second configuration"",
+    ""Second key"": ""Second value""
+  }
+}".Replace("\r\n", "\n") + '\n',
+                actual2.ToJson().Replace("\r\n", "\n") + '\n');
+            #endregion
         }
     }
 }

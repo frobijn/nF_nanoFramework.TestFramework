@@ -16,8 +16,19 @@ namespace TestFramework.Tooling.Execution.Tests
         }
 
         [TestOnPlatform("esp32")]
-        public void MethodToRunOnRealHardware()
+        [DeploymentConfiguration("RGB LED pin")]
+        public void MethodToRunOnRealHardware(string ledPin)
         {
+            Assert.IsNotNull(ledPin);
+        }
+
+        [TestOnPlatform("esp32")]
+        [DeploymentConfiguration("RGB LED pin")]
+        [DataRow(42)]
+        public void MethodToRunOnRealHardwareWithData(string ledPin, int data)
+        {
+            Assert.IsNotNull(ledPin);
+            Assert.AreEqual(42, data);
         }
     }
 }

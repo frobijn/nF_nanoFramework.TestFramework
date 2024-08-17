@@ -98,10 +98,12 @@ namespace nanoFramework.TestFramework.Tooling
         /// Parse the JSON representation of a <see cref="DeploymentConfiguration"/>.
         /// </summary>
         /// <param name="json">JSON configuration</param>
-        /// <param name="jsonDirectoryPath">The path of the directory with the file the <paramref name="json"/> was read from. The path is used to resolve
-        /// relative paths as value of <see cref="ConfigurationFile.FilePath"/>.</param>
+        /// <param name="jsonDirectoryPath">The path of the directory with the file the <paramref name="json"/>
+        /// was read from. The path is used to resolve relative paths as value of <see cref="ConfigurationFile.FilePath"/>.</param>
+        /// <param name="defaultConfiguration">The default configuration. If not <c>null</c>, it provides the
+        /// initial configuration of which the properties are overwritten with the data in <paramref name="json"/>.</param>
         /// <returns></returns>
-        public static DeploymentConfiguration Parse(string json, string jsonDirectoryPath)
+        public static DeploymentConfiguration Parse(string json, string jsonDirectoryPath, DeploymentConfiguration defaultConfiguration)
         {
             DeploymentConfiguration configuration = JsonConvert.DeserializeObject<DeploymentConfiguration>(json);
             if (!(configuration?.Values is null))
@@ -111,6 +113,21 @@ namespace nanoFramework.TestFramework.Tooling
                     if (!(file is null))
                     {
                         file._absolutePath = Path.Combine(jsonDirectoryPath ?? ".", file.FilePath);
+                    }
+                }
+            }
+            if (!(defaultConfiguration is null))
+            {
+                configuration.DisplayName ??= defaultConfiguration.DisplayName;
+                if (!(defaultConfiguration.Values is null))
+                {
+                    foreach (KeyValuePair<string, (string value, ConfigurationFile file)> value in defaultConfiguration.Values)
+                    {
+                        configuration.Values ??= new Dictionary<string, (string value, ConfigurationFile file)>();
+                        if (!configuration.Values.ContainsKey(value.Key))
+                        {
+                            configuration.Values[value.Key] = value.Value;
+                        }
                     }
                 }
             }

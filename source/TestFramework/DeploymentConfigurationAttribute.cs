@@ -15,7 +15,7 @@ namespace nanoFramework.TestFramework
     /// A test class can have at most one setup method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class DeploymentConfigurationAttribute : Attribute, IDeploymentConfiguration
+    public sealed class DeploymentConfigurationAttribute : Attribute, IDeploymentConfiguration
     {
         #region Fields
         private readonly string[] _configurationKeys;
@@ -31,7 +31,10 @@ namespace nanoFramework.TestFramework
         /// argument of the setup method that is of type <c>byte[]</c> or <c>string</c>.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="configurationKeys"/> is null</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="configurationKeys"/> is empty</exception>
-        public DeploymentConfigurationAttribute(params string[] configurationKeys)
+        /// <remarks>
+        /// Due to technical limitations the arguments are of type <c>object</c> rather than <c>string</c>.
+        /// </remarks>
+        public DeploymentConfigurationAttribute(params object[] configurationKeys)
         {
             if (configurationKeys == null)
             {
@@ -42,7 +45,11 @@ namespace nanoFramework.TestFramework
             {
                 throw new ArgumentException($"{nameof(configurationKeys)} can not be empty");
             }
-            _configurationKeys = configurationKeys;
+            _configurationKeys = new string[configurationKeys.Length];
+            for (int i = 0; i < configurationKeys.Length; i++)
+            {
+                _configurationKeys[i] = configurationKeys[i].ToString();
+            }
         }
         #endregion
 

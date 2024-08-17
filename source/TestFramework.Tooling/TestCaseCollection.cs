@@ -20,6 +20,7 @@ namespace nanoFramework.TestFramework.Tooling
     {
         #region Fields
         private static readonly HashSet<string> s_assemblyLocations = new HashSet<string>();
+        public const string VirtualDeviceDescription = "Virtual Device";
         private static readonly string s_realHardwareDescription = (new TestOnRealHardwareAttribute() as ITestOnRealHardware).Description;
         private readonly List<TestCaseSelection> _testsOnVirtualDevice = new List<TestCaseSelection>();
         private readonly List<TestCaseSelection> _testsOnRealHardware = new List<TestCaseSelection>();
@@ -84,6 +85,19 @@ namespace nanoFramework.TestFramework.Tooling
                 AppDomain.CurrentDomain.Load(test.GetName());
 
                 AddTestClasses(assemblyFilePath, test, sourceCode, allowTestOnRealHardware, logger);
+
+                static void SetSelectionIndex(List<TestCaseSelection> selections)
+                {
+                    foreach (TestCaseSelection selection in selections)
+                    {
+                        for (int i = 0; i < selection._testCases.Count; i++)
+                        {
+                            selection._testCases[i] = (-i - 1, selection._testCases[i].testCase);
+                        }
+                    }
+                }
+                SetSelectionIndex(_testsOnVirtualDevice);
+                SetSelectionIndex(_testsOnRealHardware);
             }
         }
 
@@ -139,7 +153,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     if (allowTestOnRealHardware)
                     {
-                        displayNameForVirtualDevice = $"{displayBaseName} [{VIRTUALDEVICE}]";
+                        displayNameForVirtualDevice = $"{displayBaseName} [{VirtualDeviceDescription}]";
                     }
                     else
                     {
@@ -426,12 +440,17 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         continue;
                     }
+                    DeploymentConfigurationProxy deploymentProxy = methodAttributes.OfType<DeploymentConfigurationProxy>().FirstOrDefault();
+                    foreach (DeploymentConfigurationProxy attribute in methodAttributes.OfType<DeploymentConfigurationProxy>())
+                    {
+                        if (attribute != deploymentProxy)
+                        {
+                            logger?.Invoke(LoggingLevel.Verbose, $"{attribute.Source?.ForMessage() ?? classType.FullName}: Warning: Only one attribute that implements '{nameof(IDeploymentConfiguration)}' is allowed. Only the first one is used, subsequent attributes are ignored.");
+                        }
+                    }
 
                     #region Setup / cleanup
-                    DeploymentConfigurationProxy deploymentProxy = methodAttributes.OfType<DeploymentConfigurationProxy>().FirstOrDefault();
-                    SetupProxy setup = deploymentProxy is null
-                        ? methodAttributes.OfType<SetupProxy>().FirstOrDefault()
-                        : deploymentProxy;
+                    SetupProxy setup = methodAttributes.OfType<SetupProxy>().FirstOrDefault();
                     if (!(setup is null))
                     {
                         if (hasSetup)
@@ -443,32 +462,9 @@ namespace nanoFramework.TestFramework.Tooling
                             hasSetup = true;
                             group.SetupMethodName = method.Name;
                             group.SetupSourceCodeLocation = setup.Source;
-
-                            if (!(deploymentProxy is null))
-                            {
-                                string[] keys = deploymentProxy.ConfigurationKeys;
-                                ParameterInfo[] arguments = method.GetParameters();
-                                if (keys.Length != arguments.Length)
-                                {
-                                    logger?.Invoke(LoggingLevel.Error, $"{setup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements '{nameof(IDeploymentConfiguration)}'.");
-                                }
-                                else if ((from a in arguments
-                                          where a.ParameterType != typeof(byte[]) && a.ParameterType != typeof(string)
-                                          select a).Any())
-                                {
-                                    logger?.Invoke(LoggingLevel.Error, $"{setup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Error: An argument of the method must be of type 'byte[]' or 'string'.");
-                                }
-                                else
-                                {
-                                    var configurationKeys = new List<(string key, bool asBytes)>();
-                                    for (int i = 0; i < arguments.Length; i++)
-                                    {
-                                        configurationKeys.Add((keys[i], arguments[i].ParameterType == typeof(byte[])));
-                                    }
-                                    group.ConfigurationKeys = configurationKeys;
-                                }
-                            }
-                            group.ConfigurationKeys ??= new (string, bool)[] { };
+                            group.RequiredConfigurationKeys = deploymentProxy?.GetDeploymentConfigurationArguments(method, false, logger)
+                                ?? new (string key, bool asBytes)[] { };
+                            deploymentProxy = null;
                         }
                     }
                     CleanupProxy cleanup = methodAttributes.OfType<CleanupProxy>().FirstOrDefault();
@@ -483,6 +479,11 @@ namespace nanoFramework.TestFramework.Tooling
                             hasCleanup = true;
                             group.CleanupMethodName = method.Name;
                             group.CleanupSourceCodeLocation = cleanup.Source;
+                        }
+                        if (!(deploymentProxy is null))
+                        {
+                            logger?.Invoke(LoggingLevel.Error, $"{cleanup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Error: A cleanup method cannot have an attribute that implements '{nameof(IDeploymentConfiguration)}' - the attribute is ignored.");
+                            deploymentProxy = null;
                         }
                     }
                     #endregion
@@ -536,6 +537,8 @@ namespace nanoFramework.TestFramework.Tooling
                             }
                             string testCaseId = dataRowIndex < 0 ? $"G{testGroupIndex:000}T{methodIndex:000}" : $"G{testGroupIndex:000}T{methodIndex:000}D{dataRowIndex:00}";
 
+                            IReadOnlyList<(string key, bool asBytes)> deploymentArguments = deploymentProxy?.GetDeploymentConfigurationArguments(method, dataRowIndex >= 0, logger);
+
                             if (testOnVirtualDevice)
                             {
                                 testsOnVirtualDevice._testCases.Add((-1,
@@ -544,10 +547,11 @@ namespace nanoFramework.TestFramework.Tooling
                                         dataRowIndex,
                                         assemblyFilePath,
                                         group,
-                                        method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{VIRTUALDEVICE}]" : "")}",
+                                        method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{VirtualDeviceDescription}]" : "")}",
                                         testCaseSource,
                                         true, null,
-                                        TraitsProxy.Collect(testTraits, null, new string[] { $"@{VIRTUALDEVICE}" })
+                                        deploymentArguments,
+                                        TraitsProxy.Collect(testTraits, null, new string[] { $"@{VirtualDeviceDescription}" })
                                     )));
                             }
                             if (!(testOnRealHardware.descriptions is null))
@@ -564,6 +568,7 @@ namespace nanoFramework.TestFramework.Tooling
                                         method, $"{displayNameBase}{(deviceTypeCount > 1 ? $" [{s_realHardwareDescription}]" : "")}",
                                         testCaseSource,
                                         false, testOnRealHardware.attributes,
+                                        deploymentArguments,
                                         traits
                                     )));
                             }
@@ -575,7 +580,7 @@ namespace nanoFramework.TestFramework.Tooling
                     else
                     {
                         if ((from a in methodAttributes
-                             where !(a is SetupProxy) && !(a is CleanupProxy)
+                             where !(a is SetupProxy) && !(a is CleanupProxy) && !(a is DeploymentConfigurationProxy)
                              select a).Any())
                         {
                             logger?.Invoke(LoggingLevel.Verbose, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: No other attributes are allowed when the attributes that implement '{nameof(ICleanup)}'/'{nameof(IDeploymentConfiguration)}'/'{nameof(ISetup)}' are present. Extra attributes are ignored.");
@@ -600,7 +605,6 @@ namespace nanoFramework.TestFramework.Tooling
                 _testsOnRealHardware.Add(testsOnRealHardware);
             }
         }
-        private const string VIRTUALDEVICE = "Virtual Device";
         #endregion
     }
 }

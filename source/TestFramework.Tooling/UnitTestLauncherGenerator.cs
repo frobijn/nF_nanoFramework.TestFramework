@@ -29,11 +29,12 @@ namespace nanoFramework.TestFramework.Tooling
         /// from a single assembly.
         /// </summary>
         /// <param name="selection">Selection of unit tests</param>
+        /// <param name="configuration">Deployment configuration to generated the code for; can be <c>null</c>.</param>
         /// <param name="communicateByNames">Indicates whether the information about running the test cases should
         /// use names rather than numbers. Pass <c>true</c> to make the output better understandable for humans.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        public UnitTestLauncherGenerator(TestCaseSelection selection, bool communicateByNames, LogMessenger logger)
-            : this(new TestCaseSelection[] { selection }, communicateByNames, logger)
+        public UnitTestLauncherGenerator(TestCaseSelection selection, DeploymentConfiguration configuration, bool communicateByNames, LogMessenger logger)
+            : this(new TestCaseSelection[] { selection }, configuration, communicateByNames, logger)
         {
         }
 
@@ -43,10 +44,11 @@ namespace nanoFramework.TestFramework.Tooling
         /// of the test classes from different assemblies are distinct.
         /// </summary>
         /// <param name="selection">Selection of unit tests</param>
+        /// <param name="configuration">Deployment configuration to generated the code for; can be <c>null</c>.</param>
         /// <param name="communicateByNames">Indicates whether the information about running the test cases should
         /// use names rather than numbers. Pass <c>true</c> to make the output better understandable for humans.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        public UnitTestLauncherGenerator(IEnumerable<TestCaseSelection> selection, bool communicateByNames, LogMessenger logger)
+        public UnitTestLauncherGenerator(IEnumerable<TestCaseSelection> selection, DeploymentConfiguration configuration, bool communicateByNames, LogMessenger logger)
         {
             string code = GetSourceCode("UnitTestLauncher.cs", logger);
             if (communicateByNames)
@@ -64,7 +66,7 @@ namespace nanoFramework.TestFramework.Tooling
             _sourceFiles["UnitTestLauncher.cs"] = code;
             _sourceFiles[RUNUNITTESTS_SOURCEFILENAME] = GetSourceCode(RUNUNITTESTS_SOURCEFILENAME, logger);
 
-            AddTestCases(selection, new string(' ', 12));
+            AddTestCases(selection, configuration);
         }
         private static readonly Regex s_replaceCommunicationValues = new Regex(@"\{Communication\.(?<value>[A-Z0-9_]+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -172,17 +174,99 @@ namespace nanoFramework.TestFramework.Tooling
         /// the required code to execute the selected unit tests.
         /// </summary>
         /// <param name="selections">Selection of unit tests</param>
-        /// <param name="indent">Indent of the generated code</param>
-        private void AddTestCases(IEnumerable<TestCaseSelection> selections, string indent)
+        /// <param name="configuration">Deployment configuration to generated the code for; can be <c>null</c>.</param>
+        private void AddTestCases(IEnumerable<TestCaseSelection> selections, DeploymentConfiguration configuration)
         {
             if (!_sourceFiles.ContainsKey(RUNUNITTESTS_SOURCEFILENAME))
             {
                 return;
             }
 
+            #region Code for configuration data
+            int staticDataIndex = 0;
+            var configurationDataName = new Dictionary<string, string>();
+            var staticData = new StringBuilder(@"#region Deployment configuration data");
+            string AddConfigurationData(string configurationKey, bool asBinary)
+            {
+                string key = $"{(asBinary ? "B" : "T")}{configurationKey}";
+                if (configurationDataName.TryGetValue(key, out string code))
+                {
+                    return code;
+                }
+                if (asBinary)
+                {
+                    byte[] binaryData = configuration?.GetDeploymentConfigurationFile(configurationKey);
+                    if (binaryData is null)
+                    {
+                        configurationDataName[key] = null;
+                        return null;
+                    }
+                    string fieldName = $"s_cfg_{++staticDataIndex}";
+                    configurationDataName[key] = fieldName;
+
+                    staticData.Append($@"
+{s_dataIndent}/// <summary>Configuration key '{configuration}' as binary data</summary>
+{s_dataIndent}private static readonly byte[] {fieldName} = new byte[] {{");
+                    for (int i = 0; i < binaryData.Length;)
+                    {
+                        staticData.Append($@"
+{s_dataIndent}    ");
+                        for (; i < binaryData.Length; i++)
+                        {
+                            staticData.Append(binaryData[i]);
+                            staticData.Append(',');
+                        }
+                    }
+                    staticData.Append($@"
+{s_dataIndent}}};");
+
+                    return fieldName;
+                }
+                else
+                {
+                    string textValue = configuration?.GetDeploymentConfigurationValue(configurationKey);
+                    if (textValue is null)
+                    {
+                        configurationDataName[key] = null;
+                        return null;
+                    }
+                    string fieldName = $"CFG_{++staticDataIndex}";
+                    configurationDataName[key] = fieldName;
+
+                    staticData.Append($@"
+{s_dataIndent}/// <summary>Configuration key '{configuration}' as text</summary>
+{s_dataIndent}private const string {fieldName} = {SymbolDisplay.FormatLiteral(textValue, true)};");
+
+                    return fieldName;
+                }
+            }
+            string ConvertToArguments(IReadOnlyList<(string key, bool asBytes)> requiredConfigurationKeys)
+            {
+                if ((requiredConfigurationKeys?.Count ?? 0) == 0)
+                {
+                    return "null";
+                }
+                var arguments = new List<string>();
+                foreach ((string key, bool asBinary) in requiredConfigurationKeys)
+                {
+                    string fieldName = AddConfigurationData(key, asBinary);
+                    if (fieldName is null)
+                    {
+                        arguments.Add("null");
+                    }
+                    else
+                    {
+                        arguments.Add(fieldName);
+                    }
+                }
+                return $"new object[] {{ {string.Join(", ", arguments)} }}";
+            }
+            #endregion
+
             var code = new StringBuilder();
             foreach (TestCaseSelection selection in selections)
             {
+
                 var perGroup = selection.TestCases
                                 .GroupBy(tc => tc.testCase.Group)
                                 .ToDictionary
@@ -200,42 +284,33 @@ namespace nanoFramework.TestFramework.Tooling
                                     ? Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerTestMethod
                                     : Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerClass);
 
-                    code.AppendLine($"{indent}ForClass(");
-                    code.AppendLine($"{indent}    typeof(global::{testGroup.Key.FullyQualifiedName}), {instantiation},");
+                    code.AppendLine($"{s_bodyIndent}ForClass(");
+                    code.AppendLine($"{s_bodyIndent}    typeof(global::{testGroup.Key.FullyQualifiedName}), {instantiation},");
                     if (testGroup.Key.SetupMethodName is null)
                     {
-                        code.AppendLine($"{indent}    null, null,");
+                        code.AppendLine($"{s_bodyIndent}    null, null,");
                     }
                     else
                     {
-                        code.AppendLine($"{indent}    nameof(global::{testGroup.Key.FullyQualifiedName}.{testGroup.Key.SetupMethodName}),");
-                        if (testGroup.Key.ConfigurationKeys.Count > 0)
-                        {
-                            // TODO: deployment configuration
-                            code.AppendLine($"{indent}    TODO,");
-
-                        }
-                        else
-                        {
-                            code.AppendLine($"{indent}    null,");
-                        }
+                        code.AppendLine($"{s_bodyIndent}    nameof(global::{testGroup.Key.FullyQualifiedName}.{testGroup.Key.SetupMethodName}),");
+                        code.AppendLine($"{s_bodyIndent}    {ConvertToArguments(testGroup.Key.RequiredConfigurationKeys)},");
                     }
                     if (testGroup.Key.CleanupMethodName is null)
                     {
-                        code.AppendLine($"{indent}    null,");
+                        code.AppendLine($"{s_bodyIndent}    null,");
                     }
                     else
                     {
-                        code.AppendLine($"{indent}    nameof(global::{testGroup.Key.FullyQualifiedName}.{testGroup.Key.CleanupMethodName}),");
+                        code.AppendLine($"{s_bodyIndent}    nameof(global::{testGroup.Key.FullyQualifiedName}.{testGroup.Key.CleanupMethodName}),");
                     }
 
-                    code.AppendLine($"{indent}    (frm, fdr) =>");
-                    code.AppendLine($"{indent}    {{");
+                    code.AppendLine($"{s_bodyIndent}    (frm, fdr) =>");
+                    code.AppendLine($"{s_bodyIndent}    {{");
                     foreach (TestCase testCase in testGroup.Value)
                     {
                         if (testCase.DataRowIndex < 0)
                         {
-                            code.AppendLine($"{indent}        frm(nameof(global::{testCase.FullyQualifiedName}));");
+                            code.AppendLine($"{s_bodyIndent}        frm(nameof(global::{testCase.FullyQualifiedName}), {ConvertToArguments(testCase.RequiredConfigurationKeys)});");
                         }
                     }
 
@@ -245,22 +320,36 @@ namespace nanoFramework.TestFramework.Tooling
                                      .GroupBy(tc => tc.FullyQualifiedName)
                                      .ToDictionary(
                                         g => g.Key,
-                                        g => (from tc in g
-                                              orderby tc.DataRowIndex
-                                              select tc.DataRowIndex).ToList()
+                                        g => (g.First(), (from tc in g
+                                                          orderby tc.DataRowIndex
+                                                          select tc.DataRowIndex).ToList())
                                      );
-                    foreach (KeyValuePair<string, List<int>> testMethod in perTestMethod)
+                    foreach (KeyValuePair<string, (TestCase, List<int>)> testMethod in perTestMethod)
                     {
-                        code.AppendLine($"{indent}        fdr(nameof(global::{testMethod.Key}), {string.Join(", ", testMethod.Value)});");
+                        code.AppendLine($"{s_bodyIndent}        fdr(nameof(global::{testMethod.Key}), {ConvertToArguments(testMethod.Value.Item1.RequiredConfigurationKeys)}, {string.Join(", ", testMethod.Value.Item2)});");
                     }
 
-                    code.AppendLine($"{indent}    }}");
-                    code.AppendLine($"{indent});");
+                    code.AppendLine($"{s_bodyIndent}    }}");
+                    code.AppendLine($"{s_bodyIndent});");
                 }
             }
 
-            _sourceFiles[RUNUNITTESTS_SOURCEFILENAME] = _sourceFiles[RUNUNITTESTS_SOURCEFILENAME].Replace("@@@", code.ToString());
+            string sourceCode = _sourceFiles[RUNUNITTESTS_SOURCEFILENAME].Replace("@@@", code.ToString());
+            if (configurationDataName.Count > 0)
+            {
+                staticData.Append(@"
+#endregion
+");
+                sourceCode = sourceCode.Replace("$$$", staticData.ToString());
+            }
+            else
+            {
+                sourceCode = sourceCode.Replace("$$$", "");
+            }
+            _sourceFiles[RUNUNITTESTS_SOURCEFILENAME] = sourceCode;
         }
+        private static readonly string s_bodyIndent = new string(' ', 12);
+        private static readonly string s_dataIndent = new string(' ', 8);
 
         /// <summary>
         /// Get all assemblies for the unit tests. Assumption is that all these are the *.pe

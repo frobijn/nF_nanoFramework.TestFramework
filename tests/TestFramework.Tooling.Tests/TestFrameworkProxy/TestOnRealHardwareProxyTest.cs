@@ -23,7 +23,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
     public sealed class TestOnRealHardwareProxyTest
     {
         [TestMethod]
-        public void TestOnRealHardwareProxyCreatedForAssembly()
+        public void TestOnRealHardwareProxy_CreatedForAssembly()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
@@ -43,7 +43,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        public void TestOnRealHardwareProxyCreatedForClass()
+        public void TestOnRealHardwareProxy_CreatedForClass()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
@@ -59,7 +59,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         [TestMethod]
         [TestCategory("Source code")]
-        public void TestOnRealHardwareProxyCreatedForClassWithSource()
+        public void TestOnRealHardwareProxy_CreatedForClassWithSource()
         {
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
             var logger = new LogMessengerMock();
@@ -79,7 +79,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [TestMethod]
         [TestCategory("Source code")]
         [TestOnPlatformMock("mcu")]
-        public void TestOnRealHardwareProxyCreatedForMethodWithSource()
+        public void TestOnRealHardwareProxy_CreatedForMethodWithSource()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
@@ -115,8 +115,8 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        [TestForExistingStorageMock("xyzzy")]
-        public void TestOnRealHardwareProxyUsingStorage()
+        [TestForExistingConfigurationMock("xyzzy")]
+        public void TestOnRealHardwareProxy_TestForConfiguration()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
@@ -186,28 +186,28 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         /// <summary>
         /// Test implementation of <see cref="nfTest.ITestOnRealHardware"/>, for devices
-        /// that have the file "xyzzy" in storage.
+        /// that have the key "xyzzy" in the deployment configuration.
         /// </summary>
         [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-        private sealed class TestForExistingStorageMockAttribute : Attribute, nfTest.ITestOnRealHardware
+        private sealed class TestForExistingConfigurationMockAttribute : Attribute, nfTest.ITestOnRealHardware
         {
             #region Construction
-            public TestForExistingStorageMockAttribute(string fileThatMustExist)
+            public TestForExistingConfigurationMockAttribute(string keyThatMustExist)
             {
-                _fileThatMustExist = fileThatMustExist;
+                _keyThatMustExist = keyThatMustExist;
             }
-            private readonly string _fileThatMustExist;
+            private readonly string _keyThatMustExist;
             #endregion
 
             #region ITestOnRealHardware implementation
             string nfTest.ITestOnRealHardware.Description
-                => _fileThatMustExist;
+                => _keyThatMustExist;
 
             bool nfTest.ITestOnRealHardware.ShouldTestOnDevice(nfTest.ITestDevice testDevice)
-                => !(testDevice.GetDeploymentConfigurationFile(_fileThatMustExist) is null);
+                => !(testDevice.GetDeploymentConfigurationFile(_keyThatMustExist) is null);
 
             bool nfTest.ITestOnRealHardware.AreDevicesEqual(nfTest.ITestDevice testDevice1, nfTest.ITestDevice testDevice2)
-                => testDevice1.GetDeploymentConfigurationValue(_fileThatMustExist) == testDevice2.GetDeploymentConfigurationValue(_fileThatMustExist);
+                => testDevice1.GetDeploymentConfigurationValue(_keyThatMustExist) == testDevice2.GetDeploymentConfigurationValue(_keyThatMustExist);
             #endregion
         }
         #endregion

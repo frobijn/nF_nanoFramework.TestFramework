@@ -48,6 +48,9 @@
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\MSTest.TestFramework.2.2.10\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.1.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -88,9 +91,11 @@
     </Compile>
     <Compile Include="DebugTestCasesSpecificationTest.cs" />
     <Compile Include="DeploymentConfigurationTest.cs" />
+    <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\TestDirectoryHelper.cs" />
     <Compile Include="Helpers\TestResultsHelper.cs" />
     <Compile Include="Helpers\TestUsingTestFrameworkToolingTestsDiscovery_v3.cs" />
+    <Compile Include="MSTest.cs" />
     <Compile Include="NanoCLRHelperTest.cs" />
     <Compile Include="TestCaseCollectionTest.cs" />
     <Compile Include="Helpers\TestProjectHelper.cs" />
@@ -109,7 +114,8 @@
     <Compile Include="TestFrameworkProxy\TestOnVirtualDeviceProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TraitsProxyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UnitTestLauncherGeneratorTest.cs" />
+    <Compile Include="UnitTestLauncherGeneratorTest_Discovery_v3.cs" />
+    <Compile Include="UnitTestLauncherGeneratorTest_Execution_v3.cs" />
     <Compile Include="UnitTestsOutputParserTest.cs" />
   </ItemGroup>
   <ItemGroup>

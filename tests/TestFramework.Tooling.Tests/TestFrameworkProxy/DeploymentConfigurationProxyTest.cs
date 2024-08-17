@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
@@ -26,23 +27,18 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
     {
         [TestMethod]
         [DeploymentConfigurationMock("method")]
-        public void DeploymentConfigurationProxyCreated()
+        public void DeploymentConfigurationProxy_Created()
         {
-            var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
+            var thisMethod = MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual("");
             Assert.IsNotNull(actual);
-            Assert.AreEqual(2, actual.Count);
-            CollectionAssert.AreEquivalent(
-                new object[] { typeof(DeploymentConfigurationProxy), typeof(SetupProxy) },
-                (from a in actual select a.GetType()).ToArray()
-            );
+            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(typeof(DeploymentConfigurationProxy), actual[0].GetType());
 
-            var proxy = (from a in actual
-                         where a.GetType() == typeof(DeploymentConfigurationProxy)
-                         select a).First() as DeploymentConfigurationProxy;
+            var proxy = actual[0] as DeploymentConfigurationProxy;
             CollectionAssert.AreEqual(
                 new object[] { "method" },
                 proxy.ConfigurationKeys
@@ -51,39 +47,31 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         [TestMethod]
         [TestCategory("Source code")]
-        [DeploymentConfigurationMock("some", "key")]
-        public void DeploymentConfigurationProxyMultipleCreatedWithSource()
+        [DeploymentConfigurationMock("method")]
+        public void DeploymentConfigurationProxy_WithSource()
         {
-            var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
+            var thisMethod = MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
             logger.AssertEqual("");
             Assert.IsNotNull(actual);
-            Assert.AreEqual(2, actual.Count);
-            CollectionAssert.AreEquivalent(
-                new object[] { typeof(DeploymentConfigurationProxy), typeof(SetupProxy) },
-                (from a in actual select a.GetType()).ToArray()
-            );
+            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(typeof(DeploymentConfigurationProxy), actual[0].GetType());
 
-            foreach (AttributeProxy p in actual)
-            {
-                Assert.IsNotNull(p.Source);
-                Assert.AreEqual("DeploymentConfigurationMock", p.Source.Name);
-            }
+            Assert.IsNotNull(actual[0].Source);
+            Assert.AreEqual("DeploymentConfigurationMock", actual[0].Source.Name);
 
-            var proxy = (from a in actual
-                         where a.GetType() == typeof(DeploymentConfigurationProxy)
-                         select a).First() as DeploymentConfigurationProxy;
+            var proxy = actual[0] as DeploymentConfigurationProxy;
             CollectionAssert.AreEqual(
-                new object[] { "some", "key" },
+                new object[] { "method" },
                 proxy.ConfigurationKeys
             );
         }
 
         [TestMethod]
-        public void DeploymentConfigurationProxyErrorForAssembly()
+        public void DeploymentConfigurationProxy_ErrorForAssembly()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
@@ -98,16 +86,121 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        public void DeploymentConfigurationProxyErrorForClass()
+        public void DeploymentConfigurationProxy_ErrorForClass()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual(
-@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest: Error: Attribute implementing 'IDeploymentConfiguration' can only be applied to a method. Attribute is ignored.
-Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest: Error: Attribute implementing 'ISetup' can only be applied to a method. Attribute is ignored.");
+@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest: Error: Attribute implementing 'IDeploymentConfiguration' can only be applied to a method. Attribute is ignored.");
             Assert.AreEqual(0, actual?.Count ?? -1);
         }
+
+
+        [TestMethod]
+        public void DeploymentConfigurationProxy_GetDeploymentConfigurationArguments()
+        {
+            Type classType = typeof(TestDeploymentConfigurationArguments);
+
+            #region OK
+            MethodInfo method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.OK));
+            var deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            var logger = new LogMessengerMock();
+
+            IReadOnlyList<(string key, bool asBytes)> actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
+            logger.AssertEqual("");
+            Assert.AreEqual(
+                @"string 'text key', byte[] 'binary key'" + '\n',
+                string.Join(", ", from a in actual
+                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                );
+            #endregion
+
+            #region MoreArguments - test method
+            method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.MoreArguments));
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            logger = new LogMessengerMock();
+
+            actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
+            logger.AssertEqual(
+@"Error: TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest+TestDeploymentConfigurationArguments.MoreArguments: Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements 'IDeploymentConfiguration'.");
+            Assert.AreEqual(
+                @"" + '\n',
+                string.Join(", ", from a in actual
+                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                );
+            #endregion
+
+            #region MoreArguments - data row method
+            method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.MoreArguments));
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            logger = new LogMessengerMock();
+
+            actual = deploymentProxy.GetDeploymentConfigurationArguments(method, true, logger);
+            logger.AssertEqual(@"");
+            Assert.AreEqual(
+                @"string 'text key'" + '\n',
+                string.Join(", ", from a in actual
+                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                );
+            #endregion
+
+            #region TooManyKeys
+            method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.TooManyKeys));
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            logger = new LogMessengerMock();
+
+            actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
+            logger.AssertEqual(
+@"Error: TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest+TestDeploymentConfigurationArguments.TooManyKeys: Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements 'IDeploymentConfiguration'.");
+            Assert.AreEqual(
+                @"" + '\n',
+                string.Join(", ", from a in actual
+                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                );
+            #endregion
+
+            #region IncorrectType
+            method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.IncorrectType));
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            logger = new LogMessengerMock();
+
+            actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
+            logger.AssertEqual(
+@"Error: TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest+TestDeploymentConfigurationArguments.IncorrectType: Error: An argument of the method must be of type 'byte[]' or 'string'.");
+            Assert.AreEqual(
+                @"" + '\n',
+                string.Join(", ", from a in actual
+                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                );
+            #endregion
+        }
+
+#pragma warning disable IDE0060 // Remove unused parameter
+        private sealed class TestDeploymentConfigurationArguments
+        {
+            [DeploymentConfigurationMock("text key", "binary key")]
+            public void OK(string text, byte[] binary)
+            {
+            }
+
+            [DeploymentConfigurationMock("text key")]
+            public void MoreArguments(string text, bool dataRowArgument)
+            {
+            }
+
+            [DeploymentConfigurationMock("text key", "key too many")]
+            public void TooManyKeys(string text)
+            {
+            }
+
+            [DeploymentConfigurationMock("key")]
+            public void IncorrectType(int pinNumber)
+            {
+            }
+        }
+#pragma warning restore IDE0060 // Remove unused parameter
+
 
         #region DeploymentConfigurationMockAttribute
         [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]

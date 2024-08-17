@@ -48,12 +48,67 @@ namespace nanoFramework.TestFramework.Tools
         private partial void RunUnitTests()
         {
             ForClass(
+                typeof(global::TestFramework.Tooling.Execution.Tests.StaticTestClass), (int)TestClassInitialisation.NoInstantiation,
+                nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClass.Setup), null,
+                nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClass.Cleanup),
+                (frm, fdr) =>
+                {
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClass.Method1), null);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClass.Method2), null);
+                }
+            );
+
+            ForClass(
+                typeof(global::TestFramework.Tooling.Execution.Tests.StaticTestClassSetupCleanupPerMethod), (int)TestClassInitialisation.SetupCleanupPerTestMethod,
+                nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClassSetupCleanupPerMethod.Setup), null,
+                nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClassSetupCleanupPerMethod.Cleanup),
+                (frm, fdr) =>
+                {
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClassSetupCleanupPerMethod.Method1), null);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.StaticTestClassSetupCleanupPerMethod.Method2), null);
+                }
+            );
+
+            ForClass(
+                typeof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClass), (int)TestClassInitialisation.InstantiateForAllMethods,
+                nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClass.Setup), null,
+                nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClass.Cleanup),
+                (frm, fdr) =>
+                {
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClass.Method1), null);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClass.Method2), null);
+                }
+            );
+
+            ForClass(
+                typeof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassSetupCleanupPerMethod), (int)(TestClassInitialisation.InstantiateForAllMethods | TestClassInitialisation.SetupCleanupPerTestMethod),
+                nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassSetupCleanupPerMethod.Setup), null,
+                nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassSetupCleanupPerMethod.Cleanup),
+                (frm, fdr) =>
+                {
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassSetupCleanupPerMethod.Method1), null);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassSetupCleanupPerMethod.Method2), null);
+                }
+            );
+
+            ForClass(
+                typeof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassInstancePerMethod), (int)(TestClassInitialisation.InstantiatePerTestMethod | TestClassInitialisation.SetupCleanupPerTestMethod),
+                nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassInstancePerMethod.Setup), null,
+                nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassInstancePerMethod.Cleanup),
+                (frm, fdr) =>
+                {
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassInstancePerMethod.Method1), null);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonStaticTestClassInstancePerMethod.Method2), null);
+                }
+            );
+
+            ForClass(
                 typeof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor), (int)TestClassInitialisation.InstantiateForAllMethods,
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup), null,
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Test), null);
                 }
             );
 
@@ -63,7 +118,7 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInSetup.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInSetup.Test), null);
                 }
             );
 
@@ -73,7 +128,7 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInTest.Test), null);
                 }
             );
 
@@ -83,7 +138,7 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.InconclusiveInTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.InconclusiveInTest.Test), null);
                 }
             );
 
@@ -93,7 +148,7 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.CleanupFailedInTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.CleanupFailedInTest.Test), null);
                 }
             );
 
@@ -103,7 +158,7 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInCleanUp.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInCleanUp.Test), null);
                 }
             );
 
@@ -113,7 +168,7 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInDispose.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.FailInDispose.Test), null);
                 }
             );
 
@@ -123,7 +178,7 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonFailingTest.Test));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.NonFailingTest.Test), null);
                 }
             );
 
@@ -132,8 +187,8 @@ namespace nanoFramework.TestFramework.Tools
                 null, null, null,
                 (frm, fdr) =>
                 {
-                    fdr(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithMethods.Test1), 0, 1);
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithMethods.Test2));
+                    fdr(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithMethods.Test1), null, 0, 1);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithMethods.Test2), null);
                 }
             );
 
@@ -141,15 +196,31 @@ namespace nanoFramework.TestFramework.Tools
                 typeof(global::TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions), (int)TestClassInitialisation.InstantiateForAllMethods,
                 nameof(global::TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.Setup),
                 new object[] {
-                    new byte[] { 42 },
-                    "" // setup will fail
+                    s_cfg_3,
+                    CFG_4 // setup will fail
                 },
                 null,
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile));
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile), new object[] { CFG_1 });
+                }
+            );
+
+
+            ForClass(
+                typeof(global::TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes), (int)TestClassInitialisation.InstantiateForAllMethods,
+                null, null, null,
+                (frm, fdr) =>
+                {
+                    fdr(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData), new object[] { CFG_2 }, 0);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware), new object[] { CFG_2 });
                 }
             );
         }
+
+        private const string CFG_1 = "ConfigValue";
+        private const string CFG_2 = "42";
+        private static readonly byte[] s_cfg_3 = new byte[] { 42 };
+        private const string CFG_4 = "";
     }
 }

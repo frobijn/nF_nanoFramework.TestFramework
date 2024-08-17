@@ -17,8 +17,10 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         }
 
         [TestOnPlatform("esp32")]
-        public void MethodWithNewTestMethods()
+        [DeploymentConfiguration("RGB LED pin")]
+        public void MethodWithNewTestMethods(string ledPin)
         {
+            Assert.IsNotNull(ledPin);
         }
     }
 }

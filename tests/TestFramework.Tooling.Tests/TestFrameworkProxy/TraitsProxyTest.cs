@@ -24,7 +24,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
     {
         [TestMethod]
         [TraitsMock("Some", "trait")]
-        public void TraitsProxyCreatedForMethod()
+        public void TraitsProxy_CreatedForMethod()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
@@ -45,7 +45,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [TestCategory("Source code")]
         [TraitsMock("Some", "trait")]
         [TraitsMock("Other")]
-        public void TraitsProxyCreatedForMethodWithSource()
+        public void TraitsProxy_CreatedForMethodWithSource()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
@@ -75,7 +75,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        public void TraitsProxyCreatedForAssembly()
+        public void TraitsProxy_CreatedForAssembly()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
@@ -96,7 +96,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        public void TraitsProxyCreatedForClass()
+        public void TraitsProxy_CreatedForClass()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
@@ -114,7 +114,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         [TestMethod]
         [TestCategory("Source code")]
-        public void TraitsProxyCreatedForClassWithSource()
+        public void TraitsProxy_CreatedForClassWithSource()
         {
             var logger = new LogMessengerMock();
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());

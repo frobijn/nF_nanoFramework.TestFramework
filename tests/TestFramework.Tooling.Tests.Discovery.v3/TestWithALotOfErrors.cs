@@ -10,7 +10,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     [TestClass2]
     public class TestWithALotOfErrors
     {
-        [DeploymentConfiguration("some", "key", "invalid_type")]
+        [Setup, DeploymentConfiguration("some", "key", "invalid_type")]
         public void Setup1(byte[] some, string key, int invalid)
         {
 
@@ -22,7 +22,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
 
         }
 
-        [Cleanup]
+        [Cleanup, DeploymentConfiguration("Some key")]
         public void Cleanup1()
         {
 
@@ -52,7 +52,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
             bool ITestClass.SetupCleanupPerTestMethod => true;
         }
 
-        [DeploymentConfiguration("too_many")]
+        [DeploymentConfiguration("too_many"), Setup]
         public void Setup3()
         {
 

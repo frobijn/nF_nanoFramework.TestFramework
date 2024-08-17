@@ -23,6 +23,7 @@ namespace nanoFramework.TestFramework.Tooling
             ProjectSourceInventory.ElementDeclaration location,
             bool shouldRunOnVirtualDevice,
             IEnumerable<TestOnRealHardwareProxy> testOnRealHardware,
+            IReadOnlyList<(string key, bool asBytes)> requiredConfigurationKeys,
             HashSet<string> traits)
         {
             AssemblyFilePath = assemblyFilePath;
@@ -33,6 +34,7 @@ namespace nanoFramework.TestFramework.Tooling
             TestMethodSourceCodeLocation = location;
             ShouldRunOnVirtualDevice = shouldRunOnVirtualDevice;
             _testOnRealHardware = testOnRealHardware;
+            RequiredConfigurationKeys = requiredConfigurationKeys ?? new (string, bool)[] { };
             _traits = traits;
             Group = group;
             Group._testCases.Add(this);
@@ -101,6 +103,22 @@ namespace nanoFramework.TestFramework.Tooling
         /// </remarks>
         public bool ShouldRunOnRealHardware
             => !(_testOnRealHardware is null);
+
+        /// <summary>
+        /// Get the keys that identify what part of the deployment configuration
+        /// should be passed to the test method. Each key should have a corresponding
+        /// argument of the setup method that is of type <c>byte[]</c> or <c>string</c>,
+        /// as indicated for the key.
+        /// </summary>
+        /// <remarks>
+        /// Additional deployment configuration information may be required to initialise
+        /// the test case group; see <see cref="TestCaseGroup.RequiredConfigurationKeys"/>.
+        /// </remarks>
+        public IReadOnlyList<(string key, bool asBytes)> RequiredConfigurationKeys
+        {
+            get;
+            internal set;
+        }
 
         /// <summary>
         /// Get the 0-based index of the <see cref="IDataRow"/> that is related to this test case,

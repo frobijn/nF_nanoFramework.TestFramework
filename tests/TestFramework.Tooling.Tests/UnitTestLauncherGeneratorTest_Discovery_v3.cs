@@ -14,35 +14,10 @@ namespace TestFramework.Tooling.Tests
     [TestClass]
     [TestCategory("Test execution")]
     [TestCategory("Unit test launcher")]
-    public sealed class UnitTestLauncherGeneratorTest : TestUsingTestFrameworkToolingTestsDiscovery_v3
+    public sealed class UnitTestLauncherGeneratorTest_Discovery_v3 : TestUsingTestFrameworkToolingTestsDiscovery_v3
     {
         #region Test context and helper
-        public TestContext TestContext { get; set; }
 
-        private List<string> CopyAssemblies(string assemblyDirectoryPath, string projectName)
-        {
-            string projectFilePathUT = TestProjectHelper.FindProjectFilePath(projectName);
-            string assemblyFilePathUT = TestProjectHelper.FindNFUnitTestAssembly(projectFilePathUT);
-            var copyExtensions = new HashSet<string>()
-            {
-                ".dll", ".pdb", ".pe"
-            };
-            var expectedAssemblies = new List<string>();
-            foreach (string file in Directory.EnumerateFiles(Path.GetDirectoryName(assemblyFilePathUT)))
-            {
-                if (copyExtensions.Contains(Path.GetExtension(file)))
-                {
-                    string filePath = Path.Combine(assemblyDirectoryPath, Path.GetFileName(file));
-
-                    File.Copy(file, filePath);
-                    if (Path.GetExtension(file) == ".pe")
-                    {
-                        expectedAssemblies.Add(filePath);
-                    }
-                }
-            }
-            return expectedAssemblies;
-        }
         #endregion
 
         [TestMethod]
@@ -51,7 +26,7 @@ namespace TestFramework.Tooling.Tests
         public void UnitTestLauncher_GeneratedCode(bool communicateByNames)
         {
             var logger = new LogMessengerMock();
-            var actual = new UnitTestLauncherGenerator(TestSelection, communicateByNames, logger);
+            var actual = new UnitTestLauncherGenerator(TestSelection, CreateDeploymentConfiguration(), communicateByNames, logger);
 
             logger.AssertEqual("");
 
@@ -79,8 +54,18 @@ namespace nanoFramework.TestFramework.Tools
                 nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod));
-                    fdr(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1), 0, 1);
+                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod), null);
+                    fdr(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1), null, 0, 1);
+                }
+            );
+            ForClass(
+                typeof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions), 1,
+                nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.Setup),
+                new object[] { CFG_1 },
+                null,
+                (frm, fdr) =>
+                {
+                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile), null);
                 }
             );
             ForClass(
@@ -89,11 +74,19 @@ namespace nanoFramework.TestFramework.Tools
                 null,
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test));
-                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2));
+                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test), null);
+                    frm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2), new object[] { s_cfg_2 });
                 }
             );
         }
+#region Deployment configuration data
+        /// <summary>Configuration key 'nanoFramework.TestFramework.Tooling.DeploymentConfiguration' as text</summary>
+        private const string CFG_1 = ""Value\r\nfor\r\nxyzzy"";
+        /// <summary>Configuration key 'nanoFramework.TestFramework.Tooling.DeploymentConfiguration' as binary data</summary>
+        private static readonly byte[] s_cfg_2 = new byte[] {
+            3,1,4,1,5,
+        };
+#endregion
     }
 }
 ".Replace("\r\n", "\n") + '\n',
@@ -106,9 +99,9 @@ namespace nanoFramework.TestFramework.Tools
         {
             #region Prepare assembly directory and unit test selection
             string assemblyDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
-            CopyAssemblies(assemblyDirectoryPath, "TestFramework.Tooling.Tests.Execution.v3"); // Wrong project!
+            AssemblyHelper.CopyAssemblies(assemblyDirectoryPath, "TestFramework.Tooling.Tests.Execution.v3"); // Wrong project!
             var logger = new LogMessengerMock();
-            var actual = new UnitTestLauncherGenerator(TestSelection, false, logger);
+            var actual = new UnitTestLauncherGenerator(TestSelection, null, false, logger);
             logger.AssertEqual("");
             #endregion
 
@@ -120,10 +113,13 @@ namespace nanoFramework.TestFramework.Tools
 Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([662..697))
 Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([789..824))
 Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([953..988))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1071..1106))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1276..1281))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1448..1483))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1551..1586))");
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1077..1112))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1288..1293))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1362..1397))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1590..1625))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1811..1816))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1983..2018))
+Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([2092..2127))");
         }
 
         [TestMethod]
@@ -169,61 +165,140 @@ Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace
 @"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
 DisplayName : 'TestMethod - Passed'
-Duration    : 0 ticks
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
-
-
+    
+    
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
 DisplayName : 'TestMethod1(1,1) - Passed'
-Duration    : 0 ticks
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
-
-
+    
+    
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
 DisplayName : 'TestMethod1(2,2) - Passed'
-Duration    : 0 ticks
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
-
-
+    
+    
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
 DisplayName : 'Test - Passed'
-Duration    : 0 ticks
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
-
-
+    
+    
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 DisplayName : 'Test2 - Passed'
-Duration    : 0 ticks
+Outcome     : Passed
+ErrorMessage: ''
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+DisplayName : 'TestOnDeviceWithSomeFile - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------", false);
             #endregion
         }
 
-        private (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application application) UnitTestLauncher_GenerateApplication(bool communicateByNames)
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public void UnitTestLauncher_GeneratedApplication_RunWithNanoCLRHelper_NoDeploymentConfiguration(bool communicateByNames)
+        {
+            (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application actual) = UnitTestLauncher_GenerateApplication(communicateByNames, false);
+
+            #region Assert the generated code runs on the Virtual Device
+            var logger = new LogMessengerMock();
+            var nanoClr = new NanoCLRHelper(null, null, false, logger);
+            logger.AssertEqual("", LoggingLevel.Error);
+
+            logger = new LogMessengerMock();
+            var outputCollector = new StringBuilder();
+            bool result = nanoClr.RunAssembliesAsync(actual.Assemblies, null, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger)
+                                .GetAwaiter().GetResult();
+            logger.AssertEqual("", LoggingLevel.Error);
+            Assert.IsTrue(result);
+            #endregion
+
+            #region Assert the output is correct
+            var testResults = new List<nanoFramework.TestFramework.Tooling.TestResult>();
+            var parser = new UnitTestsOutputParser(TestSelection, null, actual.ReportPrefix, (t) => testResults.AddRange(t));
+            parser.AddOutput(outputCollector.ToString());
+            parser.Flush();
+
+            testResults.AssertResults(TestSelection,
+@"----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+DisplayName : 'TestMethod - Passed'
+Outcome     : Passed
+ErrorMessage: ''
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
+DisplayName : 'TestMethod1(1,1) - Passed'
+Outcome     : Passed
+ErrorMessage: ''
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
+DisplayName : 'TestMethod1(2,2) - Passed'
+Outcome     : Passed
+ErrorMessage: ''
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+DisplayName : 'Test - Passed'
+Outcome     : Passed
+ErrorMessage: ''
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+DisplayName : 'Test2 - Test failed'
+Outcome     : Failed
+ErrorMessage: 'Test failed'
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+DisplayName : 'TestOnDeviceWithSomeFile - Setup failed'
+Outcome     : Failed
+ErrorMessage: 'Setup failed'
+----------------------------------------", false);
+            #endregion
+        }
+
+        private (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application application) UnitTestLauncher_GenerateApplication(bool communicateByNames, bool withDeploymentConfiguration = true)
         {
             #region Prepare assembly directory and unit test selection
             string assemblyDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
-            List<string> expectedAssemblies = CopyAssemblies(assemblyDirectoryPath, "TestFramework.Tooling.Tests.Discovery.v3");
+            List<string> expectedAssemblies = AssemblyHelper.CopyAssemblies(assemblyDirectoryPath, "TestFramework.Tooling.Tests.Discovery.v3");
             string assemblyFilePath = Path.Combine(assemblyDirectoryPath, "nanoFramework.UnitTestLauncher.pe");
             expectedAssemblies.Insert(0, assemblyFilePath);
             File.WriteAllText(assemblyFilePath, "This is an old version of the assembly");
             File.WriteAllText(Path.ChangeExtension(assemblyFilePath, ".dll"), "This is an old version of the assembly");
 
             var logger = new LogMessengerMock();
-            var generator = new UnitTestLauncherGenerator(TestSelection, communicateByNames, logger);
+            var generator = new UnitTestLauncherGenerator(TestSelection, withDeploymentConfiguration ? CreateDeploymentConfiguration() : null, communicateByNames, logger);
             logger.AssertEqual("");
             #endregion
 

@@ -14,16 +14,27 @@ namespace nanoFramework.TestFramework.Tooling
 
         #region Construction
         /// <summary>
-        /// 
+        /// Create a description of a hardware device
         /// </summary>
         /// <param name="target">Target that denotes the firmware installed on the device.</param>
         /// <param name="platform">Platform that describes the family the device belongs to.</param>
-        /// <param name="configuration"></param>
+        /// <param name="configuration">Deployment configuration for the device, or <c>null</c>
+        /// if no configuration is available.</param>
         public TestDevice(string target, string platform, DeploymentConfiguration configuration)
         {
             Target = target;
             Platform = platform;
             _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Create a description of a virtual device
+        /// </summary>
+        /// <param name="configuration">Deployment configuration for the device, or <c>null</c>
+        /// if no configuration is available.</param>
+        public TestDevice(DeploymentConfiguration configuration)
+            : this("nanoCLR", "Virtual Device", configuration)
+        {
         }
         #endregion
 

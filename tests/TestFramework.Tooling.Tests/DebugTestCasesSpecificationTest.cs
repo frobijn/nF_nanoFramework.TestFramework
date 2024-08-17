@@ -83,7 +83,8 @@ namespace TestFramework.Tooling.Tests
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
                 true, logger);
             logger.AssertEqual(
-                $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.",
+$@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]' or 'string'.
+Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.",
                 LoggingLevel.Error);
             #endregion
 
@@ -112,8 +113,8 @@ namespace TestFramework.Tooling.Tests
             ""type"": ""object"",
             ""description"": ""The selection of test cases, grouped by namespace and test class name."",
             ""properties"": {
-                ""TestFramework.Tooling.Execution.Tests"": { ""$ref"": ""#/definitions/Namespace_2"" },
-                ""TestFramework.Tooling.Tests.NFUnitTest"": { ""$ref"": ""#/definitions/Namespace_4"" }
+                ""TestFramework.Tooling.Execution.Tests"": { ""$ref"": ""#/definitions/Namespace_3"" },
+                ""TestFramework.Tooling.Tests.NFUnitTest"": { ""$ref"": ""#/definitions/Namespace_5"" }
             }
         },
         ""TestMethod_1"": {
@@ -125,7 +126,16 @@ namespace TestFramework.Tooling.Tests
                 }
             }
         },,
-        ""Namespace_2"": {
+        ""TestMethod_2"": {
+            ""type"": ""object"",
+            ""properties"": {
+                ""MethodToRunOnRealHardwareWithData"": {
+                    ""type"": ""array"", ""items"": { ""type"": ""integer"", ""minimum"": 0, ""maximum"": 0 },
+                    ""description"": ""Specify which data row attributes should be included. The first data row attribute in the code is 0, the next one is 1, etc. There are 1 attributes, so the numbers must be between 0 and 0. To select all, list the method name instead of this object."",
+                }
+            }
+        },,
+        ""Namespace_3"": {
             ""type"": ""object"",
             ""description"": ""Test cases for classes within the namespace. Select the classes to include."",
             ""properties"": {
@@ -174,14 +184,29 @@ namespace TestFramework.Tooling.Tests
                         { ""type"": ""string"", ""enum"": [ ""Method1"", ""Method2"" ] },
                     ""description"": ""Specify which test methods should be included."",
                 },
+                ""NonStaticTestClassInstancePerMethod"": {
+                    ""type"": ""array"", ""items"":
+                        { ""type"": ""string"", ""enum"": [ ""Method1"", ""Method2"" ] },
+                    ""description"": ""Specify which test methods should be included."",
+                },
+                ""NonStaticTestClassSetupCleanupPerMethod"": {
+                    ""type"": ""array"", ""items"":
+                        { ""type"": ""string"", ""enum"": [ ""Method1"", ""Method2"" ] },
+                    ""description"": ""Specify which test methods should be included."",
+                },
                 ""StaticTestClass"": {
                     ""type"": ""array"", ""items"":
-                        { ""type"": ""string"", ""enum"": [ ""Method"" ] },
+                        { ""type"": ""string"", ""enum"": [ ""Method1"", ""Method2"" ] },
+                    ""description"": ""Specify which test methods should be included."",
+                },
+                ""StaticTestClassSetupCleanupPerMethod"": {
+                    ""type"": ""array"", ""items"":
+                        { ""type"": ""string"", ""enum"": [ ""Method1"", ""Method2"" ] },
                     ""description"": ""Specify which test methods should be included."",
                 },
                 ""TestWithFrameworkExtensions"": {
                     ""type"": ""array"", ""items"":
-                        { ""type"": ""string"", ""enum"": [ ""TestDeviceWithSomeFile"" ] },
+                        { ""type"": ""string"", ""enum"": [ ""Setup"", ""TestDeviceWithSomeFile"" ] },
                     ""description"": ""Specify which test methods should be included."",
                 },,
                 ""TestWithMethods"": {
@@ -190,15 +215,17 @@ namespace TestFramework.Tooling.Tests
                         { ""$ref"": ""#/definitions/TestMethod_1"" }
                     ] },
                     ""description"": ""Specify which test methods should be included."",
-                },
+                },,
                 ""TestWithNewTestMethodsAttributes"": {
-                    ""type"": ""array"", ""items"":
-                        { ""type"": ""string"", ""enum"": [ ""MethodToRunOnRealHardware"", ""MethodWithTraits"" ] },
+                    ""type"": ""array"", ""items"": { ""anyOf"": [
+                        { ""type"": ""string"", ""enum"": [ ""MethodToRunOnRealHardware"", ""MethodToRunOnRealHardwareWithData"", ""MethodWithTraits"" ] },
+                        { ""$ref"": ""#/definitions/TestMethod_2"" }
+                    ] },
                     ""description"": ""Specify which test methods should be included."",
                 }
             }
         },
-        ""TestMethod_3"": {
+        ""TestMethod_4"": {
             ""type"": ""object"",
             ""properties"": {
                 ""TestMethod1"": {
@@ -207,7 +234,7 @@ namespace TestFramework.Tooling.Tests
                 }
             }
         },,
-        ""Namespace_4"": {
+        ""Namespace_5"": {
             ""type"": ""object"",
             ""description"": ""Test cases for classes within the namespace. Select the classes to include."",
             ""properties"": {
@@ -224,7 +251,7 @@ namespace TestFramework.Tooling.Tests
                 ""TestAllCurrentAttributes"": {
                     ""type"": ""array"", ""items"": { ""anyOf"": [
                         { ""type"": ""string"", ""enum"": [ ""TestMethod"", ""TestMethod1"" ] },
-                        { ""$ref"": ""#/definitions/TestMethod_3"" }
+                        { ""$ref"": ""#/definitions/TestMethod_4"" }
                     ] },
                     ""description"": ""Specify which test methods should be included."",
                 },
@@ -268,7 +295,8 @@ namespace TestFramework.Tooling.Tests
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
                 true, logger);
             logger.AssertEqual(
-                $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.",
+$@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]' or 'string'.
+Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.",
                 LoggingLevel.Error);
             #endregion
 
@@ -362,7 +390,8 @@ TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToR
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
                 true, logger);
             logger.AssertEqual(
-                $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,10): Error: An argument of the method must be of type 'byte[]' or 'string'.",
+$@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]' or 'string'.
+Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.",
                 LoggingLevel.Error);
             #endregion
 

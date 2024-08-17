@@ -41,18 +41,21 @@ namespace nanoFramework.TestFramework.Tools
         /// <see cref="ITestDevice"/> properties/methods is missing from <paramref name="otherITestDevice"/>.</exception>
         public TestDeviceProxy(object testDevice, Type otherITestDevice)
         {
-            _testDevice = testDevice;
-            _targetName = otherITestDevice.GetMethod(nameof(ITestDevice.TargetName));
-            _platform = otherITestDevice.GetMethod(nameof(ITestDevice.Platform));
-            _getDeploymentConfigurationValue = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationValue));
-            _getDeploymentConfigurationFile = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationFile));
-            if (testDevice is null
-                || _targetName is null || _platform is null
-                || _getDeploymentConfigurationValue is null
-                || _getDeploymentConfigurationFile is null)
-            {
-                throw new ArgumentException();
-            }
+            _testDevice = testDevice ?? throw new ArgumentNullException(nameof(testDevice));
+
+            _targetName = (otherITestDevice
+                ?? throw new ArgumentNullException(nameof(otherITestDevice)))
+                    .GetMethod(nameof(ITestDevice.TargetName))
+                ?? throw new ArgumentException($"{otherITestDevice.FullName} does not have a {nameof(ITestDevice.TargetName)} method");
+
+            _platform = otherITestDevice.GetMethod(nameof(ITestDevice.Platform))
+                ?? throw new ArgumentException($"{otherITestDevice.FullName} does not have a {nameof(ITestDevice.Platform)} method");
+
+            _getDeploymentConfigurationValue = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationValue))
+                ?? throw new ArgumentException($"{otherITestDevice.FullName} does not have a {nameof(ITestDevice.GetDeploymentConfigurationValue)} method");
+
+            _getDeploymentConfigurationFile = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationFile))
+                ?? throw new ArgumentException($"{otherITestDevice.FullName} does not have a {nameof(ITestDevice.GetDeploymentConfigurationFile)} method");
         }
         #endregion
 

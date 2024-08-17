@@ -22,14 +22,14 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// </summary>
         /// <param name="targetName">Target name.</param>
         /// <param name="platform">Target platform.</param>
-        /// <param name="storageFileContent">A dictionary with file paths as key and content as value</param>
-        public TestDeviceMock(string targetName, string platform, Dictionary<string, string> storageFileContent = null)
+        /// <param name="deploymentConfiguration">A dictionary with the known configuration keys and value</param>
+        public TestDeviceMock(string targetName, string platform, Dictionary<string, string> deploymentConfiguration = null)
         {
             _targetName = targetName;
             _platform = platform;
-            _storageFileContent = storageFileContent ?? new Dictionary<string, string>();
+            _deploymentConfiguration = deploymentConfiguration ?? new Dictionary<string, string>();
         }
-        private readonly Dictionary<string, string> _storageFileContent;
+        private readonly Dictionary<string, string> _deploymentConfiguration;
         #endregion
 
         #region ITestDevice implementation
@@ -56,7 +56,7 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// or if the device does not support file storage.</returns>
         public byte[] GetDeploymentConfigurationFile(string filePath)
         {
-            if (!_storageFileContent.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
+            if (!_deploymentConfiguration.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
             {
                 return null;
             }
@@ -75,7 +75,7 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// or if the device does not support file storage.</returns>
         public string GetDeploymentConfigurationValue(string filePath)
         {
-            if (!_storageFileContent.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
+            if (!_deploymentConfiguration.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
             {
                 return null;
             }

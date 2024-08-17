@@ -14,5 +14,5 @@ namespace nanoFramework.TestFramework.Tools
         private partial void RunUnitTests()
         {
 @@@        }
-    }
+$$$    }
 }

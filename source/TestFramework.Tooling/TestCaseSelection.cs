@@ -39,7 +39,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// entry in the <c>testCaseSelection</c> is also if the selection
         /// was created via <see cref="TestCaseCollection.TestCaseCollection(IEnumerable{ValueTuple{string, string, string}}, Func{string, string}, bool, LogMessenger)()"/>.
         /// If the test case selection was not created based on a selection, the list of
-        /// contains all test cases (for the device) and the <c>selectionIndex</c> is -1.
+        /// contains all test cases (for the device) and the <c>selectionIndex</c> is a negative
+        /// number that is unique for the test case.
         /// The test cases are in the same order they are discovered in the test assembly.
         /// </summary>
         public IReadOnlyList<(int selectionIndex, TestCase testCase)> TestCases

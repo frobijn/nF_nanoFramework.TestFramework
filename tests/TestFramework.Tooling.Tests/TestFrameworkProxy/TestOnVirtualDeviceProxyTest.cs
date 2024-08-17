@@ -23,7 +23,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
     public sealed class TestOnVirtualDeviceProxyTest
     {
         [TestMethod]
-        public void TestOnVirtualDeviceProxyCreatedForAssembly()
+        public void TestOnVirtualDeviceProxy_CreatedForAssembly()
         {
             var logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
@@ -42,7 +42,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         }
 
         [TestMethod]
-        public void TestOnVirtualDeviceProxyCreatedForClass()
+        public void TestOnVirtualDeviceProxy_CreatedForClass()
         {
             LogMessengerMock logger = new LogMessengerMock();
             List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
@@ -55,7 +55,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         [TestMethod]
         [TestCategory("Source code")]
-        public void TestOnVirtualDeviceProxyCreatedForClassWithSource()
+        public void TestOnVirtualDeviceProxy_CreatedForClassWithSource()
         {
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
             LogMessengerMock logger = new LogMessengerMock();
@@ -72,7 +72,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
         [TestMethod]
         [TestOnVirtualDeviceMock]
-        public void TestOnVirtualDeviceCreatedForMethod()
+        public void TestOnVirtualDeviceProxy_CreatedForMethod()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
@@ -87,7 +87,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         [TestMethod]
         [TestCategory("Source code")]
         [TestOnVirtualDeviceMock]
-        public void TestOnVirtualDeviceProxyCreatedForMethodWithSource()
+        public void TestOnVirtualDeviceProxy_CreatedForMethodWithSource()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);

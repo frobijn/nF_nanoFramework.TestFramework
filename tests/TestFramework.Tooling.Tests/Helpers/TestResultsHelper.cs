@@ -19,21 +19,28 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// <param name="actual">List of test results</param>
         /// <param name="selection">Test case selection the results are for</param>
         /// <param name="expected">Expected results</param>
-        public static void AssertResults(this List<TestResult> actual, TestCaseSelection selection, string expected, bool withMessages = true)
+        /// <param name="withMessagesAndDuration">Indicates whether to include messages and duration, the two parts
+        /// of the test result that may be different from test run to test run.</param>
+        public static void AssertResults(this List<TestResult> actual, TestCaseSelection selection, string expected, bool withMessagesAndDuration = true)
         {
             var actualAsString = new StringBuilder();
             foreach (TestResult tr in from r in actual
                                       orderby r.Index
                                       select r)
             {
-                TestCase testCase = selection.TestCases[tr.Index].testCase;
+                TestCase testCase = (from tc in selection.TestCases
+                                     where tc.selectionIndex == tr.Index
+                                     select tc.testCase).First();
                 actualAsString.AppendLine("----------------------------------------");
                 actualAsString.AppendLine($"Test        : {testCase.Group.FullyQualifiedName}.{testCase.FullyQualifiedName}{(testCase.DataRowIndex < 0 ? "" : $"#{testCase.DataRowIndex}")}");
                 actualAsString.AppendLine($"DisplayName : '{tr.DisplayName}'");
-                actualAsString.AppendLine($"Duration    : {tr.Duration.Ticks} ticks");
+                if (withMessagesAndDuration)
+                {
+                    actualAsString.AppendLine($"Duration    : {tr.Duration.Ticks} ticks");
+                }
                 actualAsString.AppendLine($"Outcome     : {tr.Outcome}");
                 actualAsString.AppendLine($"ErrorMessage: '{tr.ErrorMessage}'");
-                if (withMessages && tr.Messages.Count > 0)
+                if (withMessagesAndDuration && tr.Messages.Count > 0)
                 {
                     actualAsString.AppendLine($"Messages    :");
                     foreach (string msg in tr.Messages)

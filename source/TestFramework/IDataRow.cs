@@ -9,6 +9,11 @@ namespace nanoFramework.TestFramework
     /// attributes that implement <see cref="IDataRow"/>. Each instance of an attribute
     /// corresponds to a test run.
     /// </summary>
+    /// <remarks>
+    /// If combined with attributes that implement the <see cref="IDeploymentConfiguration"/> attribute, the
+    /// arguments matching the deployment configuration must be the first ones, followed by
+    /// the <see cref="IDataRow"/> arguments.
+    /// </remarks>
 #if NFTF_REFERENCED_SOURCE_FILE
     internal
 #else

@@ -21,7 +21,7 @@ namespace nanoFramework.TestFramework.Tooling
         private readonly string _reportPrefix;
         private readonly string _comPort;
         private readonly Action<IEnumerable<TestResult>> _testResultSink;
-        private readonly HashSet<int> _resultsSent = new HashSet<int>();
+        private readonly HashSet<TestCase> _resultsSent = new HashSet<TestCase>();
         private string _lineToBeProcessed = null;
         private List<string> _currentOutput = null;
         private enum TestClassPhases
@@ -33,7 +33,8 @@ namespace nanoFramework.TestFramework.Tooling
             Setup,
             Tests,
             Cleanup,
-            Dispose
+            Dispose,
+            Done
         }
         private TestClassPhases _testClassPhase;
         private readonly List<string> _deploymentInformation = new List<string>();
@@ -230,6 +231,12 @@ namespace nanoFramework.TestFramework.Tooling
                                     _groupCleanupOutcome = TestResult.TestOutcome.Failed;
                                     SendGroupResults();
                                     break;
+
+                                case UnitTestLauncher.Communication.CleanUpComplete:
+                                    _testClassPhase = TestClassPhases.Done;
+                                    _currentOutput?.Add($"Cleanup completed{ElapsedTime(match)}");
+                                    SendGroupResults();
+                                    break;
                                 #endregion
 
                                 #region Shared setup / cleanup
@@ -250,10 +257,6 @@ namespace nanoFramework.TestFramework.Tooling
                                 #endregion
 
                                 case UnitTestLauncher.Communication.Done:
-                                    if (_testClassPhase == TestClassPhases.Cleanup || _testClassPhase == TestClassPhases.Dispose)
-                                    {
-                                        _currentOutput?.Add($"Cleanup completed{ElapsedTime(match)}");
-                                    }
                                     SendGroupResults();
                                     break;
                             }
@@ -281,9 +284,11 @@ namespace nanoFramework.TestFramework.Tooling
                             }
                             else
                             {
-                                var testResult = new TestResult(_currentTestCase, selectionIndex, _comPort);
+                                if (!_testsInGroup.TryGetValue(_currentTestCase, out TestResult testResult))
+                                {
+                                    _testsInGroup[_currentTestCase] = testResult = new TestResult(_currentTestCase, selectionIndex, _comPort);
+                                }
                                 _currentOutput = testResult._messages;
-                                _testsInGroup[_currentTestCase] = testResult;
                             }
                             _testClassPhase = TestClassPhases.Tests;
                         }
@@ -305,8 +310,12 @@ namespace nanoFramework.TestFramework.Tooling
                                     break;
 
                                 case UnitTestLauncher.Communication.SetupFail:
-                                    AddFailDescription(match, $"Setup within the test failed{ElapsedTime(match)}");
+                                    AddFailDescription(match, $"Setup for the test failed{ElapsedTime(match)}");
                                     SetTestOutcome(match, TestResult.TestOutcome.Failed, "Setup failed");
+                                    break;
+
+                                case UnitTestLauncher.Communication.SetupComplete:
+                                    _currentOutput?.Add($"Setup completed{ElapsedTime(match)}");
                                     break;
 
                                 case UnitTestLauncher.Communication.Fail:
@@ -314,10 +323,15 @@ namespace nanoFramework.TestFramework.Tooling
                                     SetTestOutcome(match, TestResult.TestOutcome.Failed, "Test failed");
                                     break;
 
-
                                 case UnitTestLauncher.Communication.CleanupFail:
-                                    AddFailDescription(match, $"Cleanup within the test failed{ElapsedTime(match)}");
+                                    AddFailDescription(match, $"Cleanup for the test failed{ElapsedTime(match)}");
                                     SetTestOutcome(match, TestResult.TestOutcome.Failed, "Cleanup failed");
+                                    break;
+
+                                case UnitTestLauncher.Communication.CleanUpComplete:
+                                    _currentOutput?.Add($"Cleanup completed{ElapsedTime(match)}");
+                                    _currentOutput = null;
+                                    _currentTestCase = null;
                                     break;
 
                                 case UnitTestLauncher.Communication.Pass:
@@ -400,10 +414,10 @@ namespace nanoFramework.TestFramework.Tooling
 
             foreach ((int selectionIndex, TestCase testCase) in _testCases.TestCases)
             {
-                if ((flush && !_resultsSent.Contains(selectionIndex))
-                    ||
-                    (!flush && testCase.Group == _currentGroup && !_testsInGroup.ContainsKey(testCase))
-                   )
+                if (!_resultsSent.Contains(testCase) && (
+                    flush
+                    || (testCase.Group == _currentGroup && !_testsInGroup.ContainsKey(testCase))
+                   ))
                 {
                     var testResult = new TestResult(testCase, selectionIndex, _comPort);
                     _testsInGroup[testCase] = testResult;
@@ -466,7 +480,7 @@ namespace nanoFramework.TestFramework.Tooling
             }
 
             _resultsSent.UnionWith(from tr in _testsInGroup.Values
-                                   select tr.Index);
+                                   select tr.TestCase);
             _testResultSink(_testsInGroup.Values);
             _testsInGroup.Clear();
 
