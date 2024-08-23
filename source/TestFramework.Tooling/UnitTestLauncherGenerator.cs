@@ -193,7 +193,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     return code;
                 }
-                var data = configuration?.GetDeploymentConfigurationValue(configurationKey, valueType);
+                object data = configuration?.GetDeploymentConfigurationValue(configurationKey, valueType);
                 if (data is null)
                 {
                     configurationDataName[key] = null;
@@ -204,7 +204,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     string fieldName = $"s_cfg_{++staticDataIndex}";
                     configurationDataName[key] = fieldName;
-                    var binaryData = (byte[])data;
+                    byte[] binaryData = (byte[])data;
 
                     staticData.Append($@"
 {s_dataIndent}/// <summary>Value for deployment configuration key '{configurationKey}'</summary>
@@ -228,7 +228,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     string fieldName = $"CFG_{++staticDataIndex}";
                     configurationDataName[key] = fieldName;
-                    var typeName = valueType == typeof(int) ? "int" : valueType == typeof(long) ? "long" : valueType == typeof(string) ? "string" : throw new NotSupportedException();
+                    string typeName = valueType == typeof(int) ? "int" : valueType == typeof(long) ? "long" : valueType == typeof(string) ? "string" : throw new NotSupportedException();
 
                     staticData.Append($@"
 {s_dataIndent}/// <summary>Value for deployment configuration key '{configurationKey}'</summary>
@@ -283,31 +283,41 @@ namespace nanoFramework.TestFramework.Tooling
 
                     code.AppendLine($"{s_bodyIndent}ForClass(");
                     code.AppendLine($"{s_bodyIndent}    typeof(global::{testGroup.Key.FullyQualifiedName}), {instantiation},");
-                    if (testGroup.Key.SetupMethodName is null)
-                    {
-                        code.AppendLine($"{s_bodyIndent}    null, null,");
-                    }
-                    else
-                    {
-                        code.AppendLine($"{s_bodyIndent}    nameof(global::{testGroup.Key.FullyQualifiedName}.{testGroup.Key.SetupMethodName}),");
-                        code.AppendLine($"{s_bodyIndent}    {ConvertToArguments(testGroup.Key.RequiredConfigurationKeys)},");
-                    }
-                    if (testGroup.Key.CleanupMethodName is null)
+                    if (testGroup.Key.SetupMethods.Count == 0)
                     {
                         code.AppendLine($"{s_bodyIndent}    null,");
                     }
                     else
                     {
-                        code.AppendLine($"{s_bodyIndent}    nameof(global::{testGroup.Key.FullyQualifiedName}.{testGroup.Key.CleanupMethodName}),");
+                        code.AppendLine($"{s_bodyIndent}    (rsm) =>");
+                        code.AppendLine($"{s_bodyIndent}    {{");
+                        foreach (TestCaseGroup.SetupMethod setupMethod in testGroup.Key.SetupMethods)
+                        {
+                            code.AppendLine($"{s_bodyIndent}        rsm(nameof(global::{testGroup.Key.FullyQualifiedName}.{setupMethod.MethodName}), {ConvertToArguments(setupMethod.RequiredConfigurationKeys)});");
+                        }
+                        code.AppendLine($"{s_bodyIndent}    }},");
                     }
-
-                    code.AppendLine($"{s_bodyIndent}    (frm, fdr) =>");
+                    if (testGroup.Key.CleanupMethods.Count == 0)
+                    {
+                        code.AppendLine($"{s_bodyIndent}    null,");
+                    }
+                    else
+                    {
+                        code.AppendLine($"{s_bodyIndent}    (rcm) =>");
+                        code.AppendLine($"{s_bodyIndent}    {{");
+                        foreach (TestCaseGroup.CleanupMethod cleanupMethod in testGroup.Key.CleanupMethods)
+                        {
+                            code.AppendLine($"{s_bodyIndent}        rcm(nameof(global::{testGroup.Key.FullyQualifiedName}.{cleanupMethod.MethodName}));");
+                        }
+                        code.AppendLine($"{s_bodyIndent}    }},");
+                    }
+                    code.AppendLine($"{s_bodyIndent}    (rtm, rdr) =>");
                     code.AppendLine($"{s_bodyIndent}    {{");
                     foreach (TestCase testCase in testGroup.Value)
                     {
                         if (testCase.DataRowIndex < 0)
                         {
-                            code.AppendLine($"{s_bodyIndent}        frm(nameof(global::{testCase.FullyQualifiedName}), {ConvertToArguments(testCase.RequiredConfigurationKeys)});");
+                            code.AppendLine($"{s_bodyIndent}        rtm(nameof(global::{testCase.FullyQualifiedName}), {ConvertToArguments(testCase.RequiredConfigurationKeys)});");
                         }
                     }
 
@@ -323,7 +333,7 @@ namespace nanoFramework.TestFramework.Tooling
                                      );
                     foreach (KeyValuePair<string, (TestCase, List<int>)> testMethod in perTestMethod)
                     {
-                        code.AppendLine($"{s_bodyIndent}        fdr(nameof(global::{testMethod.Key}), {ConvertToArguments(testMethod.Value.Item1.RequiredConfigurationKeys)}, {string.Join(", ", testMethod.Value.Item2)});");
+                        code.AppendLine($"{s_bodyIndent}        rdr(nameof(global::{testMethod.Key}), {ConvertToArguments(testMethod.Value.Item1.RequiredConfigurationKeys)}, {string.Join(", ", testMethod.Value.Item2)});");
                     }
 
                     code.AppendLine($"{s_bodyIndent}    }}");

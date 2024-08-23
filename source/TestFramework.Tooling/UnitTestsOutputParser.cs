@@ -184,6 +184,7 @@ namespace nanoFramework.TestFramework.Tooling
                                 case UnitTestLauncher.Communication.Setup:
                                     _testClassPhase = TestClassPhases.Setup;
                                     _currentOutput = _groupSetupOutput;
+                                    _currentOutput.Add($"Setup method '{match.Groups["msg"]?.Value?.Trim()}' started{ElapsedTime(match)}");
                                     break;
 
                                 case UnitTestLauncher.Communication.SetupFail:
@@ -211,6 +212,7 @@ namespace nanoFramework.TestFramework.Tooling
                                 case UnitTestLauncher.Communication.Cleanup:
                                     _testClassPhase = TestClassPhases.Cleanup;
                                     _currentOutput = _groupCleanupOutput;
+                                    _currentOutput.Add($"Cleanup method '{match.Groups["msg"]?.Value?.Trim()}' started{ElapsedTime(match)}");
                                     break;
 
                                 case UnitTestLauncher.Communication.Dispose:

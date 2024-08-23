@@ -363,8 +363,6 @@ namespace nanoFramework.TestFramework.Tooling
                 #endregion
 
                 #region A method is turned into zero or more test cases
-                bool hasSetup = false;
-                bool hasCleanup = false;
                 var previousDisplayNames = new HashSet<string>();
                 foreach ((int methodIndex, MethodInfo method, ProjectSourceInventory.MethodDeclaration sourceLocation) in enumerateMethods())
                 {
@@ -386,33 +384,23 @@ namespace nanoFramework.TestFramework.Tooling
                     SetupProxy setup = methodAttributes.OfType<SetupProxy>().FirstOrDefault();
                     if (!(setup is null))
                     {
-                        if (hasSetup)
+                        group._setupMethods.Add(new TestCaseGroup.SetupMethod()
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"{setup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: Only one method of a class can have attribute implements '{nameof(ISetup)}'. Subsequent attribute is ignored.");
-                        }
-                        else
-                        {
-                            hasSetup = true;
-                            group.SetupMethodName = method.Name;
-                            group.SetupSourceCodeLocation = setup.Source;
-                            group.RequiredConfigurationKeys = deploymentProxy?.GetDeploymentConfigurationArguments(method, false, logger)
-                                ?? new (string, Type)[] { };
-                            deploymentProxy = null;
-                        }
+                            MethodName = method.Name,
+                            SourceCodeLocation = setup.Source,
+                            RequiredConfigurationKeys = deploymentProxy?.GetDeploymentConfigurationArguments(method, false, logger)
+                                                        ?? new (string, Type)[] { }
+                        });
+                        deploymentProxy = null;
                     }
                     CleanupProxy cleanup = methodAttributes.OfType<CleanupProxy>().FirstOrDefault();
                     if (!(cleanup is null))
                     {
-                        if (hasCleanup)
+                        group._cleanupMethods.Add(new TestCaseGroup.CleanupMethod()
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"{cleanup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: Only one method of a class can have attribute that implements '{nameof(ICleanup)}'. Subsequent attribute is ignored.");
-                        }
-                        else
-                        {
-                            hasCleanup = true;
-                            group.CleanupMethodName = method.Name;
-                            group.CleanupSourceCodeLocation = cleanup.Source;
-                        }
+                            MethodName = method.Name,
+                            SourceCodeLocation = cleanup.Source
+                        });
                         if (!(deploymentProxy is null))
                         {
                             logger?.Invoke(LoggingLevel.Error, $"{cleanup.Source?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Error: A cleanup method cannot have an attribute that implements '{nameof(IDeploymentConfiguration)}' - the attribute is ignored.");

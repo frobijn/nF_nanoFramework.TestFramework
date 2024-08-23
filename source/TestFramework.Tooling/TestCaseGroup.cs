@@ -12,6 +12,11 @@ namespace nanoFramework.TestFramework.Tooling
     /// </summary>
     public sealed class TestCaseGroup
     {
+        #region Fields
+        internal readonly List<SetupMethod> _setupMethods = new List<SetupMethod>();
+        internal readonly List<CleanupMethod> _cleanupMethods = new List<CleanupMethod>();
+        #endregion
+
         #region Construction
         /// <summary>
         /// Create the instance
@@ -69,57 +74,58 @@ namespace nanoFramework.TestFramework.Tooling
             get;
         }
 
-        //// <summary>
-        /// Get the name of the setup method.
-        /// If there is no setup method, the value is <c>null</c>>.
+        /// <summary>
+        /// Information about a setup or cleanup method
         /// </summary>
-        public string SetupMethodName
+        public sealed class SetupMethod : CleanupMethod
         {
-            get;
-            internal set;
+            /// <summary>
+            /// Get the keys that identify what part of the deployment configuration
+            /// should be passed to the setup method. Each key should have a corresponding
+            /// argument of the setup method that is of type <c>byte[]</c>, <c>int</c>, <c>long</c> or <c>string</c>,
+            /// as indicated for the key.
+            /// </summary>
+            public IReadOnlyList<(string key, Type valueType)> RequiredConfigurationKeys
+            {
+                get;
+                internal set;
+            }
         }
+        /// <summary>
+        /// Get the setup methods and parameters
+        /// </summary>
+        public IReadOnlyList<SetupMethod> SetupMethods
+            => _setupMethods;
 
         /// <summary>
-        /// Get the keys that identify what part of the deployment configuration
-        /// should be passed to the setup method. Each key should have a corresponding
-        /// argument of the setup method that is of type <c>byte[]</c>, <c>int</c>, <c>long</c> or <c>string</c>,
-        /// as indicated for the key.
+        /// Information about a setup or cleanup method
         /// </summary>
-        public IReadOnlyList<(string key, Type valueType)> RequiredConfigurationKeys
+        public class CleanupMethod
         {
-            get;
-            internal set;
-        }
+            //// <summary>
+            /// Get the name of the method.
+            /// </summary>
+            public string MethodName
+            {
+                get;
+                internal set;
+            }
 
-        /// <summary>
-        /// Get the location in the source code of the setup method that is run before the test(s).
-        /// Is <c>null</c> if there is no setup method or if the method cannot be found in the source code.
-        /// </summary>
-        public ProjectSourceInventory.ElementDeclaration SetupSourceCodeLocation
-        {
-            get;
-            internal set;
+            /// <summary>
+            /// Get the location in the source code of the method.
+            /// Is <c>null</c> if the method cannot be found in the source code.
+            /// </summary>
+            public ProjectSourceInventory.ElementDeclaration SourceCodeLocation
+            {
+                get;
+                internal set;
+            }
         }
-
         /// <summary>
-        /// Get the name of the cleanup method.
-        /// If there is no cleanup method, the value is <c>null</c>>.
+        /// Get the cleanup methods and parameters
         /// </summary>
-        public string CleanupMethodName
-        {
-            get;
-            internal set;
-        }
-
-        /// <summary>
-        /// Get the location in the source code of the cleanup method that is run after the test(s).
-        /// Is <c>null</c> if there is no setup method or if the method cannot be found in the source code.
-        /// </summary>
-        public ProjectSourceInventory.ElementDeclaration CleanupSourceCodeLocation
-        {
-            get;
-            internal set;
-        }
+        public IReadOnlyList<CleanupMethod> CleanupMethods
+            => _cleanupMethods;
 
         /// <summary>
         /// Get the testcases that are part of the group

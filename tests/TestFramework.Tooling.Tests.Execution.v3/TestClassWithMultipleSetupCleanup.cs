@@ -46,11 +46,11 @@ namespace TestFramework.Tooling.Execution.Tests
 
         public void Dispose()
         {
-            Assert.IsTrue(_constructorCalled);
-            Assert.IsTrue(_setup1Called);
-            Assert.IsTrue(_setup2Called);
-            Assert.IsTrue(_cleanup1Called);
-            Assert.IsTrue(_cleanup2Called);
+            Assert.IsTrue(_constructorCalled, "Constructor called");
+            Assert.IsTrue(_setup1Called, "Setup called");
+            Assert.IsTrue(_setup2Called, "Setup2 called");
+            Assert.IsTrue(_cleanup1Called, "Cleanup called");
+            Assert.IsTrue(_cleanup2Called, "Cleanup2 called");
         }
     }
 }

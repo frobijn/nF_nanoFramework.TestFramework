@@ -19,6 +19,8 @@ namespace nanoFramework.TestFramework.Tools
     {
         #region Fields
         private readonly string _reportPrefix;
+        private Type _testClass;
+        private string _testClassPrefix;
         private object _testClassInstance;
         #endregion
 
@@ -50,54 +52,44 @@ namespace nanoFramework.TestFramework.Tools
         #endregion
 
         #region Execution of unit tests
-        public delegate void RunTestMethods(ForTestMethod runTestMethod, ForDataRowTestMethod runDataRowTest);
+        public delegate void RunSetupMethods(RunSetupMethod runSetupMethod);
 
-        public delegate void ForTestMethod(string testMethodName, object[] configurationData);
+        public delegate void RunSetupMethod(string setupMethodName, object[] configurationData);
 
-        public delegate void ForDataRowTestMethod(string testMethodName, object[] configurationData, params int[] dataRowIndices);
+        public delegate void RunCleanupMethods(RunCleanupMethod runCleanupMethod);
+
+        public delegate void RunCleanupMethod(string cleanupMethodName);
+
+        public delegate void RunTestMethods(RunTestMethod runTestMethod, RunDataRowTestMethod runDataRowTest);
+
+        public delegate void RunTestMethod(string testMethodName, object[] configurationData);
+
+        public delegate void RunDataRowTestMethod(string testMethodName, object[] configurationData, params int[] dataRowIndices);
 
         /// <summary>
         /// Run the unit tests in the assembly
         /// </summary>
         /// <param name="testClass">Type of the test class to execute tests of</param>
         /// <param name="instantiate">Instructs how to instantiate and setup/cleanup the class. Numerical value of a combination of <see cref="TestClassInitialisation"/> values.</param>
-        public void ForClass(Type testClass, int instantiate, string setupMethodName, object[] deploymentConfiguration, string cleanupMethodName, RunTestMethods runMethods)
+        /// <param name="runSetup">Method that will call all setup methods (except the constructor). Pass <c>null</c> if there are none.</param>
+        /// <param name="runCleanup">Method that will call all cleanup methods (except <c>IDisposable.Dispose</c>). Pass <c>null</c> if there are none.</param>
+        /// <param name="runMethods">Method that will call all (selected) test methods.</param>
+        public void ForClass(Type testClass, int instantiate, RunSetupMethods runSetup, RunCleanupMethods runCleanup, RunTestMethods runMethods)
         {
             #region Verify the presence of setup/cleanup methods
-            string testClassPrefix = _reportPrefix + ":C:" + testClass.FullName;
-            Console.WriteLine($"{testClassPrefix}:0:{Communication.Start}");
+            _testClass = testClass;
+            _testClassPrefix = _reportPrefix + ":C:" + testClass.FullName;
+            Console.WriteLine($"{_testClassPrefix}:0:{Communication.Start}");
             try
             {
                 ConstructorInfo constructor = null;
-                MethodInfo setupMethod = null;
-                MethodInfo cleanupMethod = null;
                 if ((instantiate & (int)TestClassInitialisation.InstantiateForAllMethods) != 0
                     || (instantiate & (int)TestClassInitialisation.InstantiatePerTestMethod) != 0)
                 {
                     constructor = testClass.GetConstructor(s_defaultConstructor);
                     if (constructor is null)
                     {
-                        Console.WriteLine($"{testClassPrefix}:0:{Communication.MethodError}:Class does not have a public default constructor");
-                        return;
-                    }
-                }
-
-                if (setupMethodName is not null)
-                {
-                    setupMethod = testClass.GetMethod(setupMethodName);
-                    if (setupMethod is null)
-                    {
-                        Console.WriteLine($"{testClassPrefix}:0:{Communication.MethodError}:Method '{setupMethodName}' not found");
-                        return;
-                    }
-                }
-
-                if (cleanupMethodName is not null)
-                {
-                    cleanupMethod = testClass.GetMethod(cleanupMethodName);
-                    if (cleanupMethod is null)
-                    {
-                        Console.WriteLine($"{testClassPrefix}:0:{Communication.MethodError}:Method '{cleanupMethodName}' not found");
+                        Console.WriteLine($"{_testClassPrefix}:0:{Communication.MethodError}:Class does not have a public default constructor");
                         return;
                     }
                 }
@@ -109,16 +101,16 @@ namespace nanoFramework.TestFramework.Tools
                     bool InitialiseInstance(string prefix)
                     {
                         _testClassInstance = null;
-                        return InitialiseTestClass(prefix, constructor, setupMethod, deploymentConfiguration);
+                        return InitialiseTestClass(prefix, constructor, runSetup);
                     }
                     void DisposeOfInstance(string prefix)
                     {
-                        DisposeOfTestClass(prefix, cleanupMethod, true);
+                        DisposeOfTestClass(prefix, runCleanup, true);
                     }
 
                     runMethods(
                         (testMethodName, configurationData)
-                            => RunTestMethod(testClass, InitialiseInstance, DisposeOfInstance, testMethodName, configurationData),
+                            => RunTestMethodTest(testClass, InitialiseInstance, DisposeOfInstance, testMethodName, configurationData),
 
                         (testMethodName, configurationData, dataRowIndices)
                             => RunDataRowTests(testClass, InitialiseInstance, DisposeOfInstance, testMethodName, configurationData, dataRowIndices)
@@ -131,7 +123,7 @@ namespace nanoFramework.TestFramework.Tools
                     _testClassInstance = null;
                     if (constructor is not null)
                     {
-                        if (!InitialiseTestClass(testClassPrefix, constructor, null, null))
+                        if (!InitialiseTestClass(_testClassPrefix, constructor, null))
                         {
                             return;
                         }
@@ -139,16 +131,16 @@ namespace nanoFramework.TestFramework.Tools
 
                     bool InitialiseInstance(string prefix)
                     {
-                        return InitialiseTestClass(prefix, null, setupMethod, deploymentConfiguration);
+                        return InitialiseTestClass(prefix, null, runSetup);
                     }
                     void DisposeOfInstance(string prefix)
                     {
-                        DisposeOfTestClass(prefix, cleanupMethod, false);
+                        DisposeOfTestClass(prefix, runCleanup, false);
                     }
 
                     runMethods(
                         (testMethodName, configurationData)
-                            => RunTestMethod(testClass, InitialiseInstance, DisposeOfInstance, testMethodName, configurationData),
+                            => RunTestMethodTest(testClass, InitialiseInstance, DisposeOfInstance, testMethodName, configurationData),
 
                         (testMethodName, configurationData, dataRowIndices)
                             => RunDataRowTests(testClass, InitialiseInstance, DisposeOfInstance, testMethodName, configurationData, dataRowIndices)
@@ -156,7 +148,7 @@ namespace nanoFramework.TestFramework.Tools
 
                     if (constructor is not null)
                     {
-                        DisposeOfTestClass(testClassPrefix, null, true);
+                        DisposeOfTestClass(_testClassPrefix, null, true);
                     }
                     #endregion
                 }
@@ -164,31 +156,31 @@ namespace nanoFramework.TestFramework.Tools
                 {
                     #region Instantiate a test class, setup and cleanup per method
                     _testClassInstance = null;
-                    if (!InitialiseTestClass(testClassPrefix, constructor, setupMethod, deploymentConfiguration))
+                    if (!InitialiseTestClass(_testClassPrefix, constructor, runSetup))
                     {
                         return;
                     }
 
                     runMethods(
                         (testMethodName, configurationData)
-                            => RunTestMethod(testClass, null, null, testMethodName, configurationData),
+                            => RunTestMethodTest(testClass, null, null, testMethodName, configurationData),
 
                         (testMethodName, configurationData, dataRowIndices)
                             => RunDataRowTests(testClass, null, null, testMethodName, configurationData, dataRowIndices)
                     );
 
-                    DisposeOfTestClass(testClassPrefix, cleanupMethod, true);
+                    DisposeOfTestClass(_testClassPrefix, runCleanup, true);
                     #endregion
                 }
             }
             finally
             {
-                Console.WriteLine($"{testClassPrefix}:0:{Communication.Done}");
+                Console.WriteLine($"{_testClassPrefix}:0:{Communication.Done}");
             }
         }
         private static readonly Type[] s_defaultConstructor = new Type[] { };
 
-        private bool InitialiseTestClass(string prefix, ConstructorInfo constructor, MethodInfo setupMethod, object[] deploymentConfiguration)
+        private bool InitialiseTestClass(string prefix, ConstructorInfo constructor, RunSetupMethods runSetup)
         {
             long startTime = DateTime.UtcNow.Ticks;
             try
@@ -199,13 +191,32 @@ namespace nanoFramework.TestFramework.Tools
                     _testClassInstance = constructor.Invoke(null);
                 }
 
-                if (setupMethod is not null)
+                bool success = true;
+                if (runSetup is not null)
                 {
-                    Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Setup}");
-                    setupMethod.Invoke(_testClassInstance, deploymentConfiguration);
+                    runSetup((methodName, deploymentConfiguration) =>
+                    {
+                        if (success)
+                        {
+                            MethodInfo setupMethod = _testClass.GetMethod(methodName);
+                            if (setupMethod is null)
+                            {
+                                success = false;
+                                Console.WriteLine($"{_testClassPrefix}:0:{Communication.MethodError}:Method '{methodName}' not found");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Setup}:{methodName}");
+                                setupMethod.Invoke(_testClassInstance, deploymentConfiguration);
+                            }
+                        }
+                    });
                 }
-                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.SetupComplete}");
-                return true;
+                if (success)
+                {
+                    Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.SetupComplete}");
+                }
+                return success;
             }
             catch (SkipTestException ex)
             {
@@ -222,7 +233,7 @@ namespace nanoFramework.TestFramework.Tools
         private delegate bool InstanceInitialiser(string prefix);
         private delegate void InstanceDisposer(string prefix);
 
-        private void RunTestMethod(Type testClass, InstanceInitialiser setup, InstanceDisposer cleanup, string testMethodName, object[] configurationData)
+        private void RunTestMethodTest(Type testClass, InstanceInitialiser setup, InstanceDisposer cleanup, string testMethodName, object[] configurationData)
         {
             string prefix = _reportPrefix + ":M:" + testClass.FullName + '.' + testMethodName;
 
@@ -324,7 +335,7 @@ namespace nanoFramework.TestFramework.Tools
             }
         }
 
-        private void DisposeOfTestClass(string prefix, MethodInfo cleanupMethod, bool dispose)
+        private void DisposeOfTestClass(string prefix, RunCleanupMethods runCleanup, bool dispose)
         {
             long startTime = DateTime.UtcNow.Ticks;
             object testClassInstance = _testClassInstance;
@@ -334,17 +345,36 @@ namespace nanoFramework.TestFramework.Tools
             }
             try
             {
-                if (cleanupMethod is not null)
+                bool success = true;
+                if (runCleanup is not null)
                 {
-                    Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Cleanup}");
-                    cleanupMethod.Invoke(testClassInstance, s_noArguments);
+                    runCleanup((methodName) =>
+                    {
+                        if (success)
+                        {
+                            MethodInfo cleanUpMethod = _testClass.GetMethod(methodName);
+                            if (cleanUpMethod is null)
+                            {
+                                success = false;
+                                Console.WriteLine($"{_testClassPrefix}:0:{Communication.MethodError}:Method '{methodName}' not found");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Cleanup}:{methodName}");
+                                cleanUpMethod.Invoke(testClassInstance, s_noArguments);
+                            }
+                        }
+                    });
                 }
-                if (dispose && (testClassInstance is IDisposable disposable))
+                if (success)
                 {
-                    Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Dispose}");
-                    disposable.Dispose();
+                    if (dispose && (testClassInstance is IDisposable disposable))
+                    {
+                        Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Dispose}");
+                        disposable.Dispose();
+                    }
+                    Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.CleanUpComplete}");
                 }
-                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.CleanUpComplete}");
             }
             catch (Exception ex)
             {

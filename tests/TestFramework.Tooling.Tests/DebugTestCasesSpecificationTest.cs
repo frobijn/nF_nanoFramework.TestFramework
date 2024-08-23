@@ -334,7 +334,8 @@ namespace TestFramework.Tooling.Tests
                 true, logger);
             logger.AssertEqual(
 $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.
-Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.",
+Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.
+Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(55,10): Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements 'IDeploymentConfiguration'.",
                 LoggingLevel.Error);
             #endregion
 
@@ -398,6 +399,14 @@ Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}Tes
                     ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""Test"" ] } ]
                 },,
                 ""FailInDispose"": {
+                    ""description"": ""Specify which test methods should be included. List the names (and data row attributes) of the methods in an array, or specify \""*\"" to include all test methods."",
+                    ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""Test"" ] } ]
+                },,
+                ""FailInFirstCleanUp"": {
+                    ""description"": ""Specify which test methods should be included. List the names (and data row attributes) of the methods in an array, or specify \""*\"" to include all test methods."",
+                    ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""Test"" ] } ]
+                },,
+                ""FailInFirstSetup"": {
                     ""description"": ""Specify which test methods should be included. List the names (and data row attributes) of the methods in an array, or specify \""*\"" to include all test methods."",
                     ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""Test"" ] } ]
                 },,
@@ -529,7 +538,8 @@ Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}Tes
                 true, logger);
             logger.AssertEqual(
 $@"Error: {Path.GetDirectoryName(projectFilePath1)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.
-Error: {Path.GetDirectoryName(projectFilePath1)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.",
+Error: {Path.GetDirectoryName(projectFilePath1)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.
+Error: {Path.GetDirectoryName(projectFilePath1)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(55,10): Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements 'IDeploymentConfiguration'.",
                 LoggingLevel.Error);
             #endregion
 

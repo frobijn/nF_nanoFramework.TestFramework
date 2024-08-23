@@ -56,6 +56,12 @@ namespace TestFramework.Tooling.Execution.Tests
         public void Setup()
         {
             OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
+        }
+
+        [Setup]
+        public void Setup2()
+        {
+            OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
             Assert.Fail();
         }
 
@@ -200,6 +206,12 @@ namespace TestFramework.Tooling.Execution.Tests
         public void Cleanup()
         {
             OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
+        }
+
+        [Cleanup]
+        public void Cleanup2()
+        {
+            OutputHelper.WriteLine($"Cleanup2 method of {GetType().FullName}");
             // Should be reported as CleanupFailed
             Assert.Fail();
         }
@@ -337,5 +349,84 @@ namespace TestFramework.Tooling.Execution.Tests
         }
     }
 
+    [TestClass]
+    public class FailInFirstSetup : IDisposable
+    {
+        public FailInFirstSetup()
+        {
+            OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
 
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
+        }
+
+        [Setup]
+        public void Setup()
+        {
+            OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
+            Assert.Fail();
+        }
+
+        [Setup]
+        public void Setup2()
+        {
+            OutputHelper.WriteLine($"Setup2 method of {GetType().FullName}");
+            Assert.Fail("Second setup should not be run!");
+        }
+
+        [TestMethod]
+        public void Test()
+        {
+            OutputHelper.WriteLine($"Test method of {GetType().FullName}");
+        }
+
+        [Cleanup]
+        public void Cleanup()
+        {
+            OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
+        }
+    }
+
+    [TestClass]
+    public class FailInFirstCleanUp : IDisposable
+    {
+        public FailInFirstCleanUp()
+        {
+            OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
+        }
+
+        [Setup]
+        public void Setup()
+        {
+            OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
+        }
+
+        [TestMethod]
+        public void Test()
+        {
+            OutputHelper.WriteLine($"Test method of {GetType().FullName}");
+        }
+
+        [Cleanup]
+        public void Cleanup()
+        {
+            OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
+            // Should be reported as CleanupFailed
+            Assert.Fail();
+        }
+
+        [Cleanup]
+        public void Cleanup2()
+        {
+            OutputHelper.WriteLine($"Cleanup2 method of {GetType().FullName}");
+            Assert.Fail("Second cleanup should not be run!");
+        }
+    }
 }
