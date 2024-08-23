@@ -24,109 +24,59 @@ namespace TestFramework.Tooling.Tests
             File.WriteAllText(Path.Combine(jsonDirectoryPath, "config.txt"), testText);
             byte[] testBinary = new byte[] { 1, 2, 3, 4, 5, 42 };
             File.WriteAllBytes(Path.Combine(jsonDirectoryPath, "config.bin"), testBinary);
-            string json = @"{
+            string specificationFilePath = Path.Combine(jsonDirectoryPath, "sub", "deployment.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(specificationFilePath));
+            File.WriteAllText(specificationFilePath, @"{
     ""DisplayName"": ""Some device"",
     ""Configuration"":
     {
         ""First key"": ""Some value"",
         ""Second key for file"":
         {
-            ""File"": ""config.txt""
+            ""File"": ""../config.txt""
         },
         ""Second value key"": ""Second value"",
         ""Binary file key"":
         {
-            ""File"": ""config.bin""
+            ""File"": ""../config.bin""
         },
         ""Missing file key"":
         {
             ""File"": ""config.does.not.exist""
-        }
+        },
+        ""Integer value"": 42,
+        ""Integer value as text"": ""42""
     }
-}";
+}");
             #endregion
 
-            DeploymentConfiguration actual = DeploymentConfiguration.Parse(json, jsonDirectoryPath, null);
+            DeploymentConfiguration actual = DeploymentConfiguration.Parse(specificationFilePath);
 
-            string actualJson = actual.ToJson();
-            Assert.AreEqual(@"{
-  ""DisplayName"": ""Some device"",
-  ""Configuration"": {
-    ""First key"": ""Some value"",
-    ""Second value key"": ""Second value"",
-    ""Binary file key"": {
-      ""File"": ""config.bin""
-    },
-    ""Missing file key"": {
-      ""File"": ""config.does.not.exist""
-    },
-    ""Second key for file"": {
-      ""File"": ""config.txt""
-    }
-  }
-}".Replace("\r\n", "\n") + '\n',
-                actualJson?.Replace("\r\n", "\n") + '\n');
-
+            Assert.IsNotNull(actual);
             Assert.AreEqual("Some device", actual.DisplayName);
 
-            Assert.AreEqual("Some value", actual.GetDeploymentConfigurationValue("First key"));
-            Assert.AreEqual(testText, actual.GetDeploymentConfigurationValue("Second key for file"));
+            // Test actual.Values by using the GetDeploymentConfiguration* methods
 
-            Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("Nu such key"));
-            Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("Missing file key"));
+            Assert.AreEqual("Some value", actual.GetDeploymentConfigurationValue("First key", typeof(string)));
+            Assert.AreEqual(testText, actual.GetDeploymentConfigurationValue("Second key for file", typeof(string)));
 
-            CollectionAssert.AreEqual(testBinary, actual.GetDeploymentConfigurationFile("Binary file key"));
-            Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("Missing file key"));
-        }
+            Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("No such key", typeof(string)));
+            Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("Missing file key", typeof(string)));
 
-        [TestMethod]
-        public void DeploymentConfiguration_WithDefault()
-        {
-            #region Defaults
-            string json1 = @"{
-    ""DisplayName"": ""First configuration"",
-    ""Configuration"":
-    {
-        ""First key"": ""Value from first configuration"",
-        ""Second key"": ""Second value""
-    }
-}";
-            DeploymentConfiguration defaultConfig = DeploymentConfiguration.Parse(json1, null, null);
+            CollectionAssert.AreEqual(testBinary, (byte[])actual.GetDeploymentConfigurationValue("Binary file key", typeof(byte[])));
+            Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("Missing file key", typeof(byte[])));
 
-            #endregion
+            Assert.AreEqual((int)-1, actual.GetDeploymentConfigurationValue("Missing file key", typeof(int)));
+            Assert.AreEqual((long)-1L, actual.GetDeploymentConfigurationValue("Missing file key", typeof(long)));
+            Assert.AreEqual(null, actual.GetDeploymentConfigurationValue("Missing file key", typeof(string)));
 
-            #region Overwrite some values, keep some
-            string json2 = @"{
-    ""Configuration"":
-    {
-        ""First key"": ""Value from second configuration""
-    }
-}";
-            DeploymentConfiguration actual1 = DeploymentConfiguration.Parse(json2, null, defaultConfig);
-            Assert.AreEqual(@"{
-  ""DisplayName"": ""First configuration"",
-  ""Configuration"": {
-    ""First key"": ""Value from second configuration"",
-    ""Second key"": ""Second value""
-  }
-}".Replace("\r\n", "\n") + '\n',
-                actual1.ToJson().Replace("\r\n", "\n") + '\n');
-            #endregion
+            Assert.AreEqual((int)42, actual.GetDeploymentConfigurationValue("Integer value", typeof(int)));
+            Assert.AreEqual((long)42L, actual.GetDeploymentConfigurationValue("Integer value", typeof(long)));
+            Assert.AreEqual("42", actual.GetDeploymentConfigurationValue("Integer value", typeof(string)));
 
-            #region Overwrite DisplayName
-            string json3 = @"{
-  ""DisplayName"": ""Other device"",
-}";
-            DeploymentConfiguration actual2 = DeploymentConfiguration.Parse(json3, null, actual1);
-            Assert.AreEqual(@"{
-  ""DisplayName"": ""Other device"",
-  ""Configuration"": {
-    ""First key"": ""Value from second configuration"",
-    ""Second key"": ""Second value""
-  }
-}".Replace("\r\n", "\n") + '\n',
-                actual2.ToJson().Replace("\r\n", "\n") + '\n');
-            #endregion
+            Assert.AreEqual((int)42, actual.GetDeploymentConfigurationValue("Integer value as text", typeof(int)));
+            Assert.AreEqual((long)42L, actual.GetDeploymentConfigurationValue("Integer value as text", typeof(long)));
+            Assert.AreEqual("42", actual.GetDeploymentConfigurationValue("Integer value as text", typeof(string)));
         }
     }
 }

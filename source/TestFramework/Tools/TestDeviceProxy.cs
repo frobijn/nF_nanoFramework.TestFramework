@@ -27,7 +27,6 @@ namespace nanoFramework.TestFramework.Tools
         private readonly MethodInfo _targetName;
         private readonly MethodInfo _platform;
         private readonly MethodInfo _getDeploymentConfigurationValue;
-        private readonly MethodInfo _getDeploymentConfigurationFile;
         #endregion
 
         #region Construction
@@ -53,9 +52,6 @@ namespace nanoFramework.TestFramework.Tools
 
             _getDeploymentConfigurationValue = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationValue))
                 ?? throw new ArgumentException($"{otherITestDevice.FullName} does not have a {nameof(ITestDevice.GetDeploymentConfigurationValue)} method");
-
-            _getDeploymentConfigurationFile = otherITestDevice.GetMethod(nameof(ITestDevice.GetDeploymentConfigurationFile))
-                ?? throw new ArgumentException($"{otherITestDevice.FullName} does not have a {nameof(ITestDevice.GetDeploymentConfigurationFile)} method");
         }
         #endregion
 
@@ -69,12 +65,8 @@ namespace nanoFramework.TestFramework.Tools
             => (string)_platform.Invoke(_testDevice, null);
 
         /// <inheritdoc/>>
-        public byte[] GetDeploymentConfigurationFile(string filePath)
-            => (byte[])_getDeploymentConfigurationFile.Invoke(_testDevice, new object[] { filePath });
-
-        /// <inheritdoc/>>
-        public string GetDeploymentConfigurationValue(string filePath)
-            => (string)_getDeploymentConfigurationValue.Invoke(_testDevice, new object[] { filePath });
+        public object GetDeploymentConfigurationValue(string configurationKey, Type resultType)
+            => _getDeploymentConfigurationValue.Invoke(_testDevice, new object[] { configurationKey, resultType });
         #endregion
     }
 }

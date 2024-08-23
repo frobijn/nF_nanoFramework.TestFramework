@@ -25,6 +25,8 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Get proxies for the nanoFramework.TestFramework-related attributes for an assembly
         /// </summary>
         /// <param name="assembly">The assembly to get the proxies for</param>
+        /// <param name="framework">Implementation details of the test framework used by the assembly.
+        /// It will be updated (if needed) by this method.</param>
         /// <param name="logger">Method to pass a message to the caller</param>
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes</returns>
         public static List<AttributeProxy> GetAssemblyAttributeProxies(Assembly assembly, TestFrameworkImplementation framework, LogMessenger logger)
@@ -54,6 +56,8 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Get proxies for the nanoFramework.TestFramework-related attributes for a candidate test class
         /// </summary>
         /// <param name="candidateTestClass">The class to get the proxies for</param>
+        /// <param name="framework">Implementation details of the test framework used by the assembly that contains the class.
+        /// It will be updated (if needed) by this method.</param>
         /// <param name="sourceAttributes">Source positions for the attributes; can be <c>null</c></param>
         /// <param name="logger">Method to pass a message to the caller</param>
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes. Returns an empty list if the <paramref name="candidateTestClass"/>
@@ -87,6 +91,8 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Get proxies for the nanoFramework.TestFramework-related attributes for a candidate test method
         /// </summary>
         /// <param name="candidateTestMethod">The method of a test class to get the proxies for</param>
+        /// <param name="framework">Implementation details of the test framework used by the assembly that contains the method.
+        /// It will be updated (if needed) by this method.</param>
         /// <param name="sourceAttributes">Source positions for the attributes; can be <c>null</c></param>
         /// <param name="logger">Method to pass a message to the caller</param>
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes</returns>
@@ -111,8 +117,11 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <summary>
         /// Get proxies for the nanoFramework.TestFramework-related attributes for an assembly, class or method
         /// </summary>
+        /// <param name="pathToElement">The full name for the <paramref name="element"/> in the code</param>
         /// <param name="element">The assembly attributes class, test class or test method as obtained via reflection</param>
         /// <param name="elementType">Type of element the attributes are applied to</param>
+        /// <param name="framework">Implementation details of the test framework used by the assembly that contains the element.
+        /// It will be updated (if needed) by this method.</param>
         /// <param name="sourceAttributes">Source positions for the attributes; can be <c>null</c></param>
         /// <param name="logger">Method to pass a message to the caller</param>
         /// <returns>Proxies for the nanoFramework.TestFramework-related attributes</returns>

@@ -107,12 +107,12 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
             var logger = new LogMessengerMock();
 
-            IReadOnlyList<(string key, bool asBytes)> actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
+            IReadOnlyList<(string key, Type valueType)> actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
             logger.AssertEqual("");
             Assert.AreEqual(
-                @"string 'text key', byte[] 'binary key'" + '\n',
+                @"String 'String key', Byte[] 'Binary key'" + '\n',
                 string.Join(", ", from a in actual
-                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                                  select $"{a.valueType.Name} '{a.key}'") + '\n'
                 );
             #endregion
 
@@ -127,7 +127,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.AreEqual(
                 @"" + '\n',
                 string.Join(", ", from a in actual
-                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                                  select $"{a.valueType.Name} '{a.key}'") + '\n'
                 );
             #endregion
 
@@ -139,9 +139,9 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             actual = deploymentProxy.GetDeploymentConfigurationArguments(method, true, logger);
             logger.AssertEqual(@"");
             Assert.AreEqual(
-                @"string 'text key'" + '\n',
+                @"Int32 'Integer key', Int64 'Long key'" + '\n',
                 string.Join(", ", from a in actual
-                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                                  select $"{a.valueType.Name} '{a.key}'") + '\n'
                 );
             #endregion
 
@@ -156,7 +156,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.AreEqual(
                 @"" + '\n',
                 string.Join(", ", from a in actual
-                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                                  select $"{a.valueType.Name} '{a.key}'") + '\n'
                 );
             #endregion
 
@@ -167,11 +167,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
             logger.AssertEqual(
-@"Error: TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest+TestDeploymentConfigurationArguments.IncorrectType: Error: An argument of the method must be of type 'byte[]' or 'string'.");
+@"Error: TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest+TestDeploymentConfigurationArguments.IncorrectType: Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.");
             Assert.AreEqual(
                 @"" + '\n',
                 string.Join(", ", from a in actual
-                                  select $"{(a.asBytes ? "byte[]" : "string")} '{a.key}'") + '\n'
+                                  select $"{a.valueType.Name} '{a.key}'") + '\n'
                 );
             #endregion
         }
@@ -179,23 +179,23 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 #pragma warning disable IDE0060 // Remove unused parameter
         private sealed class TestDeploymentConfigurationArguments
         {
-            [DeploymentConfigurationMock("text key", "binary key")]
+            [DeploymentConfigurationMock("String key", "Binary key")]
             public void OK(string text, byte[] binary)
             {
             }
 
-            [DeploymentConfigurationMock("text key")]
-            public void MoreArguments(string text, bool dataRowArgument)
+            [DeploymentConfigurationMock("Integer key", "Long key")]
+            public void MoreArguments(int ioPort, long address, bool dataRowArgument)
             {
             }
 
-            [DeploymentConfigurationMock("text key", "key too many")]
-            public void TooManyKeys(string text)
+            [DeploymentConfigurationMock("key too many")]
+            public void TooManyKeys()
             {
             }
 
             [DeploymentConfigurationMock("key")]
-            public void IncorrectType(int pinNumber)
+            public void IncorrectType(double gain)
             {
             }
         }

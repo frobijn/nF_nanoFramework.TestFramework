@@ -20,9 +20,9 @@ namespace nanoFramework.TestFramework.Tools
             SetupComplete,
             /// <summary>Error occurred while initialising a test or the test class</summary>
             SetupFail,
-
-            /// <summary>Test was skipped</summary>
+            /// <summary>Test or test class was skipped</summary>
             Skipped,
+
             /// <summary>Test was completed successfully</summary>
             Pass,
             /// <summary>Test (proper) was not completed successfully</summary>

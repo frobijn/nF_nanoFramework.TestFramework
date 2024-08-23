@@ -89,10 +89,17 @@ namespace TestFramework.Tooling.Tests.Helpers
         {
             foreach (string version in new string[] { "Debug", "Release" })
             {
-                string assemblyFilePath = Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", version, "NFUnitTest.dll");
-                if (File.Exists(assemblyFilePath))
+                string outputDirectory = Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", version);
+                if (Directory.Exists(outputDirectory))
                 {
-                    return assemblyFilePath;
+                    foreach (string assemblyFilePath in Directory.EnumerateFiles(outputDirectory, "*.dll"))
+                    {
+                        string fileName = Path.GetFileNameWithoutExtension(assemblyFilePath);
+                        if (fileName == "NFUnitTest" || fileName.StartsWith("TestFramework.Tooling.Tests."))
+                        {
+                            return assemblyFilePath;
+                        }
+                    }
                 }
             }
             Assert.Inconclusive($"Cannot find the assembly of the test project '{Path.GetFileNameWithoutExtension(projectFilePath)}'");

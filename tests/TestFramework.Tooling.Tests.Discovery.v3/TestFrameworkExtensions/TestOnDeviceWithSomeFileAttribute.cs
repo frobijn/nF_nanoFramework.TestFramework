@@ -21,14 +21,14 @@ namespace TestFramework.Tooling.Tests.NFUnitTest.TestFrameworkExtensions
 
         public bool ShouldTestOnDevice(ITestDevice testDevice)
         {
-            string content = testDevice.GetDeploymentConfigurationValue(_fileName);
+            string content = (string)testDevice.GetDeploymentConfigurationValue(_fileName, typeof(string));
             return !string.IsNullOrEmpty(content);
         }
 
         public bool AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2)
         {
-            string content1 = testDevice1.GetDeploymentConfigurationValue(_fileName);
-            string content2 = testDevice2.GetDeploymentConfigurationValue(_fileName);
+            string content1 = (string)testDevice1.GetDeploymentConfigurationValue(_fileName, typeof(string));
+            string content2 = (string)testDevice2.GetDeploymentConfigurationValue(_fileName, typeof(string));
             return content1 == content2;
         }
     }

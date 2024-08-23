@@ -1,6 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+
 namespace nanoFramework.TestFramework
 {
     // Developer's note:
@@ -26,22 +28,12 @@ namespace nanoFramework.TestFramework
 
         /// <summary>
         /// Get the part of the deployment configuration identified by a key.
-        /// The result is either a string value, if the configuration is specified as key = value pair,
-        /// or the textual content of a configuration file.
         /// </summary>
-        /// <param name="configurationKey"></param>
-        /// <returns>Returns the content of a text file or a string value if the deployment configuration
-        /// contains data for the <paramref name="configurationKey"/>. Returns <c>null</c> if no configuration
-        /// data is specified.</returns>
-        string GetDeploymentConfigurationValue(string configurationKey);
-
-        /// <summary>
-        /// Get the part of the deployment configuration identified by a key.
-        /// The result is binary data if a file has been specified for the key in the deployment configuration.
-        /// </summary>
-        /// <param name="configurationKey"></param>
-        /// <returns>Returns the content of a binary file if the deployment configuration has specified a file
-        /// for the <paramref name="configurationKey"/>. Returns <c>null</c> otherwise.</returns>
-        byte[] GetDeploymentConfigurationFile(string configurationKey);
+        /// <param name="configurationKey">Key as used in the deployment configuration</param>
+        /// <param name="resultType">Required return type. Allowed types are <c>byte[]</c>, <c>int</c>, <c>long</c> and <c>string</c></param>
+        /// <returns>Returns the deployment configuration identified by the <paramref name="configurationKey"/>. Returns <c>null</c>
+        /// (-1 for integer types) if no configuration data is specified, if the deployment configuration cannot be presented as
+        /// <paramref name="resultType"/> or if the <paramref name="configurationKey"/> is <c>null</c>.</returns>
+        object GetDeploymentConfigurationValue(string configurationKey, Type resultType);
     }
 }

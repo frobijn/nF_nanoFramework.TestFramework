@@ -35,7 +35,7 @@ namespace TestFramework.Tooling.Tests.Helpers
                 false,
                 logger);
             logger.AssertEqual(
-$@"Error: {pathPrefix}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]' or 'string'.
+$@"Error: {pathPrefix}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.
 Error: {pathPrefix}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.", LoggingLevel.Error);
             TestSelection = testCases.TestOnVirtualDevice.First();
         }
@@ -46,14 +46,16 @@ Error: {pathPrefix}TestWithALotOfErrors.cs(25,10): Error: A cleanup method canno
             File.WriteAllText(Path.Combine(configDirectoryPath, "xyzzy.txt"), TestWithFrameworkExtensions_ConfigurationValue);
             File.WriteAllBytes(Path.Combine(configDirectoryPath, "MakeAndModel.bin"), TestClassTwoMethods_Method2_ConfigurationValue);
 
-            return DeploymentConfiguration.Parse($@"{{
+            string specificationFile = Path.Combine(configDirectoryPath, "deployment.json");
+            File.WriteAllText(specificationFile, $@"{{
     ""DisplayName"": ""{GetType().Name}"",
     ""Configuration"":{{
         ""{TestWithFrameworkExtensions_ConfigurationKey}"": {{ ""File"": ""xyzzy.txt"" }},
+        ""{TestWithFrameworkExtensions_ConfigurationKey2}"": 42,
         ""{TestClassTwoMethods_Method2_ConfigurationKey}"": {{ ""File"": ""MakeAndModel.bin"" }}
     }}
-}}
-", configDirectoryPath, null);
+}}");
+            return DeploymentConfiguration.Parse(specificationFile);
         }
         #endregion
 
@@ -82,6 +84,8 @@ Error: {pathPrefix}TestWithALotOfErrors.cs(25,10): Error: A cleanup method canno
         public const string TestWithFrameworkExtensions_FQN = "TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions";
         public const string TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName = "TestOnDeviceWithSomeFile";
         public const string TestWithFrameworkExtensions_ConfigurationKey = "xyzzy";
+        public const string TestWithFrameworkExtensions_ConfigurationKey2 = "Device ID";
+        public const string TestWithFrameworkExtensions_ConfigurationKey3 = "Address";
         public const string TestWithFrameworkExtensions_ConfigurationValue = @"Value
 for
 xyzzy";

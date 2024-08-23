@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
@@ -23,7 +24,7 @@ namespace nanoFramework.TestFramework.Tooling
             ProjectSourceInventory.ElementDeclaration location,
             bool shouldRunOnVirtualDevice,
             IEnumerable<TestOnRealHardwareProxy> testOnRealHardware,
-            IReadOnlyList<(string key, bool asBytes)> requiredConfigurationKeys,
+            IReadOnlyList<(string key, Type valueType)> requiredConfigurationKeys,
             HashSet<string> traits)
         {
             AssemblyFilePath = assemblyFilePath;
@@ -34,7 +35,7 @@ namespace nanoFramework.TestFramework.Tooling
             TestMethodSourceCodeLocation = location;
             ShouldRunOnVirtualDevice = shouldRunOnVirtualDevice;
             _testOnRealHardware = testOnRealHardware;
-            RequiredConfigurationKeys = requiredConfigurationKeys ?? new (string, bool)[] { };
+            RequiredConfigurationKeys = requiredConfigurationKeys ?? new (string, Type)[] { };
             _traits = traits;
             Group = group;
             Group._testCases.Add(this);
@@ -105,6 +106,12 @@ namespace nanoFramework.TestFramework.Tooling
             => !(_testOnRealHardware is null);
 
         /// <summary>
+        /// Get the attributes that determine whether the test case can be executed on a real hardware device.
+        /// </summary>
+        public IEnumerable<TestOnRealHardwareProxy> RealHardwareDeviceSelectors
+            => _testOnRealHardware ?? new TestOnRealHardwareProxy[0];
+
+        /// <summary>
         /// Get the keys that identify what part of the deployment configuration
         /// should be passed to the test method. Each key should have a corresponding
         /// argument of the setup method that is of type <c>byte[]</c> or <c>string</c>,
@@ -114,7 +121,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// Additional deployment configuration information may be required to initialise
         /// the test case group; see <see cref="TestCaseGroup.RequiredConfigurationKeys"/>.
         /// </remarks>
-        public IReadOnlyList<(string key, bool asBytes)> RequiredConfigurationKeys
+        public IReadOnlyList<(string key, Type valueType)> RequiredConfigurationKeys
         {
             get;
             internal set;

@@ -199,7 +199,7 @@ ErrorMessage: 'Cleanup failed'
     
     
 ----------------------------------------
-Test        : TestFramework.Tooling.Execution.Tests.InconclusiveInTest.TestFramework.Tooling.Execution.Tests.InconclusiveInTest.Test
+Test        : TestFramework.Tooling.Execution.Tests.SkippedInTest.TestFramework.Tooling.Execution.Tests.SkippedInTest.Test
 DisplayName : 'Test - Test skipped'
 Outcome     : Skipped
 ErrorMessage: 'Test skipped'
@@ -418,7 +418,7 @@ ErrorMessage: 'Cleanup failed'
     
     
 ----------------------------------------
-Test        : TestFramework.Tooling.Execution.Tests.InconclusiveInTest.TestFramework.Tooling.Execution.Tests.InconclusiveInTest.Test
+Test        : TestFramework.Tooling.Execution.Tests.SkippedInTest.TestFramework.Tooling.Execution.Tests.SkippedInTest.Test
 DisplayName : 'Test - Test skipped'
 Outcome     : Skipped
 ErrorMessage: 'Test skipped'
@@ -511,17 +511,17 @@ ErrorMessage: 'Setup failed'
 for
 data.txt");
             File.WriteAllBytes(Path.Combine(configDirectoryPath, "config_data.bin"), new byte[] { 3, 1, 4, 1, 5 });
-            File.WriteAllText(Path.Combine(configDirectoryPath, "config_RGB_LED_pin.txt"), @"42");
 
-            return DeploymentConfiguration.Parse($@"{{
+            string specificationFile = Path.Combine(configDirectoryPath, "deployment.json");
+            File.WriteAllText(specificationFile, $@"{{
     ""DisplayName"": ""{GetType().Name}"",
     ""Configuration"":{{
         ""data.txt"": {{ ""File"": ""config_data.txt"" }},
         ""data.bin"": {{ ""File"": ""config_data.bin"" }},
-        ""RGB LED pin"": {{ ""File"": ""config_RGB_LED_pin.txt"" }},
+        ""RGB LED pin"": 42,
     }}
-}}
-", configDirectoryPath, null);
+}}");
+            return DeploymentConfiguration.Parse(specificationFile);
         }
         #endregion
     }

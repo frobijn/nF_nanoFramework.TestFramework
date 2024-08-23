@@ -207,6 +207,11 @@ namespace nanoFramework.TestFramework.Tools
                 Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.SetupComplete}");
                 return true;
             }
+            catch (SkipTestException ex)
+            {
+                Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Skipped}:{ex.Message}");
+                return false;
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.SetupFail}:{ex.Message}");

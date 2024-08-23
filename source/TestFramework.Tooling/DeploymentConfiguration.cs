@@ -4,14 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Newtonsoft.Json;
 
 namespace nanoFramework.TestFramework.Tooling
 {
     /// <summary>
-    /// Specification of the deployment configuration: the (hardware and software) environment the tests
-    /// are (about to be) executed on.
+    /// Specification of the deployment configuration: the (hardware) environment the test cases
+    /// are (about to be) executed on. The deployment configuration should be created by a developer
+    /// (or other tools), this class can only read the specification.
     /// </summary>
     public class DeploymentConfiguration
     {
@@ -29,31 +29,20 @@ namespace nanoFramework.TestFramework.Tooling
         /// </summary>
         [JsonProperty("Configuration")]
         [JsonConverter(typeof(ValuesConverter))]
-        public Dictionary<string, (string value, ConfigurationFile file)> Values
+        public Dictionary<string, (object value, ConfigurationFile file)> Values
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Information about the file that contains the configuration data. This element can only be used for
-        /// reading data from a configuration file if it is created via <see cref="Parse(string, string)"/>.
+        /// Information about the file that contains the configuration data.
         /// </summary>
         public sealed class ConfigurationFile
         {
-            #region Fields
-            /// <summary>
-            /// Absolute path of the configuration file.
-            /// This field is assigned in <see cref="Parse(string, string)"/> and is not updated if
-            /// <see cref="FilePath"/> is assigned.
-            /// </summary>
-            [JsonIgnore]
-            internal string _absolutePath;
-            #endregion
-
             #region Properties
             /// <summary>
-            /// Path to the file. This can be a path relative to the directory the JSON specification resides in.
+            /// Absolute path to the file.
             /// </summary>
             [JsonProperty("File")]
             public string FilePath
@@ -70,11 +59,11 @@ namespace nanoFramework.TestFramework.Tooling
             /// <returns>The data in the file, or <c>null</c> if the file does not exist.</returns>
             public byte[] ReadAsBinary()
             {
-                if (_absolutePath is null || !File.Exists(_absolutePath))
+                if (FilePath is null || !File.Exists(FilePath))
                 {
                     return null;
                 }
-                return File.ReadAllBytes(_absolutePath);
+                return File.ReadAllBytes(FilePath);
             }
 
             /// <summary>
@@ -83,11 +72,11 @@ namespace nanoFramework.TestFramework.Tooling
             /// <returns>The text in the file, or <c>null</c> if the file does not exist.</returns>
             public string ReadAsText()
             {
-                if (_absolutePath is null || !File.Exists(_absolutePath))
+                if (FilePath is null || !File.Exists(FilePath))
                 {
                     return null;
                 }
-                return File.ReadAllText(_absolutePath);
+                return File.ReadAllText(FilePath);
             }
             #endregion
         }
@@ -97,57 +86,30 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Parse the JSON representation of a <see cref="DeploymentConfiguration"/>.
         /// </summary>
-        /// <param name="json">JSON configuration</param>
-        /// <param name="jsonDirectoryPath">The path of the directory with the file the <paramref name="json"/>
-        /// was read from. The path is used to resolve relative paths as value of <see cref="ConfigurationFile.FilePath"/>.</param>
-        /// <param name="defaultConfiguration">The default configuration. If not <c>null</c>, it provides the
-        /// initial configuration of which the properties are overwritten with the data in <paramref name="json"/>.</param>
-        /// <returns></returns>
-        public static DeploymentConfiguration Parse(string json, string jsonDirectoryPath, DeploymentConfiguration defaultConfiguration)
+        /// <param name="configurationFilePath">The path to the file with the deployment configuration.</param>
+        /// <returns>The deployment configuration, or <c>null</c> if the file does not exist</returns>
+        public static DeploymentConfiguration Parse(string configurationFilePath)
         {
-            DeploymentConfiguration configuration = JsonConvert.DeserializeObject<DeploymentConfiguration>(json);
+            if (configurationFilePath is null || !File.Exists(configurationFilePath))
+            {
+                return null;
+            }
+
+            DeploymentConfiguration configuration = JsonConvert.DeserializeObject<DeploymentConfiguration>(File.ReadAllText(configurationFilePath));
             if (!(configuration?.Values is null))
             {
-                foreach ((string _, ConfigurationFile file) in configuration.Values.Values)
+                string directoryName = Path.GetDirectoryName(configurationFilePath);
+                foreach ((object _, ConfigurationFile file) in configuration.Values.Values)
                 {
-                    if (!(file is null))
+                    if (!(file?.FilePath is null))
                     {
-                        file._absolutePath = Path.Combine(jsonDirectoryPath ?? ".", file.FilePath);
+                        file.FilePath = Path.GetFullPath(Path.Combine(directoryName, file.FilePath));
                     }
                 }
             }
-            if (!(defaultConfiguration is null))
-            {
-                configuration.DisplayName ??= defaultConfiguration.DisplayName;
-                if (!(defaultConfiguration.Values is null))
-                {
-                    foreach (KeyValuePair<string, (string value, ConfigurationFile file)> value in defaultConfiguration.Values)
-                    {
-                        configuration.Values ??= new Dictionary<string, (string value, ConfigurationFile file)>();
-                        if (!configuration.Values.ContainsKey(value.Key))
-                        {
-                            configuration.Values[value.Key] = value.Value;
-                        }
-                    }
-                }
-            }
+
             return configuration;
         }
-
-        /// <summary>
-        /// Convert the configuration into JSON
-        /// </summary>
-        /// <returns>The JSON for this configuration</returns>
-        public string ToJson()
-        {
-            return JsonConvert.SerializeObject(this, new JsonSerializerSettings()
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                Formatting = Formatting.Indented,
-            });
-        }
-
-
 
         /// <summary>
         /// Converter for the <see cref="Values"/> dictionary
@@ -161,30 +123,12 @@ namespace nanoFramework.TestFramework.Tooling
 
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
-                var values = value as Dictionary<string, (string value, ConfigurationFile file)>;
-                writer.WriteStartObject();
-
-                foreach (KeyValuePair<string, (string value, ConfigurationFile file)> configurationValue in from v in values
-                                                                                                            orderby v.Value.value is null ? 1 : 0, v.Key
-                                                                                                            select v)
-                {
-                    writer.WritePropertyName(configurationValue.Key);
-
-                    if (!(configurationValue.Value.value is null))
-                    {
-                        serializer.Serialize(writer, configurationValue.Value.value);
-                    }
-                    else if (!(configurationValue.Value.file?.FilePath is null))
-                    {
-                        serializer.Serialize(writer, configurationValue.Value.file);
-                    }
-                }
-                writer.WriteEndObject();
+                throw new NotImplementedException();
             }
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
-                var result = new Dictionary<string, (string value, ConfigurationFile file)>();
+                var result = new Dictionary<string, (object value, ConfigurationFile file)>();
 
                 if (reader.TokenType == JsonToken.StartObject)
                 {
@@ -201,6 +145,10 @@ namespace nanoFramework.TestFramework.Tooling
                         if (reader.TokenType == JsonToken.String)
                         {
                             result[key] = (reader.Value.ToString(), null);
+                        }
+                        else if (reader.TokenType == JsonToken.Integer)
+                        {
+                            result[key] = ((long)reader.Value, null);
                         }
                         else
                         {
@@ -221,52 +169,67 @@ namespace nanoFramework.TestFramework.Tooling
         #region Methods
         /// <summary>
         /// Get the part of the deployment configuration identified by a key.
-        /// The result is either a string value, if the configuration is specified as key = value pair,
-        /// or the textual content of a configuration file.
         /// </summary>
-        /// <param name="configurationKey"></param>
-        /// <returns>Returns the content of a text file or a string value if the deployment configuration
-        /// contains data for the <paramref name="configurationKey"/>. Returns <c>null</c> if no configuration
-        /// data is specified or if the <paramref name="configurationKey"/> is <c>null</c>.</returns>
-        public string GetDeploymentConfigurationValue(string configurationKey)
+        /// <param name="configurationKey">Key as used in the deployment configuration</param>
+        /// <param name="resultType">Required return type. Allowed types are <c>byte[]</c>, <c>int</c>, <c>long</c> and <c>string</c></param>
+        /// <returns>Returns the content of a file or (if the <paramref name="resultType"/> is not <c>byte[]</c>) a value if the deployment configuration
+        /// contains data for the <paramref name="configurationKey"/>. Returns <c>null</c> (-1 for integer types) if no configuration
+        /// data is specified, if the <paramref name="resultType"/> does not match the way the configuration is specified or
+        /// if the <paramref name="configurationKey"/> is <c>null</c>.</returns>
+        public object GetDeploymentConfigurationValue(string configurationKey, Type resultType)
         {
             if (!(configurationKey is null))
             {
-                if (Values?.TryGetValue(configurationKey, out (string value, ConfigurationFile file) value) ?? false)
+                if (Values?.TryGetValue(configurationKey, out (object value, ConfigurationFile file) value) ?? false)
                 {
-                    if (!(value.value is null))
+                    if (resultType == typeof(string))
                     {
-                        return value.value;
+                        if (!(value.value is null))
+                        {
+                            return value.value?.ToString();
+                        }
+                        else
+                        {
+                            return value.file.ReadAsText();
+                        }
                     }
-                    else
+                    else if (resultType == typeof(byte[]))
                     {
-                        return value.file.ReadAsText();
+                        return value.file?.ReadAsBinary();
+                    }
+                    else if (resultType == typeof(int))
+                    {
+                        if (value.value is long longValue)
+                        {
+                            return (int)longValue;
+                        }
+                        else if (value.value is string stringValue)
+                        {
+                            if (int.TryParse(stringValue, out int intValue))
+                            {
+                                return intValue;
+                            }
+                        }
+                    }
+                    else if (resultType == typeof(long))
+                    {
+                        if (value.value is long longValue)
+                        {
+                            return longValue;
+                        }
+                        else if (value.value is string stringValue)
+                        {
+                            if (long.TryParse(stringValue, out longValue))
+                            {
+                                return longValue;
+                            }
+                        }
                     }
                 }
             }
-            return null;
-        }
-
-        /// <summary>
-        /// Get the part of the deployment configuration identified by a key.
-        /// The result is binary data if a file has been specified for the key in the deployment configuration.
-        /// </summary>
-        /// <param name="configurationKey"></param>
-        /// <returns>Returns the content of a binary file if the deployment configuration has specified a file
-        /// for the <paramref name="configurationKey"/>. Returns <c>null</c> otherwise.</returns>
-        public byte[] GetDeploymentConfigurationFile(string configurationKey)
-        {
-            if (!(configurationKey is null))
-            {
-                if (Values?.TryGetValue(configurationKey, out (string value, ConfigurationFile file) value) ?? false)
-                {
-                    if (!(value.file is null))
-                    {
-                        return value.file.ReadAsBinary();
-                    }
-                }
-            }
-            return null;
+            return resultType == typeof(int) ? (object)(int)-1
+                : resultType == typeof(long) ? (object)(long)-1
+                : null;
         }
         #endregion
     }

@@ -20,8 +20,8 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         {
         }
 
-        [Setup, DeploymentConfiguration("xyzzy")]
-        public void Setup(string config)
+        [Setup, DeploymentConfiguration("xyzzy", "Device ID", "Address")]
+        public void Setup(string config, long id, int address)
         {
             Assert.IsNotNull(config);
         }

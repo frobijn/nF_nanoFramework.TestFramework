@@ -16,7 +16,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <FileAlignment>512</FileAlignment>
     <RootNamespace>TestFramework.Tooling.Tests.NFUnitTest</RootNamespace>
-    <AssemblyName>NFUnitTest</AssemblyName>
     <IsCodedUITest>False</IsCodedUITest>
     <IsTestProject>true</IsTestProject>
     <TestProjectType>UnitTest</TestProjectType>

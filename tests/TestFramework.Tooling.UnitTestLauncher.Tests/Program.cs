@@ -133,12 +133,12 @@ namespace nanoFramework.TestFramework.Tools
             );
 
             ForClass(
-                typeof(global::TestFramework.Tooling.Execution.Tests.InconclusiveInTest), (int)TestClassInitialisation.InstantiateForAllMethods,
+                typeof(global::TestFramework.Tooling.Execution.Tests.SkippedInTest), (int)TestClassInitialisation.InstantiateForAllMethods,
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Setup), null,
                 nameof(global::TestFramework.Tooling.Execution.Tests.FailInConstructor.Cleanup),
                 (frm, fdr) =>
                 {
-                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.InconclusiveInTest.Test), null);
+                    frm(nameof(global::TestFramework.Tooling.Execution.Tests.SkippedInTest.Test), null);
                 }
             );
 

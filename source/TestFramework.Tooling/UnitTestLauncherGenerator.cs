@@ -186,26 +186,28 @@ namespace nanoFramework.TestFramework.Tooling
             int staticDataIndex = 0;
             var configurationDataName = new Dictionary<string, string>();
             var staticData = new StringBuilder(@"#region Deployment configuration data");
-            string AddConfigurationData(string configurationKey, bool asBinary)
+            string AddConfigurationData(string configurationKey, Type valueType)
             {
-                string key = $"{(asBinary ? "B" : "T")}{configurationKey}";
+                string key = $"{valueType.Name}_{configurationKey}";
                 if (configurationDataName.TryGetValue(key, out string code))
                 {
                     return code;
                 }
-                if (asBinary)
+                var data = configuration?.GetDeploymentConfigurationValue(configurationKey, valueType);
+                if (data is null)
                 {
-                    byte[] binaryData = configuration?.GetDeploymentConfigurationFile(configurationKey);
-                    if (binaryData is null)
-                    {
-                        configurationDataName[key] = null;
-                        return null;
-                    }
+                    configurationDataName[key] = null;
+                    return null;
+                }
+
+                if (valueType == typeof(byte[]))
+                {
                     string fieldName = $"s_cfg_{++staticDataIndex}";
                     configurationDataName[key] = fieldName;
+                    var binaryData = (byte[])data;
 
                     staticData.Append($@"
-{s_dataIndent}/// <summary>Configuration key '{configuration}' as binary data</summary>
+{s_dataIndent}/// <summary>Value for deployment configuration key '{configurationKey}'</summary>
 {s_dataIndent}private static readonly byte[] {fieldName} = new byte[] {{");
                     for (int i = 0; i < binaryData.Length;)
                     {
@@ -224,35 +226,30 @@ namespace nanoFramework.TestFramework.Tooling
                 }
                 else
                 {
-                    string textValue = configuration?.GetDeploymentConfigurationValue(configurationKey);
-                    if (textValue is null)
-                    {
-                        configurationDataName[key] = null;
-                        return null;
-                    }
                     string fieldName = $"CFG_{++staticDataIndex}";
                     configurationDataName[key] = fieldName;
+                    var typeName = valueType == typeof(int) ? "int" : valueType == typeof(long) ? "long" : valueType == typeof(string) ? "string" : throw new NotSupportedException();
 
                     staticData.Append($@"
-{s_dataIndent}/// <summary>Configuration key '{configuration}' as text</summary>
-{s_dataIndent}private const string {fieldName} = {SymbolDisplay.FormatLiteral(textValue, true)};");
+{s_dataIndent}/// <summary>Value for deployment configuration key '{configurationKey}'</summary>
+{s_dataIndent}private const {typeName} {fieldName} = {(valueType == typeof(string) ? SymbolDisplay.FormatLiteral((string)data, true) : data)};");
 
                     return fieldName;
                 }
             }
-            string ConvertToArguments(IReadOnlyList<(string key, bool asBytes)> requiredConfigurationKeys)
+            string ConvertToArguments(IReadOnlyList<(string key, Type valueType)> requiredConfigurationKeys)
             {
                 if ((requiredConfigurationKeys?.Count ?? 0) == 0)
                 {
                     return "null";
                 }
                 var arguments = new List<string>();
-                foreach ((string key, bool asBinary) in requiredConfigurationKeys)
+                foreach ((string key, Type valueType) in requiredConfigurationKeys)
                 {
-                    string fieldName = AddConfigurationData(key, asBinary);
+                    string fieldName = AddConfigurationData(key, valueType);
                     if (fieldName is null)
                     {
-                        arguments.Add("null");
+                        arguments.Add(valueType == typeof(int) ? "-1" : valueType == typeof(long) ? "-1L" : "null");
                     }
                     else
                     {

@@ -1,6 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+
 namespace nanoFramework.TestFramework.Tooling
 {
     /// <summary>
@@ -66,12 +68,8 @@ namespace nanoFramework.TestFramework.Tooling
             => Platform;
 
         /// <inheritdoc/>
-        public byte[] GetDeploymentConfigurationFile(string configurationKey)
-            => _configuration?.GetDeploymentConfigurationFile(configurationKey);
-
-        /// <inheritdoc/>
-        public string GetDeploymentConfigurationValue(string configurationKey)
-            => _configuration?.GetDeploymentConfigurationValue(configurationKey);
+        public object GetDeploymentConfigurationValue(string configurationKey, Type resultType)
+            => _configuration?.GetDeploymentConfigurationValue(configurationKey, resultType);
         #endregion
     }
 }

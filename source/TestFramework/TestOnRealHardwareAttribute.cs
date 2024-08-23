@@ -8,8 +8,8 @@ namespace nanoFramework.TestFramework
     /// <summary>
     /// Mark a test, all methods of a test class or all tests in a assembly (when applied to a class implementing the
     /// <see cref="IAssemblyAttributes"/> interface) as intended to be executed on real hardware. This is also visible in the
-    /// Visual Studio test explorer via a trait. The test will be executed on at least one
-    /// of the available devices that are not the Virtual Device.
+    /// Visual Studio test explorer via a trait. The test will be executed on one
+    /// of the available real hardware devices.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
 #if NFTF_REFERENCED_SOURCE_FILE
@@ -21,9 +21,8 @@ namespace nanoFramework.TestFramework
     {
         #region Construction
         /// <summary>
-        /// Inform the test runner that the test should be run on real hardware. If the available devices
-        /// have a different CLR firmware (target) installed, the test is executed for each target on
-        /// one of the devices with that firmware.
+        /// Inform the test runner that the test should be run on real hardware. It is sufficient to run the test
+        /// on a single device in case multiple real hardware devices are available.
         /// </summary>
         public TestOnRealHardwareAttribute()
         {
@@ -38,7 +37,7 @@ namespace nanoFramework.TestFramework
             => true;
 
         bool ITestOnRealHardware.AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2)
-            => testDevice1.TargetName() == testDevice2.TargetName();
+            => true;
         #endregion
     }
 }

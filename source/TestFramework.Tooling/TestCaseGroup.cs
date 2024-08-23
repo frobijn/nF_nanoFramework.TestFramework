@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
 
 namespace nanoFramework.TestFramework.Tooling
@@ -81,10 +82,10 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Get the keys that identify what part of the deployment configuration
         /// should be passed to the setup method. Each key should have a corresponding
-        /// argument of the setup method that is of type <c>byte[]</c> or <c>string</c>,
+        /// argument of the setup method that is of type <c>byte[]</c>, <c>int</c>, <c>long</c> or <c>string</c>,
         /// as indicated for the key.
         /// </summary>
-        public IReadOnlyList<(string key, bool asBytes)> RequiredConfigurationKeys
+        public IReadOnlyList<(string key, Type valueType)> RequiredConfigurationKeys
         {
             get;
             internal set;

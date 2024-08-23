@@ -84,8 +84,14 @@ While working on the implementation of the must-have requirements, it turned out
 
     To resolve assembly version conflicts, the test framework uses a separate host for discovering and directing the execution of the tests. As a result, the TestFramework.Tooling can use updates for NuGet packages that previously prevented running the test adapter (underlying [VSTest issue](https://github.com/microsoft/vstest/issues/4775)).
 
+- Protection against running tests simultaneously from multiple Visual Studio/VSTest instances
+
+    Running tests in parallel from multiple Visual Studio/VSTest instances may cause problems for tests that should be run on real hardware, as multiple instances may try to access the same device. Exclusive access control is implemented for obtaining access to a device and running tests on a device. It is intended as a protection mechanism; no attempt has been optimize running the tests in an optimal way.
+
+- The result of a single test is made available to Visual Studio/VSTest immediately after the test is completed, rather than after completion of all tests in a test assembly.
+
 ## Backward compatibility 
-The v3 version is backward compatible with v2. A v2 test project does not have to be changed to work with the v3 test adapter and test framework; updating the NuGet packages should be sufficient to profit from most of the improvements. To benefit from all improvement, the project has to be modified but that can be done in stages if needed. The documentation includes a migration guide for v2 projects to v3. 
+The v3 version is backward compatible with v2. A v2 test project does not have to be changed to work with the v3 test adapter and test framework; updating the NuGet packages should be sufficient to profit from most of the improvements. To benefit from all improvement, the project has to be modified but that can be done in stages if needed. The documentation includes a migration guide for v2 projects to v3.
 
 There are three possible exceptions to the backward compatibility claim that are assumed to arise only in niche applications:
 
@@ -106,8 +112,9 @@ A hands-on demo for all features are available in this repository:
 
 - Clone this repository and switch to this branch.
 - Build the `nanoFramework.TestFramework.Tooling` solution
-- Open the `poc\NFUnit Test DemoByReference` solution. The solution contains a test project that only uses v2 features, one that shows off the new v3 features and a project to debug the unit tests. The projects are configured to use the test adapter and other tools from this repository.
+- Open the `poc\NFUnit Test DemoByReference` solution. The solution contains a test project that only uses v2 features, two that show off the new v3 features and two projects to debug the unit tests. The projects are configured to use the test adapter and other tools from this repository.
 - Play around to run selective tests, all tests, tests from the two test projects running in parallel on the Virtual Device, tests running simultaneously on multiple connected hardware devices and the Virtual Device, etc.
+- Play around with the projects to debug the unit tests. Make sure to build the projects after cloning the repository, as some files are not stored in the git repository.
 - Use/view the `poc\vstest-*.bat` scripts to run tests as in an automated build environment. The options used in the script are available in the Azure DevOps `VSTest@2` task.
 
 The use of the v3 test framework is also documented in the general nanoFramework documentation.
@@ -170,7 +177,21 @@ Other architectural changes/implementation aspects are:
 
     The new build task `MetadataProcessor.MsBuildTask` can be tested by running it. Included is the set of command line arguments for the *Smart command line arguments* VS-extension that runs the task for the hands-on debug project *poc\TestOfTestDebugProjectByReference*.
 
-- nano.runsettings **TODO**
+- A hierarchy of .runsettings configuration files that are separate from Visual Studio's .runsettings files.
+
+    Visual Studio's .runsettings configuration system is ill suited for the nanoFramework test framework. The main reasons are:
+
+    - Some generic settings in *RunConfiguration* must have a fixed value for the nanoFramework test framework to work. Such as *MaxCpuCount* = 1, otherwise Visual Studio will start multiple test hosts in parallel if the user selects the *Run Tests in Parallel* option and several test hosts may try to access the same real hardware. Although the test framework is protected against that, it will slow down the overall execution of the tests. 
+
+    - Visual Studio can run unit tests for several platforms (.NET framework, .NET, ...) mainly because it can figure out for each unit test project what platform to select for the test host. VS cannot do that for the nanoFramework and the *TargetFrameworkVersion* must be set to *net48*. Similarly the *TestAdaptersPaths* must be set. But this will then also apply to all other (regular .NET) unit tests projects.
+
+    - Visual Studio groups test projects per configuration and asks the test adapter to execute one such group. If two projects have a slightly different configuration, they end up in different groups. Because of the *MaxCpuCount* = 1 requirement, Visual Studio runs each group in a separate test host one after the other and the parallelization features of the nanoFramework test framework cannot be used.
+
+    - Some settings, such as the serial ports to use, are user/computer specific, should not be stored in version control/git and should not be part of the main configuration that is stored in version control/git. The .runsettings mechanism is not designed for that.
+
+    Instead the test framework uses a hierarchy of configuration files, with nano.runsettings for version controlled configurations, nano.runsettings.user for user-specific configurations, and nano.vstest.runsettings (controlled by the test framework) for the VSTest test host configuration. The regular .runsettings files are then available for the non-nanoFramework test adapters.
+
+    A new MSBuild tool `nanoFramework.TestFramework.UnitTestsProjectTool` is introduced to support the configuration hierarchy (and the migration of v2 to v3).
 
 ## Other code changes / implementation considerations
 
@@ -202,7 +223,7 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 
 - The `DeploymentConfigurationAttribute` has a weird constructor
 
-    Its argument is `params object[]` instead of `params string[]` because the latter results in a invalid typecast exception in `GetCustomAttributes`. 
+    Its argument is `params object[]` instead of `params string[]` because the latter results in a invalid typecast exception in `GetCustomAttributes`.
 
 - The unit test launcher uses the type of test classes and the name of methods
 
@@ -215,3 +236,16 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 - The relation between the deployment configuration ("make and model") and a device must be assigned by hand
 
     The initial goal was to use metadata that identifies an individual device to retrieve the deployment configuration. However, all metadata that is available via the COM port communication is created by the CLR - this in effect duplicates the use of the target name as it is not identifying the individual device. Manufacturer's hats prevent addition of metadata that can be assigned from a .NET application layer, or the availability of other data that can be read from the device. Although other identifying features are available (e.g., MAC address) there is no way for nanoFramework tooling to relate those to the COM port the device is connected to.
+
+- New NuGet packages are introduced:
+
+    - `nanoFramework.TestFramework.DebugTestsProject` with the support for the new debug-unit-tests project
+    
+    - `nanoFramework.TestFramework.Tooling` for the .NET Framework library of the same name, as this is required to unit test / debug more complex test framework extensions. It will also help people who want to create new/custom tools that work with unit tests.
+
+- The `nanoFramework.TestFramework` package is discontinued and replaced by `nanoFramework.TestFramework.Core` and `nanoFramework.TestFramework.UnitTestsProject`.
+
+    The current `nanoFramework.TestFramework` contains the test framework library, test adapter and unit test launcher. In v3 the test framework library without adapter/unit test launcher is required for class libraries with test framework extensions. If the v3 NuGet package with only the test framework library would be called `nanoFramework.TestFramework`, people may upgrade to the new version of the package and find that the unit test projects no longer work. Better to use `nanoFramework.TestFramework.Core` as the package that only contains the class library.
+
+    Similar arguments apply to the name of the package that succeeds the `nanoFramework.TestFramework` as the package required to support the unit tests project. Proposed name is `nanoFramework.TestFramework.UnitTestsProject`, with `nanoFramework.TestFramework.Core` as dependency. The package contains the test adapter and `nanoFramework.TestFramework.UnitTestsProjectTool`.
+

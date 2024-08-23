@@ -100,6 +100,7 @@
     <Compile Include="TestCaseCollectionTest.cs" />
     <Compile Include="Helpers\TestProjectHelper.cs" />
     <Compile Include="ProjectSourceInventoryTest.cs" />
+    <Compile Include="VSConfigurationTest.cs" />
     <Compile Include="TestFrameworkConfigurationTest.cs" />
     <Compile Include="TestFrameworkProxy\CleanupProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\DataRowProxyTest.cs" />

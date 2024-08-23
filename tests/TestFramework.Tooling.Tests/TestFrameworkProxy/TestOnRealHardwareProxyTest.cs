@@ -131,7 +131,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.AreEqual("xyzzy", proxy.Description);
 
             var testDevice1 = new TestDeviceProxy(
-                new TestDeviceMock("-", "-", new Dictionary<string, string>
+                new TestDeviceMock("-", "-", new Dictionary<string, object>
                 {
                     {  "xyzzy", "Present!" }
                 })
@@ -140,7 +140,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.IsTrue(proxy.AreDevicesEqual(testDevice1, testDevice1));
 
             var testDevice2 = new TestDeviceProxy(
-                new TestDeviceMock("-", "-", new Dictionary<string, string>
+                new TestDeviceMock("-", "-", new Dictionary<string, object>
                 {
                     {  "xyzzy", "Also present!" }
                 })
@@ -149,7 +149,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             Assert.IsFalse(proxy.AreDevicesEqual(testDevice1, testDevice2));
 
             var testDevice3 = new TestDeviceProxy(
-                new TestDeviceMock("-", "-", new Dictionary<string, string>
+                new TestDeviceMock("-", "-", new Dictionary<string, object>
                 {
                     {  "not_xyzzy", "Not present!" }
                 })
@@ -204,10 +204,10 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                 => _keyThatMustExist;
 
             bool nfTest.ITestOnRealHardware.ShouldTestOnDevice(nfTest.ITestDevice testDevice)
-                => !(testDevice.GetDeploymentConfigurationFile(_keyThatMustExist) is null);
+                => !(testDevice.GetDeploymentConfigurationValue(_keyThatMustExist, typeof(string)) is null);
 
             bool nfTest.ITestOnRealHardware.AreDevicesEqual(nfTest.ITestDevice testDevice1, nfTest.ITestDevice testDevice2)
-                => testDevice1.GetDeploymentConfigurationValue(_keyThatMustExist) == testDevice2.GetDeploymentConfigurationValue(_keyThatMustExist);
+                => testDevice1.GetDeploymentConfigurationValue(_keyThatMustExist, typeof(string)) == testDevice2.GetDeploymentConfigurationValue(_keyThatMustExist, typeof(string));
             #endregion
         }
         #endregion

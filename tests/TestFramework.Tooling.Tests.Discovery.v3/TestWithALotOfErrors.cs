@@ -11,7 +11,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     public class TestWithALotOfErrors
     {
         [Setup, DeploymentConfiguration("some", "key", "invalid_type")]
-        public void Setup1(byte[] some, string key, int invalid)
+        public void Setup1(byte[] some, string key, double invalid)
         {
 
         }

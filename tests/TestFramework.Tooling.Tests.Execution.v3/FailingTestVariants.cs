@@ -12,7 +12,6 @@ namespace TestFramework.Tooling.Execution.Tests
         public FailInConstructor()
         {
             OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
-            // Should be reported as inconclusive / test not run
             Assert.Fail();
         }
 
@@ -57,7 +56,6 @@ namespace TestFramework.Tooling.Execution.Tests
         public void Setup()
         {
             OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
-            // Should be reported as inconclusive / test not run
             Assert.Fail();
         }
 
@@ -108,9 +106,9 @@ namespace TestFramework.Tooling.Execution.Tests
     }
 
     [TestClass]
-    public class InconclusiveInTest : IDisposable
+    public class SkippedInTest : IDisposable
     {
-        public InconclusiveInTest()
+        public SkippedInTest()
         {
             OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
         }
@@ -272,4 +270,72 @@ namespace TestFramework.Tooling.Execution.Tests
             OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
         }
     }
+
+    [TestClass]
+    public class SkippedInConstructor : IDisposable
+    {
+        public SkippedInConstructor()
+        {
+            OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+            Assert.SkipTest("Skip all tests in the test class");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
+        }
+
+        [Setup]
+        public void Setup()
+        {
+            OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
+        }
+
+        [TestMethod]
+        public void Test()
+        {
+            OutputHelper.WriteLine($"Test method of {GetType().FullName}");
+        }
+
+        [Cleanup]
+        public void Cleanup()
+        {
+            OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
+        }
+    }
+
+    [TestClass]
+    public class SkippedInSetup : IDisposable
+    {
+        public SkippedInSetup()
+        {
+            OutputHelper.WriteLine($"Constructor of {GetType().FullName}");
+        }
+
+        public void Dispose()
+        {
+            OutputHelper.WriteLine($"Dispose of {GetType().FullName}");
+        }
+
+        [Setup]
+        public void Setup()
+        {
+            OutputHelper.WriteLine($"Setup method of {GetType().FullName}");
+            Assert.SkipTest("Skip all tests in the test class");
+        }
+
+        [TestMethod]
+        public void Test()
+        {
+            OutputHelper.WriteLine($"Test method of {GetType().FullName}");
+        }
+
+        [Cleanup]
+        public void Cleanup()
+        {
+            OutputHelper.WriteLine($"Cleanup method of {GetType().FullName}");
+        }
+    }
+
+
 }

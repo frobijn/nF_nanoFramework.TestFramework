@@ -10,7 +10,8 @@ using System.Xml;
 namespace nanoFramework.TestFramework.Tooling
 {
     /// <summary>
-    /// Settings specific to the .NET nanoFramework Test Framework tooling.
+    /// Settings for the execution of unit tests that are specified in files with name
+    /// <see cref="SettingsFileName"/>/<see cref="UserSettingsFileName"/>.
     /// </summary>
     public sealed class TestFrameworkConfiguration
     {
@@ -21,55 +22,34 @@ namespace nanoFramework.TestFramework.Tooling
         public const string SettingsName = "nanoFrameworkAdapter";
 
         /// <summary>
-        /// File name to store the nanoFramework.TestFramework configuration in.
+        /// File name to store the nanoFramework.TestFramework configuration in
+        /// that contains the settings for all computers/servers that host the
+        /// tests runners. This file is typically added to version control / git.
         /// </summary>
         public const string SettingsFileName = "nano.runsettings";
 
         /// <summary>
-        /// Settings in RunConfiguration that determine the behaviour of the Visual Studio test runner
-        /// and that we case so much about that a user cannot assign them.
+        /// File name to store the nanoFramework.TestFramework configuration in
+        /// that is specific for the current user on the current computer.
+        /// This file is not intended to be added to version control / git.
         /// </summary>
-        private static readonly Dictionary<string, string> s_requiredRunConfigurationNodes = new Dictionary<string, string>()
-        {
-            // The Visual Studio Test Explorer implements a "poor man's parallelization" method.
-            // If "Run Tests In Parallel" is selected, for each test assembly a new test host is
-            // instantiated and the test hosts run in parallel. We don't want that, as it could be that
-            // all those parallel hosts want to run tests on the same connected hardware device.
-            // We would have to implement some inter-process locking mechanism to ensure only one
-            // test host can access the device.
-            // VSTest has a way to override the parallelization by specifying the maximum number
-            // of test hosts that can run in parallel - specify 1 to effectively turn off the
-            // parallelization option.
-            { "MaxCpuCount", "1" },
+        public const string UserSettingsFileName = "nano.runsettings.user";
 
-            // It is possible to run tests for many types of platforms (.NET Framework 4.8,
-            // .NET 8, ...) from the Visual Studio test infrastructure. VSTest uses auto-discovery
-            // to determine the platform and select the test host version that matches the platform.
-            // Assemblies created to run on the nanoCLR are marked for platform .NETnanoframework v1.0
-            // and VSTest does not know what test host version to use. That must be a host that can run
-            // the TestAdapter and this tooling.
-            // Fortunately there is a way to tell VSTest which test host to use: 
-            { "TargetFrameworkVersion", "net48" },
-            { "TargetPlatform", "x64" }
-            // Unfortunately there is no way to make that specific for the nanoCLR tests. For a solution
-            // that has both nanoFramework tests and other .NET tests, putting the TargetFrameworkVersion/
-            // TargetPlatform in a solution-wide .runsettings file would force all other tests to run
-            // on the same platform. That is why a separate set of configs with SettingsFileName
-            // are employed.
-        };
-
-        /// <summary>
-        /// The setting in RunConfiguration that instructs the Visual Studio test infrastructure
-        /// where the test adapter lives. This must be set to ensure VSTest is using the correct
-        /// one. The user can set it in the <see cref="SettingsFileName"/>-file, which is useful
-        /// when developing or testing a different (version of the) TestAdapter.
-        /// </summary>
-        private const string TestAdaptersPaths = "TestAdaptersPaths";
-
-        private string _maxVirtualDevices;
+        private readonly List<string> _configurationHierarchyDirectoryPaths = new List<string>();
+        private readonly Dictionary<string, string> _deploymentConfiguration = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private const string GlobalSettingsDirectoryPath = "GlobalSettingsDirectoryPath";
+        private const string DeploymentConfiguration_SerialPort = "SerialPort";
+        private const string DeploymentConfiguration_File = "File";
         #endregion
 
         #region Properties
+        /// <summary>
+        /// The hierarchy of locations where the configuration files are located. The last entry
+        /// is the one specific for the unit test assembly.
+        /// </summary>
+        public IReadOnlyList<string> ConfigurationHierarchyDirectoryPaths
+            => _configurationHierarchyDirectoryPaths;
+
         /// <summary>
         /// True (the default) to allow the tests to be executed on real hardware.
         /// </summary>
@@ -89,36 +69,35 @@ namespace nanoFramework.TestFramework.Tooling
         /// if there are no limitations. The setting is ignored if <see cref="AllowRealHardware"/>
         /// is <c>false</c>.
         /// </summary>
-        public IReadOnlyList<string> RealHardwarePort { get; set; } = new string[] { };
+        public IReadOnlyList<string> AllowSerialPorts { get; set; } = new string[] { };
 
         /// <summary>
-        /// Path to a local version of nanoclr.exe to use to run Unit Tests.
-        /// If the path is specified as a relative path and the tests of a single assembly
-        /// are being executed, the path is assumed to be relative to the assembly
-        /// being executed. If no such file exists, the path is then assumed to be
-        /// relative to the solution directory. If that file also does not exist, the
-        /// test will not be executed.
-        /// Is an empty string if no value has been specified.
+        /// The maximum time in milliseconds the execution of the tests in a single test assembly on real hardware is allowed to take.
         /// </summary>
-        public string PathToLocalNanoCLR { get; set; } = string.Empty;
+        public int? RealHardwareTimeout { get; set; }
+
+        /// <summary>
+        /// Path to a local version of nanoclr.exe to use to run unit Tests.
+        /// The value is the full path to the file, and <c>null</c> if no value has been specified.
+        /// It is possible to assign a path relative to the directory where the settings file resides that provided
+        /// these settings.
+        /// </summary>
+        public string PathToLocalNanoCLR { get; set; }
 
         /// <summary>
         /// Version of the global nanoCLR instance to use when running Unit Tests.
         /// This setting is ignored if <see cref="PathToLocalNanoCLR"/> is specified.
-        /// Is an empty string if no value has been specified.
+        /// Is <c>null</c> if no value has been specified.
         /// </summary>
-        public string CLRVersion { get; set; } = string.Empty;
+        public string CLRVersion { get; set; }
 
         /// <summary>
-        /// Path to a local CLR instance to use to run Unit Tests.
-        /// If the path is specified as a relative path and the tests of a single assembly
-        /// are being executed, the path is assumed to be relative to the assembly
-        /// being executed. If no such file exists, the path is then assumed to be
-        /// relative to the solution directory. If that file also does not exist, the
-        /// test will not be executed on the Virtual Device.
-        /// Is an empty string if no value has been specified.
+        /// Path to a local CLR instance to use to run the unit tests.
+        /// The value is the full path to the file, and <c>null</c> if no value has been specified.
+        /// It is possible to assign a path relative to the directory where the settings file resides that provided
+        /// these settings.
         /// </summary>
-        public string PathToLocalCLRInstance { get; set; } = string.Empty;
+        public string PathToLocalCLRInstance { get; set; }
 
         /// <summary>
         /// Set to a number other than 1 tp allow the parallel execution of tests on a Virtual Device.
@@ -127,143 +106,193 @@ namespace nanoFramework.TestFramework.Tooling
         public int MaxVirtualDevices { get; set; } = 0;
 
         /// <summary>
+        /// The maximum time in milliseconds the execution of the tests in a single test assembly on the virtual device is allowed to take.
+        /// </summary>
+        public int? VirtualDeviceTimeout { get; set; }
+
+        /// <summary>
         /// Level of logging for Unit Test execution.
         /// </summary>
         public LoggingLevel Logging { get; set; } = LoggingLevel.None;
 
         /// <summary>
-        /// Allows users to terminate a test session when it exceeds a given timeout, specified in milliseconds.
-        /// Setting a timeout ensures that resources are well consumed and test sessions are constrained to a set time.
+        /// Get the path to the file with deployment configuration for the device connected to the specified serial port.
         /// </summary>
-        public int? TestSessionTimeout
+        /// <param name="serialPort">Name of the serial port (e.g., COM9)</param>
+        /// <returns>The full path to the file, and <c>null</c> if no value has been specified.</returns>
+        public string DeploymentConfigurationFilePath(string serialPort)
         {
-            get;
-            private set;
+            _deploymentConfiguration.TryGetValue(serialPort, out string path);
+            return path;
         }
 
         /// <summary>
-        /// Get the run configuration settings that have been read from the (template for)
-        /// .runsettings using <see cref="Read(string, LogMessenger, string)"/>
+        /// Assign the path to the file with deployment configuration for the device connected to the specified serial port.
         /// </summary>
-        private XmlNode RunConfiguration
+        /// <param name="serialPort">Name of the serial port (e.g., COM9)</param>
+        /// <param name="path">The full path to the file, or a path relative to the directory where the settings file resides that provided
+        /// these settings. Pass <c>null</c> if no deployment configuration is available.</param>
+        public void SetDeploymentConfigurationFilePath(string serialPort, string path)
         {
-            get;
-            set;
-        } = null;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                _deploymentConfiguration.Remove(serialPort);
+            }
+            else
+            {
+                _deploymentConfiguration[serialPort] = path;
+            }
+        }
         #endregion
 
-        #region Construction / validation
+        #region Construction
         /// <summary>
         /// Get settings from (a template for) a .runsettings file
         /// </summary>
-        /// <param name="configuration">The content of a .runsettings file.</param>
-        /// <param name="defaultConfiguration">The configuration that will be modified by the content of the .runsettings file.
-        /// Pass <c>null</c> to start with a configuration without any user settings.</param>
+        /// <param name="settingsDirectoryPath">The path where the .runsettings file(s) are located that are most relevant for the unit test assembly.</param>
+        /// <param name="backwardCompatible">Indicates whether the .runsettings file is a nano.runsettings from the previous version of the test platform.</param>
         /// <param name="logger">Method to pass processing information to the caller. Pass <c>null</c> if no log information is required.</param>
-        /// <returns>The parsed settings, or the default settings if the <paramref name="configuration"/> is
-        /// <c>null</c>, is not valid XML or does not contain a node with name <see cref="SettingsName"/>.
-        /// If <paramref name="defaultConfiguration"/> is not <c>null</c>, the result is a modified version of that configuration.</returns>
-        public static TestFrameworkConfiguration Read(string configuration, TestFrameworkConfiguration defaultConfiguration, LogMessenger logger)
+        /// <returns>The parsed settings. Returns the default settings if no configuration files are found, one of the configuration files is not valid XML
+        /// or none of the configuration files contain a node with name <see cref="SettingsName"/>.</returns>
+        public static TestFrameworkConfiguration Read(string settingsDirectoryPath, bool backwardCompatible, LogMessenger logger)
         {
-            TestFrameworkConfiguration combinedConfiguration = defaultConfiguration ?? new TestFrameworkConfiguration();
-            if (string.IsNullOrEmpty(configuration))
+            TestFrameworkConfiguration combinedConfiguration = new TestFrameworkConfiguration();
+
+            var visitedDirectoryPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            combinedConfiguration.Read(visitedDirectoryPaths, settingsDirectoryPath, backwardCompatible, logger);
+            return combinedConfiguration;
+        }
+        private void Read(HashSet<string> visitedDirectoryPaths, string settingsDirectoryPath, bool backwardCompatible, LogMessenger logger)
+        {
+            if (string.IsNullOrWhiteSpace(settingsDirectoryPath))
             {
-                return combinedConfiguration;
+                return;
+            }
+            settingsDirectoryPath = Path.GetFullPath(settingsDirectoryPath);
+            if (!visitedDirectoryPaths.Add(settingsDirectoryPath))
+            {
+                logger?.Invoke(LoggingLevel.Verbose, $"The path '{settingsDirectoryPath}' is encountered multiple times as value for '{GlobalSettingsDirectoryPath}'. The '{SettingsFileName}/{UserSettingsFileName}' files from that directory are only read once.");
+                return;
+            }
+
+            _configurationHierarchyDirectoryPaths.Insert(0, settingsDirectoryPath);
+            ReadXml(visitedDirectoryPaths, Path.Combine(settingsDirectoryPath, SettingsFileName), backwardCompatible, logger);
+            if (backwardCompatible)
+            {
+                return;
+            }
+            ReadXml(visitedDirectoryPaths, Path.Combine(settingsDirectoryPath, UserSettingsFileName), false, logger);
+        }
+        private void ReadXml(HashSet<string> visitedDirectoryPaths, string settingsFilePath, bool backwardCompatible, LogMessenger logger)
+        {
+            if (!File.Exists(settingsFilePath))
+            {
+                return;
             }
             var doc = new XmlDocument();
             try
             {
-                doc.LoadXml(configuration);
+                doc.Load(settingsFilePath);
             }
             catch (Exception ex)
             {
-                logger?.Invoke(LoggingLevel.Error, $"The .runsettings configuration is not valid XML: {ex.Message}");
-                return combinedConfiguration;
+                logger?.Invoke(LoggingLevel.Error, $"The '{settingsFilePath}' configuration does not contain valid XML: {ex.Message}");
+                return;
             }
-            combinedConfiguration.ModifyConfiguration(doc.DocumentElement?.SelectSingleNode(SettingsName));
 
-            // Also remember the RunConfiguration settings except the ones we care about.
-            XmlNode runConfiguration = doc.DocumentElement.SelectSingleNode(nameof(combinedConfiguration.RunConfiguration));
-            if (!(runConfiguration is null))
+
+            foreach (XmlNode node in doc.DocumentElement.SelectNodes(SettingsName))
             {
-                // Remove fixed settings
-                foreach (string requiredNodeName in s_requiredRunConfigurationNodes.Keys)
+                #region Helpers
+                int? ReadXmlInteger(string elementName, int? defaultValue)
                 {
-                    XmlNode node = runConfiguration.SelectSingleNode(requiredNodeName);
-                    node?.ParentNode.RemoveChild(node);
-                }
-                // Merge settings
-                foreach (XmlNode node in runConfiguration.ChildNodes)
-                {
-                    if (node.NodeType == XmlNodeType.Element && !s_requiredRunConfigurationNodes.ContainsKey(node.Name))
+                    XmlNode integerValue = node.SelectSingleNode(elementName)?.FirstChild;
+                    if (integerValue != null && integerValue.NodeType == XmlNodeType.Text)
                     {
-                        XmlNode old = combinedConfiguration.RunConfiguration?.SelectSingleNode(node.Name);
-                        if (!(old is null))
+                        if (int.TryParse(integerValue.Value.Trim(), out int value))
                         {
-                            combinedConfiguration.RunConfiguration.RemoveChild(old);
-                        }
-                        if (combinedConfiguration.RunConfiguration is null)
-                        {
-                            var newDoc = new XmlDocument();
-                            newDoc.AppendChild(newDoc.CreateElement(nameof(RunConfiguration)));
-                            combinedConfiguration.RunConfiguration = newDoc.DocumentElement;
-                        }
-                        XmlNode copy = combinedConfiguration.RunConfiguration.OwnerDocument.ImportNode(node, true);
-                        combinedConfiguration.RunConfiguration.AppendChild(copy);
-
-                        if (node.Name == nameof(TestSessionTimeout))
-                        {
-                            if (int.TryParse(copy.InnerText, out int timeout))
+                            if (value < 0)
                             {
-                                combinedConfiguration.TestSessionTimeout = timeout;
+                                logger?.Invoke(LoggingLevel.Verbose, $"'{elementName}' must 0 or larger, but is {value} in '{settingsFilePath}'. Setting is ignored.");
                             }
                             else
                             {
-                                combinedConfiguration.TestSessionTimeout = null;
+                                return value;
                             }
+                        }
+                        else
+                        {
+                            logger?.Invoke(LoggingLevel.Verbose, $"'{nameof(MaxVirtualDevices)}' must be an integer, but is '{integerValue.Value}' in '{settingsFilePath}'. Setting is ignored.");
+                        }
+                    }
+                    return defaultValue;
+                }
+                #endregion
+
+                if (!backwardCompatible)
+                {
+                    XmlNode globalSettingsDirectoryPath = node.SelectSingleNode(GlobalSettingsDirectoryPath)?.FirstChild;
+                    if (globalSettingsDirectoryPath?.NodeType == XmlNodeType.Text)
+                    {
+                        if (!string.IsNullOrWhiteSpace(globalSettingsDirectoryPath.Value))
+                        {
+                            // First read the global settings 
+                            Read(visitedDirectoryPaths, Path.GetFullPath(Path.Combine(Path.GetDirectoryName(settingsFilePath), globalSettingsDirectoryPath.Value)), false, logger);
                         }
                     }
                 }
-            }
-            return combinedConfiguration;
-        }
 
-        /// <summary>
-        /// Get settings from an XML node
-        /// </summary>
-        /// <param name="node">Relevant node from the XML configuration. This should be a node with the name
-        /// <see cref="SettingsName"/>.</param>
-        /// <returns>The parsed settings</returns>
-        public static TestFrameworkConfiguration Extract(XmlNode node)
-        {
-            TestFrameworkConfiguration settings = new TestFrameworkConfiguration();
-            settings.ModifyConfiguration(node);
-            return settings;
-        }
-
-        /// <summary>
-        /// Modify the current configuration with the settings in the XML.
-        /// </summary>
-        /// <param name="node">Relevant node from the XML configuration. This should be a node with the name
-        /// <see cref="SettingsName"/>.</param>
-        private void ModifyConfiguration(XmlNode node)
-        {
-            if (node?.Name == SettingsName)
-            {
-                XmlNode allowRealHard = node.SelectSingleNode(nameof(AllowRealHardware))?.FirstChild
-                                    ?? node.SelectSingleNode("IsRealHardware")?.FirstChild;
+                XmlNode allowRealHard = node.SelectSingleNode(backwardCompatible ? "IsRealHardware" : nameof(AllowRealHardware))?.FirstChild;
                 if (allowRealHard != null && allowRealHard.NodeType == XmlNodeType.Text)
                 {
                     AllowRealHardware = allowRealHard.Value.ToLower() == "true";
                 }
 
-                XmlNode realHardPort = node.SelectSingleNode(nameof(RealHardwarePort))?.FirstChild;
-                if (realHardPort != null && realHardPort.NodeType == XmlNodeType.Text)
+                XmlNode allowSerialPorts = node.SelectSingleNode(backwardCompatible ? "RealHardwarePort" : nameof(AllowSerialPorts))?.FirstChild;
+                if (allowSerialPorts != null && allowSerialPorts.NodeType == XmlNodeType.Text)
                 {
-                    if (!string.IsNullOrWhiteSpace(realHardPort.Value))
+                    if (!string.IsNullOrWhiteSpace(allowSerialPorts.Value))
                     {
-                        RealHardwarePort = realHardPort.Value.Split(',', ';');
+                        AllowSerialPorts = allowSerialPorts.Value.Split(',', ';');
                     }
+                }
+
+                if (!backwardCompatible)
+                {
+                    RealHardwareTimeout = ReadXmlInteger(nameof(RealHardwareTimeout), RealHardwareTimeout);
+                }
+
+
+                if (!backwardCompatible)
+                {
+                    XmlNode pathToLocalNanoCLR = node.SelectSingleNode(nameof(PathToLocalNanoCLR))?.FirstChild;
+                    if (pathToLocalNanoCLR != null && pathToLocalNanoCLR.NodeType == XmlNodeType.Text)
+                    {
+                        PathToLocalNanoCLR = string.IsNullOrWhiteSpace(pathToLocalNanoCLR.Value)
+                            ? null
+                            : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(settingsFilePath), pathToLocalNanoCLR.Value));
+                    }
+                }
+
+                XmlNode clrVersion = node.SelectSingleNode(nameof(CLRVersion))?.FirstChild;
+                if (clrVersion != null && clrVersion.NodeType == XmlNodeType.Text)
+                {
+                    CLRVersion = string.IsNullOrWhiteSpace(clrVersion.Value) ? null : clrVersion.Value;
+                }
+
+                XmlNode pathToLocalCLRInstance = node.SelectSingleNode(nameof(PathToLocalCLRInstance))?.FirstChild;
+                if (pathToLocalCLRInstance != null && pathToLocalCLRInstance.NodeType == XmlNodeType.Text)
+                {
+                    PathToLocalCLRInstance = string.IsNullOrWhiteSpace(pathToLocalCLRInstance.Value)
+                            ? null
+                            : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(settingsFilePath), pathToLocalCLRInstance.Value));
+                }
+
+                if (!backwardCompatible)
+                {
+                    MaxVirtualDevices = (int)ReadXmlInteger(nameof(MaxVirtualDevices), MaxVirtualDevices);
+
+                    VirtualDeviceTimeout = ReadXmlInteger(nameof(VirtualDeviceTimeout), VirtualDeviceTimeout);
                 }
 
                 XmlNode loggingLevel = node.SelectSingleNode(nameof(Logging))?.FirstChild;
@@ -273,217 +302,76 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         Logging = logging;
                     }
-                }
-
-                XmlNode pathToLocalNanoCLR = node.SelectSingleNode(nameof(PathToLocalNanoCLR))?.FirstChild;
-                if (pathToLocalNanoCLR != null && pathToLocalNanoCLR.NodeType == XmlNodeType.Text)
-                {
-                    PathToLocalNanoCLR = pathToLocalNanoCLR.Value;
-                }
-
-                XmlNode clrVersion = node.SelectSingleNode(nameof(CLRVersion))?.FirstChild;
-                if (clrVersion != null && clrVersion.NodeType == XmlNodeType.Text)
-                {
-                    CLRVersion = clrVersion.Value;
-                }
-
-                XmlNode pathToLocalCLRInstance = node.SelectSingleNode(nameof(PathToLocalCLRInstance))?.FirstChild;
-                if (pathToLocalCLRInstance != null && pathToLocalCLRInstance.NodeType == XmlNodeType.Text)
-                {
-                    PathToLocalCLRInstance = pathToLocalCLRInstance.Value;
-                }
-
-                XmlNode maxVirtualDevices = node.SelectSingleNode(nameof(MaxVirtualDevices))?.FirstChild;
-                if (maxVirtualDevices != null && maxVirtualDevices.NodeType == XmlNodeType.Text)
-                {
-                    if (int.TryParse(maxVirtualDevices.Value.Trim(), out int value))
-                    {
-                        MaxVirtualDevices = value;
-                        if (MaxVirtualDevices < 0)
-                        {
-                            _maxVirtualDevices = MaxVirtualDevices.ToString();
-                        }
-                    }
                     else
                     {
-                        _maxVirtualDevices = maxVirtualDevices.Value;
+                        logger?.Invoke(LoggingLevel.Verbose, $"'{nameof(Logging)}' = '{loggingLevel.Value}' is not a valid value in '{settingsFilePath}'. Setting is ignored.");
                     }
                 }
-            }
-        }
 
-        /// <summary>
-        /// Validate the settings and resolve the relative paths
-        /// </summary>
-        /// <param name="solutionDirectory">Path to the solution directory. Pass <c>null</c> if this is not available.</param>
-        /// <param name="assemblyFilePath">Path to the assembly containing the tests. Pass <c>null</c> if tests from multiple assemblies are being considered.</param>
-        /// <param name="logger">Method to pass processing information to the caller. Pass <c>null</c> if no log information is required.</param>
-        /// <returns>Indicates whether the settings are ready to use. Returns <c>false</c> if there is a problem,
-        /// e.g., the files pointed to by paths doe not exist.</returns>
-        public bool Validate(string solutionDirectory, string assemblyFilePath, LogMessenger logger)
-        {
-            bool isValid = true;
-
-            if (!AllowRealHardware)
-            {
-                if (RealHardwarePort.Count > 0)
+                if (!backwardCompatible)
                 {
-                    logger?.Invoke(LoggingLevel.Verbose, $"Tests on real hardware are disabled; {nameof(RealHardwarePort)} is ignored.'");
-                }
-            }
-
-            bool ResolveRelativePath(string name, string path)
-            {
-                bool found = false;
-                if (!Path.IsPathRooted(path))
-                {
-                    if (!string.IsNullOrWhiteSpace(assemblyFilePath))
+                    foreach (XmlNode deploymentConfiguration in node.SelectNodes(nameof(DeploymentConfiguration)))
                     {
-                        string assemblyDirectory = Path.GetDirectoryName(assemblyFilePath);
-                        string candidate = Path.Combine(assemblyDirectory, path);
-                        if (File.Exists(candidate))
+                        if (deploymentConfiguration.NodeType != XmlNodeType.Element)
                         {
-                            path = candidate;
-                            found = true;
+                            continue;
+                        }
+                        XmlNode serialPort = deploymentConfiguration.SelectSingleNode(DeploymentConfiguration_SerialPort)?.FirstChild;
+                        XmlNode filePath = deploymentConfiguration.SelectSingleNode(DeploymentConfiguration_File).FirstChild;
+                        if (serialPort?.NodeType != XmlNodeType.Text)
+                        {
+                            logger?.Invoke(LoggingLevel.Verbose, $"'{nameof(DeploymentConfiguration)}' must have a child element '{DeploymentConfiguration_SerialPort}' in '{settingsFilePath}'. Setting is ignored.");
                         }
                         else
                         {
-                            logger?.Invoke(LoggingLevel.Detailed, $"{name} '{path}' is not relative to the assembly directory '{assemblyDirectory}'");
+                            SetDeploymentConfigurationFilePath(serialPort.Value, string.IsNullOrWhiteSpace(filePath?.Value)
+                                                                                ? null
+                                                                                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(settingsFilePath), filePath.Value)));
                         }
                     }
-
-                    if (!found && !string.IsNullOrWhiteSpace(solutionDirectory))
-                    {
-                        string candidate = Path.Combine(solutionDirectory, path);
-                        if (File.Exists(candidate))
-                        {
-                            path = candidate;
-                            found = true;
-                        }
-                        else
-                        {
-                            logger?.Invoke(LoggingLevel.Detailed, $"{name} '{path}' is not relative to the solution directory '{solutionDirectory}'");
-                        }
-                    }
-
-                    if (found)
-                    {
-                        logger?.Invoke(LoggingLevel.Detailed, $"{name}: found at '{path}'");
-                    }
-                }
-                else
-                {
-                    found = File.Exists(path);
-                }
-                return found;
-            }
-
-            if (!string.IsNullOrWhiteSpace(PathToLocalNanoCLR))
-            {
-                if (!ResolveRelativePath(nameof(PathToLocalNanoCLR), PathToLocalNanoCLR))
-                {
-                    logger?.Invoke(LoggingLevel.Error, $"Local nanoclr.exe not found at {nameof(PathToLocalNanoCLR)} = '{PathToLocalNanoCLR}'");
-                    isValid = false;
-                }
-                if (!string.IsNullOrWhiteSpace(CLRVersion))
-                {
-                    logger?.Invoke(LoggingLevel.Verbose, $"{nameof(CLRVersion)} is ignored because the path to a local CLR instance is specified.");
                 }
             }
-            if (!string.IsNullOrWhiteSpace(PathToLocalCLRInstance))
-            {
-                if (!ResolveRelativePath(nameof(PathToLocalCLRInstance), PathToLocalCLRInstance))
-                {
-                    logger?.Invoke(LoggingLevel.Error, $"Local CLR instance not found at {nameof(PathToLocalCLRInstance)} = '{PathToLocalCLRInstance}'");
-                    isValid = false;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(_maxVirtualDevices))
-            {
-                logger?.Invoke(LoggingLevel.Error, $"{nameof(MaxVirtualDevices)} must be an integer ≥ 0, not '{_maxVirtualDevices}'");
-                isValid = false;
-            }
-            return isValid;
         }
         #endregion
 
         #region Methods
         /// <summary>
-        /// Create a full .runsettings configuration, including the required RunConfiguration nodes.
+        /// Create a <see cref="SettingsFileName"/>/<see cref="UserSettingsFileName"/> pair of configuration files
+        /// that contains the minimal number of settings that are functionally equivalent to these settings.
+        /// Existing files will be overwritten or, if not needed, deleted.
         /// </summary>
-        /// <param name="testAdapterDirectoryPath">The path to the directory that holds the TestAdapter.
-        /// This value is used of the user has not yet specified a path for the adapter.</param>
-        /// <returns>The XML of the full configuration.</returns>
-        public string CreateRunSettings(string testAdapterDirectoryPath)
+        /// <param name="settingsDirectoryPath">The path to the directory where the settings should be saved</param>
+        /// <param name="logger">Method to pass processing information to the caller. Pass <c>null</c> if no log information is required.</param>
+        public void SaveEffectiveSettings(string settingsDirectoryPath, LogMessenger logger)
         {
-            XmlDocument configuration = CreateRunSettings();
-
-            // Complete the RunConfiguration section
-            XmlNode runConfiguration;
-            if (RunConfiguration is null)
-            {
-                runConfiguration = configuration.CreateElement(nameof(RunConfiguration));
-            }
-            else
-            {
-                runConfiguration = configuration.ImportNode(RunConfiguration, true);
-            }
-            configuration.DocumentElement.AppendChild(runConfiguration);
-            foreach (string requiredNodeName in s_requiredRunConfigurationNodes.Keys)
-            {
-                XmlElement node = configuration.CreateElement(requiredNodeName);
-                runConfiguration.AppendChild(node);
-                XmlText value = configuration.CreateTextNode(s_requiredRunConfigurationNodes[requiredNodeName]);
-                node.AppendChild(value);
-            }
-
-            XmlNode adapterPath = runConfiguration.SelectSingleNode(TestAdaptersPaths);
-            if (adapterPath is null)
-            {
-                adapterPath = configuration.CreateElement(TestAdaptersPaths);
-                runConfiguration.AppendChild(adapterPath);
-                XmlText value = configuration.CreateTextNode(testAdapterDirectoryPath);
-                adapterPath.AppendChild(value);
-            }
-
-            // Add the framework configuration
-            AddFrameworkConfiguration(configuration);
-
-            // Return formatted XML
-            using (var buffer = new MemoryStream())
-            {
-                using (var writer = new XmlTextWriter(buffer, new UTF8Encoding(false)))
-                {
-                    writer.Indentation = 4;
-                    writer.Formatting = Formatting.Indented;
-                    writer.IndentChar = ' ';
-                    configuration.WriteContentTo(writer);
-                }
-                return Encoding.UTF8.GetString(buffer.ToArray());
-            }
+            SaveEffectiveSettings(Path.Combine(settingsDirectoryPath, SettingsFileName), false, logger);
+            SaveEffectiveSettings(Path.Combine(settingsDirectoryPath, UserSettingsFileName), true, logger);
         }
 
-        private static XmlDocument CreateRunSettings()
+        private void SaveEffectiveSettings(string settingsFilePath, bool isUserFile, LogMessenger logger)
         {
-            var configuration = new XmlDocument();
-            configuration.AppendChild(configuration.CreateXmlDeclaration("1.0", "utf-8", null));
-            configuration.AppendChild(configuration.CreateElement("RunSettings"));
-            return configuration;
-        }
-
-        private void AddFrameworkConfiguration(XmlDocument configuration)
-        {
-            // Add the framework nodes
-            XmlElement frameworkConfiguration = configuration.CreateElement(SettingsName);
-            configuration.DocumentElement.AppendChild(frameworkConfiguration);
+            XmlDocument document = null;
+            XmlNode runSettings = null;
 
             #region Shorthand
+            XmlDocument Document()
+            {
+                if (document is null)
+                {
+                    document = new XmlDocument();
+                    document.AppendChild(document.CreateXmlDeclaration("1.0", "utf-8", null));
+                    XmlElement root = document.CreateElement("RunSettings");
+                    document.AppendChild(root);
+                    runSettings = document.CreateElement(SettingsName);
+                    root.AppendChild(runSettings);
+                }
+                return document;
+            }
             void AddNode(string name, string value, XmlElement parent = null)
             {
-                XmlElement node = configuration.CreateElement(name);
-                (parent ?? frameworkConfiguration).AppendChild(node);
-                XmlText valueNode = configuration.CreateTextNode(value);
+                XmlElement node = Document().CreateElement(name);
+                (parent ?? runSettings).AppendChild(node);
+                XmlText valueNode = document.CreateTextNode(value);
                 node.AppendChild(valueNode);
             }
             void AddBooleanNode(string name, bool value, XmlElement parent = null)
@@ -492,42 +380,99 @@ namespace nanoFramework.TestFramework.Tooling
             }
             #endregion
 
+            #region Save settings
             var defaultConfiguration = new TestFrameworkConfiguration();
 
-            if (AllowRealHardware != defaultConfiguration.AllowRealHardware)
+            if (isUserFile)
             {
-                AddBooleanNode(nameof(AllowRealHardware), AllowRealHardware);
-            }
+                if (AllowRealHardware && AllowSerialPorts.Count > 0)
+                {
+                    AddNode(nameof(AllowSerialPorts), string.Join(";", AllowSerialPorts));
 
-            if (RealHardwarePort.Count > 0)
-            {
-                AddNode(nameof(RealHardwarePort), string.Join(";", RealHardwarePort));
+                    foreach (string serialPort in AllowSerialPorts)
+                    {
+                        if (_deploymentConfiguration.TryGetValue(serialPort, out string filePath))
+                        {
+                            XmlElement node = Document().CreateElement(nameof(DeploymentConfiguration));
+                            runSettings.AppendChild(node);
+                            AddNode(DeploymentConfiguration_SerialPort, serialPort, node);
+                            AddNode(DeploymentConfiguration_File, PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), filePath), node);
+                        }
+                    }
+                }
             }
+            else
+            {
+                if (AllowRealHardware != defaultConfiguration.AllowRealHardware)
+                {
+                    AddBooleanNode(nameof(AllowRealHardware), AllowRealHardware);
+                }
 
-            if (PathToLocalNanoCLR != defaultConfiguration.PathToLocalNanoCLR)
-            {
-                AddNode(nameof(PathToLocalNanoCLR), PathToLocalNanoCLR);
-            }
+                if (AllowRealHardware)
+                {
+                    if (RealHardwareTimeout != defaultConfiguration.RealHardwareTimeout)
+                    {
+                        AddNode(nameof(RealHardwareTimeout), RealHardwareTimeout.ToString());
+                    }
+                }
 
-            if (CLRVersion != defaultConfiguration.CLRVersion)
-            {
-                AddNode(nameof(CLRVersion), CLRVersion);
-            }
+                if (PathToLocalNanoCLR != defaultConfiguration.PathToLocalNanoCLR)
+                {
+                    AddNode(nameof(PathToLocalNanoCLR), PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), PathToLocalNanoCLR));
+                }
 
-            if (PathToLocalCLRInstance != defaultConfiguration.PathToLocalCLRInstance)
-            {
-                AddNode(nameof(PathToLocalCLRInstance), PathToLocalCLRInstance);
-            }
+                if (CLRVersion != defaultConfiguration.CLRVersion)
+                {
+                    AddNode(nameof(CLRVersion), CLRVersion);
+                }
 
-            if (MaxVirtualDevices != defaultConfiguration.MaxVirtualDevices)
-            {
-                AddNode(nameof(MaxVirtualDevices), MaxVirtualDevices.ToString());
-            }
+                if (PathToLocalCLRInstance != defaultConfiguration.PathToLocalCLRInstance)
+                {
+                    AddNode(nameof(PathToLocalCLRInstance), PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), PathToLocalCLRInstance));
+                }
 
-            if (Logging != defaultConfiguration.Logging)
-            {
-                AddNode(nameof(Logging), Logging.ToString());
+                if (MaxVirtualDevices != defaultConfiguration.MaxVirtualDevices)
+                {
+                    AddNode(nameof(MaxVirtualDevices), MaxVirtualDevices.ToString());
+                }
+
+                if (VirtualDeviceTimeout != defaultConfiguration.VirtualDeviceTimeout)
+                {
+                    AddNode(nameof(VirtualDeviceTimeout), VirtualDeviceTimeout.ToString());
+                }
+
+                if (Logging != defaultConfiguration.Logging)
+                {
+                    AddNode(nameof(Logging), Logging.ToString());
+                }
             }
+            #endregion
+
+            #region Save/delete file
+            if (document is null)
+            {
+                try
+                {
+                    File.Delete(settingsFilePath);
+                }
+                catch (Exception ex)
+                {
+                    logger?.Invoke(LoggingLevel.Error, $"Cannot delete '{settingsFilePath}': {ex.Message}");
+                }
+            }
+            else
+            {
+                // Write formatted XML
+                Directory.CreateDirectory(Path.GetDirectoryName(settingsFilePath));
+                using (var writer = new XmlTextWriter(settingsFilePath, new UTF8Encoding(false)))
+                {
+                    writer.Indentation = 4;
+                    writer.Formatting = Formatting.Indented;
+                    writer.IndentChar = ' ';
+                    document.WriteContentTo(writer);
+                }
+            }
+            #endregion
         }
         #endregion
     }

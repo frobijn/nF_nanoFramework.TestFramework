@@ -42,8 +42,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                 Assert.Inconclusive();
             }
 
-            var testDevice = new TestDeviceProxy(new TestDeviceMock("any", "esp32"));
-            Assert.IsNotNull(actual.SelectDevicesForExecution(new TestDeviceProxy[] { testDevice }).FirstOrDefault());
+            var testDevice = new TestDeviceProxy(new TestDeviceMock("*", "esp32"));
+            Assert.IsTrue(actual.RealHardwareDeviceSelectors?.Any());
+            Assert.IsTrue((from s in actual.RealHardwareDeviceSelectors
+                           where s.ShouldTestOnDevice(testDevice)
+                           select s).Any());
             #endregion
 
             #region Custom ITestOnRealHardware implementation, ShouldTestOnDevice has some code for remote devices
@@ -56,11 +59,14 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                 Assert.Inconclusive();
             }
 
-            testDevice = new TestDeviceProxy(new TestDeviceMock("any", "any", new Dictionary<string, string>()
+            testDevice = new TestDeviceProxy(new TestDeviceMock("any", "any", new Dictionary<string, object>()
             {
                 { "xyzzy", "Some data" }
             }));
-            Assert.IsNotNull(actual.SelectDevicesForExecution(new TestDeviceProxy[] { testDevice }).FirstOrDefault());
+            Assert.IsTrue(actual.RealHardwareDeviceSelectors?.Any());
+            Assert.IsTrue((from s in actual.RealHardwareDeviceSelectors
+                           where s.ShouldTestOnDevice(testDevice)
+                           select s).Any());
             #endregion
         }
     }

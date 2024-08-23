@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
-using System.Text;
 using nanoFramework.TestFramework;
 
 namespace TestFramework.Tooling.Tests.Helpers
@@ -23,13 +23,13 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// <param name="targetName">Target name.</param>
         /// <param name="platform">Target platform.</param>
         /// <param name="deploymentConfiguration">A dictionary with the known configuration keys and value</param>
-        public TestDeviceMock(string targetName, string platform, Dictionary<string, string> deploymentConfiguration = null)
+        public TestDeviceMock(string targetName, string platform, Dictionary<string, object> deploymentConfiguration = null)
         {
             _targetName = targetName;
             _platform = platform;
-            _deploymentConfiguration = deploymentConfiguration ?? new Dictionary<string, string>();
+            _deploymentConfiguration = deploymentConfiguration ?? new Dictionary<string, object>();
         }
-        private readonly Dictionary<string, string> _deploymentConfiguration;
+        private readonly Dictionary<string, object> _deploymentConfiguration;
         #endregion
 
         #region ITestDevice implementation
@@ -47,37 +47,23 @@ namespace TestFramework.Tooling.Tests.Helpers
             => _platform;
         private readonly string _platform;
 
-        /// <summary>
-        /// Get the content of a file that is stored on the device
-        /// as an array of bytes.
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
-        /// or if the device does not support file storage.</returns>
-        public byte[] GetDeploymentConfigurationFile(string filePath)
+        /// <inheritdoc/>
+        public object GetDeploymentConfigurationValue(string filePath, Type resultType)
         {
-            if (!_deploymentConfiguration.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
+            if (!_deploymentConfiguration.TryGetValue(filePath, out object content))
             {
-                return null;
-            }
-            else
-            {
-                return Encoding.UTF8.GetBytes(content);
-            }
-        }
-
-        /// <summary>
-        /// Get the content of a file that is stored on the device
-        /// as a string
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns>Returns the content of the file, or <c>null</c> if the file does not exist
-        /// or if the device does not support file storage.</returns>
-        public string GetDeploymentConfigurationValue(string filePath)
-        {
-            if (!_deploymentConfiguration.TryGetValue(filePath, out string content) || string.IsNullOrEmpty(content))
-            {
-                return null;
+                if (resultType == typeof(int))
+                {
+                    return (int)-1;
+                }
+                else if (resultType == typeof(long))
+                {
+                    return (long)-1L;
+                }
+                else
+                {
+                    return null;
+                }
             }
             else
             {

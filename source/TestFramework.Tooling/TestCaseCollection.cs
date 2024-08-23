@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
@@ -19,7 +18,6 @@ namespace nanoFramework.TestFramework.Tooling
     public sealed class TestCaseCollection
     {
         #region Fields
-        private static readonly HashSet<string> s_assemblyLocations = new HashSet<string>();
         public const string VirtualDeviceDescription = "Virtual Device";
         private static readonly string s_realHardwareDescription = (new TestOnRealHardwareAttribute() as ITestOnRealHardware).Description;
         private readonly List<TestCaseSelection> _testsOnVirtualDevice = new List<TestCaseSelection>();
@@ -71,18 +69,7 @@ namespace nanoFramework.TestFramework.Tooling
                 }
                 ProjectSourceInventory sourceCode = projectFilePath is null ? null : new ProjectSourceInventory(projectFilePath, logger);
 
-                lock (s_assemblyLocations)
-                {
-                    if (s_assemblyLocations.Count == 0)
-                    {
-                        AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
-                    }
-                    s_assemblyLocations.Add(Path.GetDirectoryName(assemblyFilePath));
-                }
-
-                // developer note: we have to use LoadFile() and not Load() which loads the assembly into the caller domain
-                Assembly test = Assembly.LoadFile(assemblyFilePath);
-                AppDomain.CurrentDomain.Load(test.GetName());
+                Assembly test = AssemblyLoader.LoadFile(assemblyFilePath);
 
                 AddTestClasses(assemblyFilePath, test, sourceCode, allowTestOnRealHardware, logger);
 
@@ -309,61 +296,7 @@ namespace nanoFramework.TestFramework.Tooling
         }
         #endregion
 
-        #region Helpers for assembly loading
-        private static Assembly AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            string dllName = args.Name.Split(new[] { ',' })[0] + ".dll";
-
-            // The args.RequestingAssembly can be null apparently.
-            // Check the locations of the assemblies for the dll.
-            // This method may be called after the AppDomain.CurrentDomain.Load call,
-            // e.g., while constructing the test cases or evaluating the (extended)
-            // test framework attributes, wo the requested dll can be in any of
-            // the previously loaded assembly directories.
-            string path = null;
-            if (!(args.RequestingAssembly?.Location is null))
-            {
-                path = Path.Combine(args.RequestingAssembly.Location, dllName);
-                if (!File.Exists(path))
-                {
-                    path = null;
-                }
-            }
-            if (path is null)
-            {
-                lock (s_assemblyLocations)
-                {
-                    foreach (string directory in s_assemblyLocations)
-                    {
-                        path = Path.Combine(directory, dllName);
-                        if (!File.Exists(path))
-                        {
-                            path = null;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            if (!(path is null))
-            {
-                try
-                {
-                    return Assembly.LoadFrom(path);
-                }
-                catch
-                {
-                    // this is called on several occasions, some are not related with our types or assemblies
-                    // therefore there are calls that can't be resolved and that's OK
-                }
-            }
-            return null;
-        }
-        #endregion
-
-        #region Helpers for test case discovery
+        #region Discovery of test cases
         /// <summary>
         /// Description of the test cases per assembly and per device type
         /// (Virtual Device or real hardware)
@@ -463,7 +396,7 @@ namespace nanoFramework.TestFramework.Tooling
                             group.SetupMethodName = method.Name;
                             group.SetupSourceCodeLocation = setup.Source;
                             group.RequiredConfigurationKeys = deploymentProxy?.GetDeploymentConfigurationArguments(method, false, logger)
-                                ?? new (string key, bool asBytes)[] { };
+                                ?? new (string, Type)[] { };
                             deploymentProxy = null;
                         }
                     }
@@ -537,7 +470,7 @@ namespace nanoFramework.TestFramework.Tooling
                             }
                             string testCaseId = dataRowIndex < 0 ? $"G{testGroupIndex:000}T{methodIndex:000}" : $"G{testGroupIndex:000}T{methodIndex:000}D{dataRowIndex:00}";
 
-                            IReadOnlyList<(string key, bool asBytes)> deploymentArguments = deploymentProxy?.GetDeploymentConfigurationArguments(method, dataRowIndex >= 0, logger);
+                            IReadOnlyList<(string key, Type valueType)> deploymentArguments = deploymentProxy?.GetDeploymentConfigurationArguments(method, dataRowIndex >= 0, logger);
 
                             if (testOnVirtualDevice)
                             {

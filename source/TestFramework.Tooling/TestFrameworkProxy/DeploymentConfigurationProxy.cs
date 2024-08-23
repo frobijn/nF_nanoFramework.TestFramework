@@ -61,10 +61,10 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="allowExtraElements">Indicates whether the method has other, non-configuration related arguments that follow
         /// the configuration-related arguments</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        /// <returns></returns>
-        public IReadOnlyList<(string key, bool asBytes)> GetDeploymentConfigurationArguments(MethodInfo method, bool allowExtraElements, LogMessenger logger)
+        /// <returns>A list with as items the key and type of the configuration data that matches the argument.</returns>
+        public IReadOnlyList<(string key, Type valueType)> GetDeploymentConfigurationArguments(MethodInfo method, bool allowExtraElements, LogMessenger logger)
         {
-            var configurationKeys = new List<(string key, bool asBytes)>();
+            var configurationKeys = new List<(string key, Type valueType)>();
 
             string[] keys = ConfigurationKeys;
             ParameterInfo[] arguments = method.GetParameters();
@@ -74,16 +74,16 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                 logger?.Invoke(LoggingLevel.Error, $"{Source?.ForMessage() ?? $"{method.ReflectedType.FullName}.{method.Name}"}: Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements '{nameof(IDeploymentConfiguration)}'.");
             }
             else if ((from a in arguments.Take(keys.Length)
-                      where a.ParameterType != typeof(byte[]) && a.ParameterType != typeof(string)
+                      where a.ParameterType != typeof(byte[]) && a.ParameterType != typeof(int) && a.ParameterType != typeof(long) && a.ParameterType != typeof(string)
                       select a).Any())
             {
-                logger?.Invoke(LoggingLevel.Error, $"{Source?.ForMessage() ?? $"{method.ReflectedType.FullName}.{method.Name}"}: Error: An argument of the method must be of type 'byte[]' or 'string'.");
+                logger?.Invoke(LoggingLevel.Error, $"{Source?.ForMessage() ?? $"{method.ReflectedType.FullName}.{method.Name}"}: Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.");
             }
             else
             {
                 for (int i = 0; i < keys.Length; i++)
                 {
-                    configurationKeys.Add((keys[i], arguments[i].ParameterType == typeof(byte[])));
+                    configurationKeys.Add((keys[i], arguments[i].ParameterType));
                 }
             }
             return configurationKeys;
