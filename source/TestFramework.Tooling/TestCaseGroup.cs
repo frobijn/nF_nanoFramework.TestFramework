@@ -47,15 +47,15 @@ namespace nanoFramework.TestFramework.Tooling
             /// <summary>
             /// Not - it is a static test class
             /// </summary>
-            NoInstantiation = Tools.UnitTestLauncher.TestClassInitialisation.NoInstantiation,
+            NoInstantiation = TestFramework.Tools.UnitTestLauncher.TestClassInitialisation.NoInstantiation,
             /// <summary>
             /// One instance for all test methods
             /// </summary>
-            InstantiateForAllMethods = Tools.UnitTestLauncher.TestClassInitialisation.InstantiateForAllMethods,
+            InstantiateForAllMethods = TestFramework.Tools.UnitTestLauncher.TestClassInitialisation.InstantiateForAllMethods,
             /// <summary>
             /// One instance per test method
             /// </summary>
-            InstantiatePerTestMethod = Tools.UnitTestLauncher.TestClassInitialisation.InstantiatePerTestMethod,
+            InstantiatePerTestMethod = TestFramework.Tools.UnitTestLauncher.TestClassInitialisation.InstantiatePerTestMethod,
         }
         /// <summary>
         /// Indicates whether the test class is a static class.

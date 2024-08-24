@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <BuildDependsOn Condition=" $(RunSettingsFilePath) != '' And $(AssemblyName) == 'NFUnitTest'">
+      NT_UTP_MigrateNanoRunSettings;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+    <CoreBuild>
+      NT_UTP_CreateNanoVSRunSettings;
+      $(CoreBuild)
+    </CoreBuild>
+    <RunSettingsFilePath>$(MSBuildProjectDirectory)$(OutputPath)\$(NT_UTP_RUNSETTINGSFILENAME)</RunSettingsFilePath>
+  </PropertyGroup>
+
+  <UsingTask TaskName="MigrateTestProjectAndNanoRunSettings" AssemblyFile="$(NT_UTP_BUILDTOOL)"/>
+  <UsingTask TaskName="CreateVSTestRunSettings" AssemblyFile="$(NT_UTP_BUILDTOOL)"/>
+
+  <Target Name="NT_UTP_MigrateNanoRunSettings">
+    <MigrateTestProjectAndNanoRunSettings
+        ProjectDirectory="$(MSBuildProjectDirectory)"/>
+  </Target>
+
+  <Target Name="NT_UTP_CreateNanoVSRunSettings">
+    <CreateVSTestRunSettings
+        TestAdapterFilePath="$(NT_UTP_TESTADAPTER)"
+        ProjectDirectory="$(MSBuildProjectDirectory)"
+        OutputPath="$(OutputPath)"
+        RunSettingsFileName="$(NT_UTP_RUNSETTINGSFILENAME)"/>
+  </Target>
+
+</Project>

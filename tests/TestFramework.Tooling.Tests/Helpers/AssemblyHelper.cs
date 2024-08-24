@@ -10,6 +10,7 @@ namespace TestFramework.Tooling.Tests.Helpers
     {
         public static List<string> CopyAssemblies(string assemblyDirectoryPath, string projectName)
         {
+            Directory.CreateDirectory(assemblyDirectoryPath);
             string projectFilePathUT = TestProjectHelper.FindProjectFilePath(projectName);
             string assemblyFilePathUT = TestProjectHelper.FindNFUnitTestAssembly(projectFilePathUT);
             var copyExtensions = new HashSet<string>()

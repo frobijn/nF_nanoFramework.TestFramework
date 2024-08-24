@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+	<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<Compile Include="../TestFramework.Tooling/LogMessenger.cs">
+		<Link>TestFramework.Tooling/LogMessenger.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework.Tooling/PathHelper.cs">
+		<Link>TestFramework.Tooling/PathHelper.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework.Tooling/TestFrameworkConfiguration.cs">
+		<Link>TestFramework.Tooling/TestFrameworkConfiguration.cs</Link>
+	</Compile>
+	<Compile Include="CreateVSTestRunSettings.cs" />
+	<Compile Include="MigrateTestProjectAndNanoRunSettings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.11.0" />
+  </ItemGroup>
+
+</Project>

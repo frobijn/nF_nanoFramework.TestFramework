@@ -14,6 +14,6 @@
     This is important when the build is carried out in Visual Studio, as the assemblies are then loaded into
     the IDE's process. This will lock the assemblies and prevent replacing them.
     -->
-    <Exec Command="&quot;$(NF_TDP_BUILDTOOL)&quot; &quot;$(MSBuildProjectDirectory)&quot; &quot;$(IntermediateOutputPath).&quot; &quot;$(OutputPath).&quot; $(NF_TDP_BUILDTOOL_VERBOSE)" ConsoleToMSBuild="true"/>
+    <Exec Command="&quot;$(NF_TDP_BUILDTOOL)&quot; &quot;$(MSBuildProjectDirectory)&quot; &quot;$(IntermediateOutputPath)nF&quot; &quot;$(OutputPath).&quot; $(NF_TDP_BUILDTOOL_VERBOSE)" ConsoleToMSBuild="true"/>
   </Target>
 </Project>

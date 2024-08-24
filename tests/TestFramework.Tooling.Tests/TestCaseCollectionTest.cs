@@ -620,7 +620,7 @@ G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttribute
                     return "";
                 }
                 var result = new StringBuilder();
-                foreach (var setupMethod in setupMethods)
+                foreach (TestCaseGroup.SetupMethod setupMethod in setupMethods)
                 {
                     if (result.Length > 0)
                     {

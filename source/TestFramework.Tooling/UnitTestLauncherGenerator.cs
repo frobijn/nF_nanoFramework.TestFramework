@@ -278,8 +278,8 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     int instantiation = (int)testGroup.Key.Instantiation
                         + (int)(testGroup.Key.SetupCleanupPerTestMethod
-                                    ? Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerTestMethod
-                                    : Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerClass);
+                                    ? TestFramework.Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerTestMethod
+                                    : TestFramework.Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerClass);
 
                     code.AppendLine($"{s_bodyIndent}ForClass(");
                     code.AppendLine($"{s_bodyIndent}    typeof(global::{testGroup.Key.FullyQualifiedName}), {instantiation},");

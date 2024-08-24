@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <NF_UTP_DIRECTORY Condition=" '$(NF_UTP_DIRECTORY)' == '' ">$(MSBuildThisFileDirectory)</NF_UTP_DIRECTORY>
+    <NT_UTP_BUILDTOOL Condition=" '$(NT_UTP_BUILDTOOL)' == '' ">$(NT_UTP_DIRECTORY)..\tools\nanoFramework.TestFramework.TestProjectBuildTool.dll</NT_UTP_BUILDTOOL>
+    <NT_UTP_TESTADAPTER Condition=" '$(NT_UTP_BUILDTOOL)' == '' ">$(NT_UTP_DIRECTORY)..\tools\nanoFramework.TestFramework.TestAdapter.dll</NT_UTP_TESTADAPTER>
+    <NT_UTP_RUNSETTINGSFILENAME Condition=" '$(NT_UTP_RUNSETTINGSFILENAME)' == '' ">nano.vs.runsettings</NT_UTP_RUNSETTINGSFILENAME>
+  </PropertyGroup>
+</Project>

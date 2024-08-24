@@ -21,10 +21,10 @@
   Direct reference of the TestFramework.DebugProjectBuildTool
   -->
   <PropertyGroup>
-    <NF_TDP_BUILDTOOL>$(MSBuildThisFileDirectory)..\..\source\TestFramework.DebugProjectBuildTool\bin\debug\nanoFramework.TestFramework.DebugProjectBuildTool.exe</NF_TDP_BUILDTOOL>
-    <NF_TDP_BUILDTOOL Condition=" !Exists('$(NF_TDP_BUILDTOOL)')">$(MSBuildThisFileDirectory)..\..\source\TestFramework.DebugProjectBuildTool\bin\release\nanoFramework.TestFramework.DebugProjectBuildTool.exe</NF_TDP_BUILDTOOL>
+    <NF_TDP_BUILDTOOL>$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.DebugProjectBuildTool\bin\debug\nanoFramework.TestFramework.DebugProjectBuildTool.exe</NF_TDP_BUILDTOOL>
+    <NF_TDP_BUILDTOOL Condition=" !Exists('$(NF_TDP_BUILDTOOL)')">$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.DebugProjectBuildTool\bin\release\nanoFramework.TestFramework.DebugProjectBuildTool.exe</NF_TDP_BUILDTOOL>
   </PropertyGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\source\Build\NFTestDebugProject.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\source\Build\NFTestDebugProject.props" />
   <!--
   Extra items that should be present in the project template
   -->
@@ -50,8 +50,9 @@
     <Content Include="UnitTestLauncher.RunUnitTests.json" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\source\TestFramework\nanoFramework.TestFramework.nfproj" />
-    <ProjectReference Include="..\TestOfTestFrameworkByReference\NFUnitTestByReference.nfproj" />
+    <ProjectReference Include="..\..\..\source\TestFramework\nanoFramework.TestFramework.nfproj" />
+    <ProjectReference Include="..\TestProject.v2\TestProject.v2.nfproj" />
+    <ProjectReference Include="..\TestProject.v3\TestProject.v3.nfproj" />
   </ItemGroup>
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.CSharp.targets" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.CSharp.targets')" />
   <Import Project="$(NF_TDP_DIRECTORY)NFTestDebugProject.targets" Condition="Exists('$(NF_TDP_DIRECTORY)NFTestDebugProject.targets')" />

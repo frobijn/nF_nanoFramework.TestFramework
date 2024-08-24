@@ -19,6 +19,11 @@ namespace nanoFramework.TestFramework.Tooling
     public sealed class DebugTestCasesSpecification
     {
         #region Fields
+        /// <summary>
+        /// File name to store the specification of the test cases to debug in.
+        /// </summary>
+        public const string SpecificationFileName = "SelectUnitTests.json";
+
         private string _specificationFileName;
         #endregion
 

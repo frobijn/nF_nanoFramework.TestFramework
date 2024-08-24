@@ -100,7 +100,7 @@
 	</Compile>
 	<Compile Include="AssemblyLoader.cs" />
 	<Compile Include="DeploymentConfiguration.cs" />
-	<Compile Include="MigrationFromV2\MigrateUnitTestsProjectAndNanoRunsettings.cs" />
+	<Compile Include="Tools\DebugProjectBuildTool.cs" />
 	<Compile Include="NanoCLRHelper.cs" />
 	<Compile Include="PathHelper.cs" />
 	<Compile Include="ProjectSourceInventory.cs" />
@@ -130,7 +130,6 @@
 	<Compile Include="UnitTestsOutputParser.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs" />
-	<Compile Include="VSTestConfiguration.cs" />
 	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.cs" />
 	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
 	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs" />

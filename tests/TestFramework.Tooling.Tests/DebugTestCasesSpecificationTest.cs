@@ -12,6 +12,7 @@ namespace TestFramework.Tooling.Tests
 {
     [TestClass]
     [TestCategory("Unit test debugger")]
+    [TestCategory("MSBuild")]
     public sealed class DebugTestCasesSpecificationTest
     {
         public TestContext TestContext { get; set; }

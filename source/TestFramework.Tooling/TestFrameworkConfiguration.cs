@@ -38,6 +38,7 @@ namespace nanoFramework.TestFramework.Tooling
         private readonly List<string> _configurationHierarchyDirectoryPaths = new List<string>();
         private readonly Dictionary<string, string> _deploymentConfiguration = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private const string GlobalSettingsDirectoryPath = "GlobalSettingsDirectoryPath";
+        private const string DeploymentConfiguration = "DeploymentConfiguration";
         private const string DeploymentConfiguration_SerialPort = "SerialPort";
         private const string DeploymentConfiguration_File = "File";
         #endregion
@@ -310,7 +311,7 @@ namespace nanoFramework.TestFramework.Tooling
 
                 if (!backwardCompatible)
                 {
-                    foreach (XmlNode deploymentConfiguration in node.SelectNodes(nameof(DeploymentConfiguration)))
+                    foreach (XmlNode deploymentConfiguration in node.SelectNodes(DeploymentConfiguration))
                     {
                         if (deploymentConfiguration.NodeType != XmlNodeType.Element)
                         {
@@ -320,7 +321,7 @@ namespace nanoFramework.TestFramework.Tooling
                         XmlNode filePath = deploymentConfiguration.SelectSingleNode(DeploymentConfiguration_File).FirstChild;
                         if (serialPort?.NodeType != XmlNodeType.Text)
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"'{nameof(DeploymentConfiguration)}' must have a child element '{DeploymentConfiguration_SerialPort}' in '{settingsFilePath}'. Setting is ignored.");
+                            logger?.Invoke(LoggingLevel.Verbose, $"'{DeploymentConfiguration}' must have a child element '{DeploymentConfiguration_SerialPort}' in '{settingsFilePath}'. Setting is ignored.");
                         }
                         else
                         {
@@ -393,7 +394,7 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (_deploymentConfiguration.TryGetValue(serialPort, out string filePath))
                         {
-                            XmlElement node = Document().CreateElement(nameof(DeploymentConfiguration));
+                            XmlElement node = Document().CreateElement(DeploymentConfiguration);
                             runSettings.AppendChild(node);
                             AddNode(DeploymentConfiguration_SerialPort, serialPort, node);
                             AddNode(DeploymentConfiguration_File, PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), filePath), node);
