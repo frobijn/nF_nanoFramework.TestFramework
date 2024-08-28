@@ -14,7 +14,9 @@ namespace nanoFramework.TestFramework.Tooling
 
         Verbose = 2,
 
-        Error = 3
+        Warning = 3,
+
+        Error = 4
     }
 
     /// <summary>

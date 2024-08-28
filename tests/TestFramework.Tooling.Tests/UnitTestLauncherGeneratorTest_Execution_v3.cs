@@ -14,6 +14,7 @@ namespace TestFramework.Tooling.Tests
     [TestClass]
     [TestCategory("Test execution")]
     [TestCategory("Unit test launcher")]
+    [TestCategory("Virtual device")]
     public class UnitTestLauncherGeneratorTest_Execution_v3
     {
         [TestMethod]

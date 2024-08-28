@@ -38,9 +38,9 @@ The initial goal of the v3 version of the TestFramework was to address some limi
 
     In v2 it is not possible to debug tests via the test explorer or otherwise. There are good (technical) reasons why that is the case. As unit tests are often the first users of software under development, it is not uncommon that a new test fails immediately because of imperfections in the source code. It is essential that the developer can easily debug a single test. The selection of the test should be designed in a way that it does not have to be stored in git/version control, as it is a local/per user feature.
 
-- Support development with a frozen version of the nanoFramework.
+- Support development with a frozen/old version of the nanoFramework.
 
-    It is important that a developer can freeze the nanoFramework version to avoid interference of new nanoFramework features or bugs with the project that uses the framework. This is especially relevant in CrowdStrike scenarios and/or if new features implement breaking changes. In v2 that is not possible as it always uses the global `nanoclr.exe` tool and even auto-updates that version - the developer cannot stop that. In v3 the developer can control the auto-update and can also use a local version of the tool.
+    It is important that a developer can freeze the nanoFramework version to avoid interference of new nanoFramework features or bugs with the project that uses the framework. Or even go back to old versions, to fix problems in products released some time ago. This is especially relevant in CrowdStrike scenarios, if new features implement breaking changes, or if a fix for an old version cannot be based on a new version of the software/firmware. In v2 that is not possible as it always uses the global `nanoclr.exe` tool and even auto-updates that version - the developer cannot stop that. In v3 the developer can control the auto-update and can also use a local version of the tool.
 
 ## Additional improvements/changes
 
@@ -143,9 +143,9 @@ And there are additional projects that help with debugging:
 
 The basic architecture of v2 still applies: VS test hosts call the test adapter for various functions, test adapter loads the unit test assembly to discover the test and orchestrate execution of the tests. The must-have requirements of v3 mainly concern the interaction between the test adapter and the unit test assembly in the discovery phase and the orchestration of running unit tests. Functionally this works the same in v2 and v3, apart from the new features, but technically it is implemented differently to overcome some technical challenges. In practical terms the code for the interaction of the test adapter with the devices and the installation/auto-updating of `nanoclr.exe` is largely unchanged, all other code had to be modified.
 
-A major architectural change is that the discovery and orchestration of unit tests is no longer performed in the process that hosts the test adapter, but in a `nanoFramework.TestHost`. The test adapter implementation must be based on .NET Framework in order to work with the nanoFramework-based assemblies, but the VSTest host for the .NET Framework limits the use of newer versions of some NuGet packages. This is an open issue (for the VSTest project) that is not expected to be resolved soon, and is the reason that the v2 test adapter cannot be upgraded to use the latest CliWrap package. Resolution of this issue is required for v3 as it also inhibits the use of the Roslyn NuGet packages. Other test frameworks (e.g., xUnit) experienced or anticipated similar assembly version conflicts and solved that by hosting the discovery and orchestration software in a separate host process that is fully controlled by the test framework. The test adapter implements all required interfaces to communicate with VSTest and starts an instance of `nanoFramework.TestHost` to perform the actual work. The test adapter and `nanoFramework.TestHost` communicate via standard input/output. The test adapter has no dependencies on non-VSTest packages anymore.
+A major architectural change is that the discovery and orchestration of unit tests is no longer performed in the process that hosts the test adapter, but in a `nanoFramework.TestFramework.TestHost`. The test adapter implementation must be based on .NET Framework in order to work with the nanoFramework-based assemblies, but the VSTest host for the .NET Framework limits the use of newer versions of some NuGet packages. This is an open issue (for the VSTest project) that is not expected to be resolved soon, and is the reason that the v2 test adapter cannot be upgraded to use the latest CliWrap package. Resolution of this issue is required for v3 as it also inhibits the use of the Roslyn NuGet packages. Other test frameworks (e.g., xUnit) experienced or anticipated similar assembly version conflicts and solved that by hosting the discovery and orchestration software in a separate host process that is fully controlled by the test framework. The test adapter implements all required interfaces to communicate with VSTest and starts an instance of `nanoFramework.TestFramework.TestHost` to perform the actual work. The test adapter and `nanoFramework.TestFramework.TestHost` communicate via standard input/output. The test adapter has no dependencies on non-VSTest packages anymore.
 
-Easy debugging of unit tests is implemented via a new type of project. This is essentially the same project as a nanoFramework application, with predefined source files and a MSBuild task (`MetadataProcessor.MsBuildTask`). The MSBuild task uses the same discovery mechanism as the test adapter to known which unit tests exist and obtain knowledge how to execute the tests, and adds the source code of the unit test launcher to the project to execute the selected test(s).
+Easy debugging of unit tests is implemented via a new type of project. This is essentially the same project as a nanoFramework application, with predefined source files and a MSBuild task (`nanoFramework.TestFramework.DebugProjectBuildTool`). The MSBuild task uses the same discovery mechanism as the test adapter to known which unit tests exist and obtain knowledge how to execute the tests, and adds the source code of the unit test launcher to the project to execute the selected test(s).
 
 Other architectural changes/implementation aspects are:
 
@@ -165,9 +165,9 @@ Other architectural changes/implementation aspects are:
 
     To implement the requirement to run selective unit tests without running other tests in the assembly, a method had to be found to pass the selection of tests to the unit test launcher. As the "production" software should not be contaminated with features required only in the development phase, adding unit test extensions to the wire protocol for communication with the devices is undesirable. Instead, the unit test launcher application is generated for each selection of tests, compiled and converted to a .pe assembly using `nanoFramework.Tools.MetadataProcessor.CLI`.
 
-- The `MetadataProcessor.MsBuildTask` is implemented as a console application rather than as a build task
+- The `nanoFramework.TestFramework.DebugProjectBuildTool` is implemented as a console application rather than as a build task
 
-    The build task loads unit test assemblies and their dependencies, but does not unload them. It is technically complex to unload assemblies, this would require loading assemblies in a different AppDomain from the discovery software. For performance reasons Visual Studio keeps MSBuild processes alive even after the build. If `MetadataProcessor.MsBuildTask` was implemented as a build task, the unit test assemblies and dependencies are locked and cannot be overwritten by subsequent builds. The easiest way to solve that is to make the build task an application that ends (and unloads the assemblies) after its work is done. A second reason is potential assembly/platform version conflicts, the same issue the test adapter suffered from and that was solved by introducing a custom test host.
+    The build task loads unit test assemblies and their dependencies, but does not unload them. It is technically complex to unload assemblies, this would require loading assemblies in a different AppDomain from the discovery software. For performance reasons Visual Studio keeps MSBuild processes alive even after the build. If `nanoFramework.TestFramework.DebugProjectBuildTool` was implemented as a build task, the unit test assemblies and dependencies are locked and cannot be overwritten by subsequent builds. The easiest way to solve that is to make the build task an application that ends (and unloads the assemblies) after its work is done. A second reason is potential assembly/platform version conflicts, the same issue the test adapter suffered from and that was solved by introducing a custom test host.
 
 - A full suite of unit tests covers the functionality in `TestFramework.Tooling`
 
@@ -175,7 +175,7 @@ Other architectural changes/implementation aspects are:
 
     The unit tests for the test adapter assert the communication between the 
 
-    The new build task `MetadataProcessor.MsBuildTask` can be tested by running it. Included is the set of command line arguments for the *Smart command line arguments* VS-extension that runs the task for the hands-on debug project *poc\TestOfTestDebugProjectByReference*.
+    The new build task `nanoFramework.TestFramework.DebugProjectBuildTool` can be tested by running it. Included is the set of command line arguments for the *Smart command line arguments* VS-extension that runs the task for the hands-on debug project *poc\TestOfTestDebugProjectByReference*.
 
 - A hierarchy of .runsettings configuration files that are separate from Visual Studio's .runsettings files.
 
@@ -189,9 +189,9 @@ Other architectural changes/implementation aspects are:
 
     - Some settings, such as the serial ports to use, are user/computer specific, should not be stored in version control/git and should not be part of the main configuration that is stored in version control/git. The .runsettings mechanism is not designed for that.
 
-    Instead the test framework uses a hierarchy of configuration files, with nano.runsettings for version controlled configurations, nano.runsettings.user for user-specific configurations, and nano.vstest.runsettings (controlled by the test framework) for the VSTest test host configuration. The regular .runsettings files are then available for the non-nanoFramework test adapters.
+    Instead the test framework uses a hierarchy of configuration files, with nano.runsettings for version controlled configurations, nano.runsettings.user for user-specific configurations, and nano.vs.runsettings (controlled by the test framework) for the Visual Studio/VSTest test host configuration. The regular .runsettings files are then available for the non-nanoFramework test adapters.
 
-    A new MSBuild tool `nanoFramework.TestFramework.UnitTestsProjectTool` is introduced to support the configuration hierarchy (and the migration of v2 to v3).
+    A new MSBuild tool `nanoFramework.TestFramework.TestProjectBuildTool` is introduced to ensure nano.vs.runsettings exists and is as required, and assist in the migration of a project from v2 to v3.
 
 ## Other code changes / implementation considerations
 
@@ -237,15 +237,24 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 
     The initial goal was to use metadata that identifies an individual device to retrieve the deployment configuration. However, all metadata that is available via the COM port communication is created by the CLR - this in effect duplicates the use of the target name as it is not identifying the individual device. Manufacturer's hats prevent addition of metadata that can be assigned from a .NET application layer, or the availability of other data that can be read from the device. Although other identifying features are available (e.g., MAC address) there is no way for nanoFramework tooling to relate those to the COM port the device is connected to.
 
+- The test adapter is changed from `nanoFramework.TestAdapter` to `nanoFramework.TestFramework.TestAdapter`, to make sure the v3 version will never overwrite a v2 version and to have a name consistent with the other test framework tools. Most code has moved from the test adapter to `nanoFramework.TestFramework.Tooling`. The URI to identify the test adapter / executor has been changed as well, so Visual Studio / VSTest won't be confused.
+
 - New NuGet packages are introduced:
 
     - `nanoFramework.TestFramework.DebugTestsProject` with the support for the new debug-unit-tests project
     
     - `nanoFramework.TestFramework.Tooling` for the .NET Framework library of the same name, as this is required to unit test / debug more complex test framework extensions. It will also help people who want to create new/custom tools that work with unit tests.
 
-- The `nanoFramework.TestFramework` package is discontinued and replaced by `nanoFramework.TestFramework.Core` and `nanoFramework.TestFramework.UnitTestsProject`.
+- The `nanoFramework.TestFramework` package is discontinued and replaced by `nanoFramework.TestFramework.Core` and `nanoFramework.TestFramework.TestProject`.
 
     The current `nanoFramework.TestFramework` contains the test framework library, test adapter and unit test launcher. In v3 the test framework library without adapter/unit test launcher is required for class libraries with test framework extensions. If the v3 NuGet package with only the test framework library would be called `nanoFramework.TestFramework`, people may upgrade to the new version of the package and find that the unit test projects no longer work. Better to use `nanoFramework.TestFramework.Core` as the package that only contains the class library.
 
-    Similar arguments apply to the name of the package that succeeds the `nanoFramework.TestFramework` as the package required to support the unit tests project. Proposed name is `nanoFramework.TestFramework.UnitTestsProject`, with `nanoFramework.TestFramework.Core` as dependency. The package contains the test adapter and `nanoFramework.TestFramework.UnitTestsProjectTool`.
+    Similar arguments apply to the name of the package that succeeds the `nanoFramework.TestFramework` as the package required to support the unit tests project. Proposed name is `nanoFramework.TestFramework.TestProject`, with `nanoFramework.TestFramework.Core` as dependency. The package contains the test adapter `nanoFramework.TestFramework.TestAdapter` and `nanoFramework.TestFramework.TestProjectBuildTool`.
 
+- The code has workaround(s) to compensate for nf-debugger design choices
+
+    The code checks the serial ports in parallel to see whether a real hardware device is connected (of course, as that may take some time and there is no reason to wait for that). The way to do that (`PortBase.CreateInstanceForSerial(false).AddDevice(serialPort)`) suggests that this is a thread-safe process, but it is not. Instead of returning the discovered device or add it to a collection of the instance of `PortBase`, it is added to a static list of `NanoFrameworkDevices`. There is no way to gain exclusive access to that collection, as the exclusive access is implemented by separate locks in `PortSerialManager` and `PortTcpIpManager`. Unfortunately, the `NanoFrameworkDevices` must be accessed to find out whether a device has been discovered, as the `AddDevice` does not provide information whether is has discovered a device and which device it is. The workaround is that if there's an exception accessing `NanoFrameworkDevices`, it is attempted again and again until no exception occurs.
+
+- In the solution `nanoFramework.TestFramework` extra project dependencies have been defined.
+
+    Some of the test projects and the TestAdapter project require the binaries from other projects as input/external tool. A direct project reference cannot be used as the build system then assumes all projects should have a common framework etc. The dependencies have been entered using the *Project dependencies* for the solution - this ensures the projects are built before the test projects.

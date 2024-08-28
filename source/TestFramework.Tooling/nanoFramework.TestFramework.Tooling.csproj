@@ -41,6 +41,7 @@
   <ItemGroup>
      <PackageReference Include="CliWrap" Version="3.6.6" />
      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+     <PackageReference Include="nanoFramework.Tools.Debugger.Net" Version="2.4.42" />
      <!-- <PackageReference Include="nanoFramework.Tools.MetadataProcessor" Version="1.12.1" GeneratePathProperty="true" /> -->
      <PackageReference Include="Nerdbank.GitVersioning">
       <Version>3.6.141</Version>
@@ -100,6 +101,7 @@
 	</Compile>
 	<Compile Include="AssemblyLoader.cs" />
 	<Compile Include="DeploymentConfiguration.cs" />
+	<Compile Include="RealHardwareDeviceHelper.cs" />
 	<Compile Include="Tools\DebugProjectBuildTool.cs" />
 	<Compile Include="NanoCLRHelper.cs" />
 	<Compile Include="PathHelper.cs" />
@@ -127,6 +129,9 @@
 	<Compile Include="TestFrameworkConfiguration.cs" />
 	<Compile Include="TestResult.cs" />
 	<Compile Include="TestRunner.cs" />
+	<Compile Include="Tools\TestAdapterDiscoverer.cs" />
+	<Compile Include="Tools\TestAdapterTestCasesExecutor.cs" />
+	<Compile Include="Tools\TestAdapterTestHostMessaging.cs" />
 	<Compile Include="UnitTestsOutputParser.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs" />

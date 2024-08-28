@@ -150,6 +150,7 @@ Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
+        [TestCategory("Virtual device")]
         public void UnitTestLauncher_GeneratedApplication_RunWithNanoCLRHelper(bool communicateByNames)
         {
             (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application actual) = UnitTestLauncher_GenerateApplication(communicateByNames);
@@ -226,6 +227,7 @@ ErrorMessage: ''
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
+        [TestCategory("Virtual device")]
         public void UnitTestLauncher_GeneratedApplication_RunWithNanoCLRHelper_NoDeploymentConfiguration(bool communicateByNames)
         {
             (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application actual) = UnitTestLauncher_GenerateApplication(communicateByNames, false);

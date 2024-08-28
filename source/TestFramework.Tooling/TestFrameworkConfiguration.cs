@@ -64,13 +64,22 @@ namespace nanoFramework.TestFramework.Tooling
 
         /// <summary>
         /// Limit the real hardware devices to run the tests on to
-        /// the ones that communicate via the serial port number(s).
+        /// the ones that communicate via the serial port(s).
         /// In the configuration file, this is a list of COM ports separated
         /// by a comma or semicolon. The value is an empty array
         /// if there are no limitations. The setting is ignored if <see cref="AllowRealHardware"/>
         /// is <c>false</c>.
         /// </summary>
         public IReadOnlyList<string> AllowSerialPorts { get; set; } = new string[] { };
+
+        /// <summary>
+        /// Exclude the serial port(s) from the search for real hardware devices to run the tests on.
+        /// In the configuration file, this is a list of COM ports separated
+        /// by a comma or semicolon. The value is an empty array
+        /// if there are no ports to exclude. The setting is ignored if <see cref="AllowRealHardware"/>
+        /// is <c>false</c>.
+        /// </summary>
+        public IReadOnlyList<string> ExcludeSerialPorts { get; set; } = new string[] { };
 
         /// <summary>
         /// The maximum time in milliseconds the execution of the tests in a single test assembly on real hardware is allowed to take.
@@ -260,6 +269,15 @@ namespace nanoFramework.TestFramework.Tooling
 
                 if (!backwardCompatible)
                 {
+                    XmlNode excludeSerialPorts = node.SelectSingleNode(nameof(ExcludeSerialPorts))?.FirstChild;
+                    if (excludeSerialPorts != null && excludeSerialPorts.NodeType == XmlNodeType.Text)
+                    {
+                        if (!string.IsNullOrWhiteSpace(excludeSerialPorts.Value))
+                        {
+                            ExcludeSerialPorts = excludeSerialPorts.Value.Split(',', ';');
+                        }
+                    }
+
                     RealHardwareTimeout = ReadXmlInteger(nameof(RealHardwareTimeout), RealHardwareTimeout);
                 }
 

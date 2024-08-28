@@ -12,6 +12,7 @@ namespace TestFramework.Tooling.Tests
 {
     [TestClass]
     [TestCategory("Test execution")]
+    [TestCategory("Virtual device")]
     public sealed class NanoCLRHelperTest
     {
         public TestContext TestContext { get; set; }

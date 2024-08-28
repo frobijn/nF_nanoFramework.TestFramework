@@ -103,6 +103,7 @@
   <ItemGroup>
     <Compile Include="Helpers\LogMessengerMock.cs" />
     <Compile Include="Helpers\TestDirectoryHelper.cs" />
+    <Compile Include="MSTest.cs" />
     <Compile Include="TestProjectBuildToolTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

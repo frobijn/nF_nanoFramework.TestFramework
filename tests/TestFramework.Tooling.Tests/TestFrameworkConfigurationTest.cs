@@ -162,6 +162,7 @@ namespace TestFramework.Tooling.Tests
 <RunSettings>
     <nanoFrameworkAdapter>
         <AllowSerialPorts>COM9;COM11,COM42</AllowSerialPorts>
+        <ExcludeSerialPorts>COM30;COM31</ExcludeSerialPorts>
         <DeploymentConfiguration>
             <SerialPort>COM9</SerialPort>
             <File>..\DeploymentConfiguration\DevBoard_MCU_ESP32S3_N8R32V.json</File>
@@ -224,6 +225,7 @@ namespace TestFramework.Tooling.Tests
                 {
                     AllowRealHardware = false,
                     AllowSerialPorts = new string[] { "COM9", "COM11", "COM42" },
+                    ExcludeSerialPorts = new string[] { "COM30", "COM31" },
                     RealHardwareTimeout = 120000,
                     PathToLocalNanoCLR = Path.Combine(globalDirectory, "clr", "nanoclr.exe"),
                     CLRVersion = "v1.0",
@@ -263,6 +265,7 @@ namespace TestFramework.Tooling.Tests
                 {
                     AllowRealHardware = false,
                     AllowSerialPorts = new string[] { "COM42" },
+                    ExcludeSerialPorts = new string[] { "COM30", "COM31" },
                     RealHardwareTimeout = 120000,
                     PathToLocalNanoCLR = Path.Combine(globalDirectory, "clr", "nanoclr.exe"),
                     CLRVersion = "v1.0",
@@ -302,6 +305,7 @@ namespace TestFramework.Tooling.Tests
                 {
                     AllowRealHardware = true,
                     AllowSerialPorts = new string[] { "COM11", "COM42" },
+                    ExcludeSerialPorts = new string[] { "COM30", "COM31" },
                     RealHardwareTimeout = 120000,
                     PathToLocalNanoCLR = Path.Combine(globalDirectory, "clr", "nanoclr.exe"),
                     CLRVersion = "v1.0",

@@ -10,7 +10,7 @@ using TestFramework.Tooling.BuildTools.Tests.Helpers;
 namespace TestFramework.Tooling.BuildTools.Tests
 {
     [TestClass]
-    [TestCategory("Unit test execution")]
+    [TestCategory("Test execution")]
     [TestCategory("MSBuild")]
     public class TestProjectBuildToolTest
     {

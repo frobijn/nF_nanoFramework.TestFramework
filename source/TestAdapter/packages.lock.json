@@ -228,7 +228,8 @@
           "CliWrap": "[3.6.6, )",
           "Microsoft.CodeAnalysis.CSharp": "[4.11.0, )",
           "Newtonsoft.Json": "[13.0.3, )",
-          "Newtonsoft.Json.Schema": "[4.0.1, )"
+          "Newtonsoft.Json.Schema": "[4.0.1, )",
+          "nanoFramework.Tools.Debugger.Net": "[2.4.42, )"
         }
       }
     }

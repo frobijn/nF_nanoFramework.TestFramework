@@ -58,6 +58,13 @@ namespace nanoFramework.TestFramework.Tooling
             internal set;
         }
 
+        // The numerical values of the TestOutcome are identical to the ones
+        // of Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome
+        // Keep it that way, or add a translation in TestExecutor_TestCases_TestResults.
+
+        /// <summary>
+        /// Outcome of the test
+        /// </summary>
         public enum TestOutcome
         {
             /// <summary>

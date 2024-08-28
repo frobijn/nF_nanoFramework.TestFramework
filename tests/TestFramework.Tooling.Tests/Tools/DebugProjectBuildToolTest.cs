@@ -22,7 +22,7 @@ namespace TestFramework.Tooling.Tests.Tools
         {
             #region Get test cases
             string projectDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
-            var outputDirectory = Path.Combine("bin", "Debug");
+            string outputDirectory = Path.Combine("bin", "Debug");
             AssemblyHelper.CopyAssemblies(Path.Combine(projectDirectoryPath, outputDirectory), "TestFramework.Tooling.Tests.Execution.v3");
 
             var actual = new DebugProjectBuildTool(projectDirectoryPath);
@@ -45,7 +45,7 @@ namespace TestFramework.Tooling.Tests.Tools
         {
             #region Get test cases
             string projectDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
-            var outputDirectory = Path.Combine("bin", "Debug");
+            string outputDirectory = Path.Combine("bin", "Debug");
             AssemblyHelper.CopyAssemblies(Path.Combine(projectDirectoryPath, outputDirectory), "TestFramework.Tooling.Tests.Execution.v3");
             string specificationFilePath = Path.Combine(projectDirectoryPath, DebugTestCasesSpecification.SpecificationFileName);
 
