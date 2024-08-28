@@ -102,6 +102,7 @@
 	<Compile Include="AssemblyLoader.cs" />
 	<Compile Include="DeploymentConfiguration.cs" />
 	<Compile Include="RealHardwareDeviceHelper.cs" />
+	<Compile Include="TestCaseExecutionOrchestration.cs" />
 	<Compile Include="Tools\DebugProjectBuildTool.cs" />
 	<Compile Include="NanoCLRHelper.cs" />
 	<Compile Include="PathHelper.cs" />
@@ -128,7 +129,6 @@
 	<Compile Include="TestCaseCollection.cs" />
 	<Compile Include="TestFrameworkConfiguration.cs" />
 	<Compile Include="TestResult.cs" />
-	<Compile Include="TestRunner.cs" />
 	<Compile Include="Tools\TestAdapterDiscoverer.cs" />
 	<Compile Include="Tools\TestAdapterTestCasesExecutor.cs" />
 	<Compile Include="Tools\TestAdapterTestHostMessaging.cs" />

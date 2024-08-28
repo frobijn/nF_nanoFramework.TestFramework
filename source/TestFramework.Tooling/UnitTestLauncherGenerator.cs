@@ -19,6 +19,7 @@ namespace nanoFramework.TestFramework.Tooling
     {
         #region Fields
         private readonly Dictionary<string, string> _sourceFiles = new Dictionary<string, string>();
+        private readonly HashSet<string> _testAssemblyDirectoryPaths = new HashSet<string>();
         private const string MAIN_SOURCEFILE = "UnitTestLauncher.Main.cs";
         private const string ASSEMBLY_NAME = "nanoFramework.UnitTestLauncher";
         #endregion
@@ -139,15 +140,14 @@ namespace nanoFramework.TestFramework.Tooling
         /// Generate the unit test launcher as an application that will be deployed to
         /// the device to execute the tests.
         /// </summary>
-        /// <param name="assemblyDirectoryPath">Path to the directory with the unit test
-        /// assembly and all its dependencies.</param>
+        /// <param name="applicationAssemblyDirectoryPath">Directory where the generated application's assembly is written to.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
         /// <returns>The information about the created assembly, or <c>null</c> if the
         /// application could not be created.</returns>
-        public Application GenerateAsApplication(string assemblyDirectoryPath, LogMessenger logger)
+        public Application GenerateAsApplication(string applicationAssemblyDirectoryPath, LogMessenger logger)
         {
             var assemblies = new List<string>();
-            if (!FindAssemblies(assemblies, assemblyDirectoryPath, logger))
+            if (!FindAssemblies(assemblies, applicationAssemblyDirectoryPath, logger))
             {
                 return null;
             }
@@ -160,7 +160,7 @@ namespace nanoFramework.TestFramework.Tooling
             }
             mainSource = mainSource.Replace("@@@", result.ReportPrefix);
 
-            if (!GenerateApplication(assemblies, assemblyDirectoryPath, mainSource, logger))
+            if (!GenerateApplication(assemblies, applicationAssemblyDirectoryPath, mainSource, logger))
             {
                 return null;
             }
@@ -263,6 +263,7 @@ namespace nanoFramework.TestFramework.Tooling
             var code = new StringBuilder();
             foreach (TestCaseSelection selection in selections)
             {
+                _testAssemblyDirectoryPaths.Add(Path.GetDirectoryName(selection.AssemblyFilePath));
 
                 var perGroup = selection.TestCases
                                 .GroupBy(tc => tc.testCase.Group)
@@ -360,31 +361,34 @@ namespace nanoFramework.TestFramework.Tooling
 
         /// <summary>
         /// Get all assemblies for the unit tests. Assumption is that all these are the *.pe
-        /// files the assembly directory. Delete <see cref="ASSEMBLY_NAME"/>-files as well.
+        /// files the assembly directory, except for <see cref="ASSEMBLY_NAME"/>-files.
         /// </summary>
         /// <param name="assemblies">List of assemblies to fill</param>
-        /// <param name="assemblyDirectoryPath">Directory with all assemblies</param>
+        /// <param name="applicationAssemblyDirectoryPath">Directory where the generated application's assembly is written to.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        private bool FindAssemblies(List<string> assemblies, string assemblyDirectoryPath, LogMessenger logger)
+        private bool FindAssemblies(List<string> assemblies, string applicationAssemblyDirectoryPath, LogMessenger logger)
         {
-            if (Directory.Exists(assemblyDirectoryPath))
+            foreach (string directoryPath in _testAssemblyDirectoryPaths)
             {
-                foreach (string file in Directory.EnumerateFiles(assemblyDirectoryPath, "*.pe"))
+                if (Directory.Exists(directoryPath))
                 {
-                    if (Path.GetFileNameWithoutExtension(file) != ASSEMBLY_NAME)
+                    foreach (string file in Directory.EnumerateFiles(directoryPath, "*.pe"))
                     {
-                        assemblies.Add(file);
+                        if (Path.GetFileNameWithoutExtension(file) != ASSEMBLY_NAME)
+                        {
+                            assemblies.Add(file);
+                        }
                     }
                 }
             }
             if (assemblies.Count == 0)
             {
                 // Nothing to run!
-                logger?.Invoke(LoggingLevel.Verbose, $"Application generation aborted: no unit test assemblies found");
+                logger?.Invoke(LoggingLevel.Error, $"Application generation aborted: no unit test assemblies found");
                 return false;
             }
 
-            foreach (string file in Directory.EnumerateFiles(assemblyDirectoryPath, $"{ASSEMBLY_NAME}.*"))
+            foreach (string file in Directory.EnumerateFiles(applicationAssemblyDirectoryPath, $"{ASSEMBLY_NAME}.*"))
             {
                 try
                 {
@@ -392,16 +396,16 @@ namespace nanoFramework.TestFramework.Tooling
                 }
                 catch (Exception ex)
                 {
-                    logger?.Invoke(LoggingLevel.Verbose, $"Application generation aborted: cannot delete {Path.GetFileName(file)}: {ex.Message}");
+                    logger?.Invoke(LoggingLevel.Error, $"Application generation aborted: cannot delete {Path.GetFileName(file)}: {ex.Message}");
                     return false;
                 }
             }
             return true;
         }
 
-        private bool GenerateApplication(List<string> assemblies, string assemblyDirectoryPath, string mainSourceCode, LogMessenger logger)
+        private bool GenerateApplication(List<string> assemblies, string applicationAssemblyDirectoryPath, string mainSourceCode, LogMessenger logger)
         {
-            string assemblyFilePath = Path.Combine(assemblyDirectoryPath, ASSEMBLY_NAME + ".dll");
+            string assemblyFilePath = Path.Combine(applicationAssemblyDirectoryPath, ASSEMBLY_NAME + ".dll");
 
             CSharpCompilation compilation = CSharpCompilation.Create(Path.GetFileName(assemblyFilePath))
                                             .WithOptions(new CSharpCompilationOptions(OutputKind.ConsoleApplication))
@@ -445,14 +449,14 @@ namespace nanoFramework.TestFramework.Tooling
             }
 
             // Convert exe to pe
-            string peFilePath = Path.Combine(assemblyDirectoryPath, ASSEMBLY_NAME + ".pe");
+            string peFilePath = Path.Combine(applicationAssemblyDirectoryPath, ASSEMBLY_NAME + ".pe");
 
             var arguments = new List<string>();
             foreach (string assembly in assemblies)
             {
                 arguments.Add("-LoadHints");
                 arguments.Add(Path.GetFileNameWithoutExtension(assembly));
-                arguments.Add(Path.ChangeExtension(Path.GetFileName(assembly), ".dll"));
+                arguments.Add(Path.ChangeExtension(PathHelper.GetRelativePath(applicationAssemblyDirectoryPath, assembly), ".dll"));
             }
             arguments.Add("-verbose");
 
@@ -465,7 +469,7 @@ namespace nanoFramework.TestFramework.Tooling
 
             Command cmd = Cli.Wrap(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "MetaDataProcessor", "nanoFramework.Tools.MetaDataProcessor.exe"))
                 .WithArguments(arguments)
-                .WithWorkingDirectory(assemblyDirectoryPath)
+                .WithWorkingDirectory(applicationAssemblyDirectoryPath)
                 .WithValidation(CommandResultValidation.None);
 
             BufferedCommandResult cliResult = cmd.ExecuteBufferedAsync().Task.Result;

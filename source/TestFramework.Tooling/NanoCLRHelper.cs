@@ -100,18 +100,18 @@ namespace nanoFramework.TestFramework.Tooling
         /// </summary>
         /// <param name="assemblyFilePaths">Paths to the assembly files</param>
         /// <param name="localCLRInstanceFilePath">Path to a local instance of the nanoFramework CLR. Pass <c>null</c> tio use the default CLR.</param>
-        /// <param name="timeout">Timeout in millisecond; pass <c>null</c> to let the application run to its end.</param>
         /// <param name="logging">Level of logging in the virtual device.</param>
         /// <param name="processOutput">Action to process the output that is provided in chunks. Pass <c>null</c> if the output is not required.</param>
         /// <param name="logger">Logger for information about starting/executing the nanoCLR tool.</param>
+        /// <param name="cancellationToken">Cancellation token that can be cancelled to abort the application.</param>
         /// <returns>Indicates whether the execution of nanoCLR was successful and did not result in an error.</returns>
         public async Task<bool> RunAssembliesAsync(
             IEnumerable<string> assemblyFilePaths,
             string localCLRInstanceFilePath,
-            int? timeout,
             LoggingLevel logging,
             Action<string> processOutput,
-            LogMessenger logger)
+            LogMessenger logger,
+            CancellationToken? cancellationToken)
         {
             // prepare launch of nanoCLR CLI
             StringBuilder arguments = new StringBuilder();
@@ -146,20 +146,29 @@ namespace nanoFramework.TestFramework.Tooling
                  })
             );
 
-            // setup cancellation token with the timeout from settings
-            using (CancellationTokenSource cts = timeout.HasValue
-                                                ? new CancellationTokenSource(timeout.Value)
-                                                : new CancellationTokenSource())
+            CancellationTokenSource cts = cancellationToken.HasValue ? null : new CancellationTokenSource();
+            try
             {
-                CommandResult cliResult = await cmd.ExecuteAsync(cts.Token);
+                CommandResult cliResult = await cmd.ExecuteAsync(cancellationToken ?? cts.Token);
                 int exitCode = cliResult.ExitCode;
 
                 if (exitCode != 0)
                 {
-                    logger?.Invoke(LoggingLevel.Error, $"nanoCLR ended with '{exitCode}' exit code.\r\n>>>>>>>>>>>>>\r\n{output}\r\n>>>>>>>>>>>>>");
+                    logger?.Invoke(LoggingLevel.Error, $"nanoCLR ended with exit code '{exitCode}'.");
+                    logger?.Invoke(LoggingLevel.Verbose, output.ToString());
                     return false;
                 }
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout 
+                logger?.Invoke(LoggingLevel.Warning, $"nanoCLR aborted on request or after timeout.");
+                return false;
+            }
+            finally
+            {
+                cts?.Dispose();
             }
         }
         #endregion

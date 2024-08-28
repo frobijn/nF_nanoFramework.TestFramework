@@ -106,35 +106,6 @@ namespace nanoFramework.TestFramework.Tools
         }
 
         [TestMethod]
-        public void UnitTestLauncher_GeneratedApplication_MismatchNFUnitTestAndTestCases()
-        {
-            #region Prepare assembly directory and unit test selection
-            string assemblyDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
-            AssemblyHelper.CopyAssemblies(assemblyDirectoryPath, "TestFramework.Tooling.Tests.Execution.v3"); // Wrong project!
-            var logger = new LogMessengerMock();
-            var actual = new UnitTestLauncherGenerator(TestSelection, null, false, logger);
-            logger.AssertEqual("");
-            #endregion
-
-            logger = new LogMessengerMock();
-            actual.GenerateAsApplication(assemblyDirectoryPath, logger);
-
-            // It is not important what the errors actually are. Important is that there are errors.
-            logger.AssertEqual(
-@"Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([591..596))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([715..750))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([899..934))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1084..1119))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1208..1243))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1419..1424))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1546..1581))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([1787..1822))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([2008..2013))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([2174..2209))
-Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace 'TestFramework.Tooling' (are you missing an assembly reference?) @ SourceFile([2283..2318))");
-        }
-
-        [TestMethod]
         public void UnitTestLauncher_GeneratedApplication()
         {
             (UnitTestLauncherGenerator _, UnitTestLauncherGenerator.Application actual) = UnitTestLauncher_GenerateApplication(true);
@@ -162,7 +133,7 @@ Error: CS0234 The type or namespace name 'Tests' does not exist in the namespace
 
             logger = new LogMessengerMock();
             var outputCollector = new StringBuilder();
-            bool result = nanoClr.RunAssembliesAsync(actual.Assemblies, null, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger)
+            bool result = nanoClr.RunAssembliesAsync(actual.Assemblies, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger, null)
                                 .GetAwaiter().GetResult();
             logger.AssertEqual("", LoggingLevel.Error);
             Assert.IsTrue(result);
@@ -239,7 +210,7 @@ ErrorMessage: ''
 
             logger = new LogMessengerMock();
             var outputCollector = new StringBuilder();
-            bool result = nanoClr.RunAssembliesAsync(actual.Assemblies, null, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger)
+            bool result = nanoClr.RunAssembliesAsync(actual.Assemblies, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger, null)
                                 .GetAwaiter().GetResult();
             logger.AssertEqual("", LoggingLevel.Error);
             Assert.IsTrue(result);
@@ -304,9 +275,9 @@ ErrorMessage: 'Setup failed'
         private (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application application) UnitTestLauncher_GenerateApplication(bool communicateByNames, bool withDeploymentConfiguration = true)
         {
             #region Prepare assembly directory and unit test selection
-            string assemblyDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
-            List<string> expectedAssemblies = AssemblyHelper.CopyAssemblies(assemblyDirectoryPath, "TestFramework.Tooling.Tests.Discovery.v3");
-            string assemblyFilePath = Path.Combine(assemblyDirectoryPath, "nanoFramework.UnitTestLauncher.pe");
+            string applicationAssemblyDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
+            List<string> expectedAssemblies = AssemblyFilePaths.ToList();
+            string assemblyFilePath = Path.Combine(applicationAssemblyDirectoryPath, "nanoFramework.UnitTestLauncher.pe");
             expectedAssemblies.Insert(0, assemblyFilePath);
             File.WriteAllText(assemblyFilePath, "This is an old version of the assembly");
             File.WriteAllText(Path.ChangeExtension(assemblyFilePath, ".dll"), "This is an old version of the assembly");
@@ -317,7 +288,7 @@ ErrorMessage: 'Setup failed'
             #endregion
 
             logger = new LogMessengerMock();
-            UnitTestLauncherGenerator.Application application = generator.GenerateAsApplication(assemblyDirectoryPath, logger);
+            UnitTestLauncherGenerator.Application application = generator.GenerateAsApplication(applicationAssemblyDirectoryPath, logger);
 
             logger.AssertEqual("");
             Assert.IsTrue(File.Exists(assemblyFilePath));

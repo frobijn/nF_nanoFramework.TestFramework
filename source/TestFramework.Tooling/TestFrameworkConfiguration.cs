@@ -110,10 +110,10 @@ namespace nanoFramework.TestFramework.Tooling
         public string PathToLocalCLRInstance { get; set; }
 
         /// <summary>
-        /// Set to a number other than 1 tp allow the parallel execution of tests on a Virtual Device.
+        /// Set to a number other than 1 to allow the parallel execution of tests on a Virtual Device.
         /// Set to 0 (the default) to let the test framework decide how many virtual devices to spin up.
         /// </summary>
-        public int MaxVirtualDevices { get; set; } = 0;
+        public int? MaxVirtualDevices { get; set; }
 
         /// <summary>
         /// The maximum time in milliseconds the execution of the tests in a single test assembly on the virtual device is allowed to take.
@@ -223,7 +223,7 @@ namespace nanoFramework.TestFramework.Tooling
                         {
                             if (value < 0)
                             {
-                                logger?.Invoke(LoggingLevel.Verbose, $"'{elementName}' must 0 or larger, but is {value} in '{settingsFilePath}'. Setting is ignored.");
+                                logger?.Invoke(LoggingLevel.Warning, $"'{elementName}' must 0 or larger, but is {value} in '{settingsFilePath}'. Setting is ignored.");
                             }
                             else
                             {
@@ -232,7 +232,7 @@ namespace nanoFramework.TestFramework.Tooling
                         }
                         else
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"'{nameof(MaxVirtualDevices)}' must be an integer, but is '{integerValue.Value}' in '{settingsFilePath}'. Setting is ignored.");
+                            logger?.Invoke(LoggingLevel.Warning, $"'{nameof(MaxVirtualDevices)}' must be an integer, but is '{integerValue.Value}' in '{settingsFilePath}'. Setting is ignored.");
                         }
                     }
                     return defaultValue;
@@ -323,7 +323,7 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                     else
                     {
-                        logger?.Invoke(LoggingLevel.Verbose, $"'{nameof(Logging)}' = '{loggingLevel.Value}' is not a valid value in '{settingsFilePath}'. Setting is ignored.");
+                        logger?.Invoke(LoggingLevel.Warning, $"'{nameof(Logging)}' = '{loggingLevel.Value}' is not a valid value in '{settingsFilePath}'. Setting is ignored.");
                     }
                 }
 
@@ -339,7 +339,7 @@ namespace nanoFramework.TestFramework.Tooling
                         XmlNode filePath = deploymentConfiguration.SelectSingleNode(DeploymentConfiguration_File).FirstChild;
                         if (serialPort?.NodeType != XmlNodeType.Text)
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"'{DeploymentConfiguration}' must have a child element '{DeploymentConfiguration_SerialPort}' in '{settingsFilePath}'. Setting is ignored.");
+                            logger?.Invoke(LoggingLevel.Warning, $"'{DeploymentConfiguration}' must have a child element '{DeploymentConfiguration_SerialPort}' in '{settingsFilePath}'. Setting is ignored.");
                         }
                         else
                         {

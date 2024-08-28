@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tools;
@@ -623,6 +624,191 @@ Some information about the assemblies
             #endregion
 
             #region Assert
+            actualTestResults.AssertResults(TestSelection, expectedTestResults);
+            #endregion
+        }
+
+        /// <summary>
+        /// Same test as <see cref="AllTestMethods_NonStaticClasses_Pass_SingleOutput"/>,
+        /// but abort is requested during processing of the first class.
+        /// </summary>
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public void ParseOutput_AbortRequested(bool communicateByNames)
+        {
+            #region Output and expectations
+            string output1 = $@"
+Some information about the assemblies
+
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
+Message from the constructor
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup1
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup2
+Message from the Setup method";
+            string output2 = $@"
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:30000:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
+{ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+Output from the test method
+
+More output from the test method
+
+{ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
+{ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+Test with data from the first data row attribute
+{ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:10000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
+{ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+Test with data from the second data row attribute
+{ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:20000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup1
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup2
+Message from the cleanup method
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
+Message from the Dispose method
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:40000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
+{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+{ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
+{ReportPrefix}:C:{TestClassTwoMethods_FQN}:10000:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
+{ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method1Name}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+{ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method1Name}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
+{ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+{ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}:70000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
+{ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
+{ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
+{ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+{ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
+{ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
+{ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+{ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
+{ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
+{ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
+{ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+";
+            string expectedTestResults = @"----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
+DisplayName : 'TestMethod - Passed'
+Duration    : 50000 ticks
+Outcome     : Passed
+ErrorMessage: ''
+Messages    :
+Output from the test method
+    
+More output from the test method
+    
+Test passed after 5 ms
+    
+*** Setup ***
+Message from the constructor
+Setup method 'Setup1' started after 1 ms
+Setup method 'Setup2' started after 1 ms
+Message from the Setup method
+Setup completed after 3 ms
+    
+*** Cleanup ***
+Cleanup method 'Cleanup1' started after < 1 ms
+Cleanup method 'Cleanup2' started after < 1 ms
+Message from the cleanup method
+Message from the Dispose method
+Cleanup completed after 4 ms
+    
+*** Deployment ***
+    
+Some information about the assemblies
+    
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
+DisplayName : 'TestMethod1(1,1) - Passed'
+Duration    : 10000 ticks
+Outcome     : Passed
+ErrorMessage: ''
+Messages    :
+Test with data from the first data row attribute
+Test passed after 1 ms
+    
+*** Setup ***
+Message from the constructor
+Setup method 'Setup1' started after 1 ms
+Setup method 'Setup2' started after 1 ms
+Message from the Setup method
+Setup completed after 3 ms
+    
+*** Cleanup ***
+Cleanup method 'Cleanup1' started after < 1 ms
+Cleanup method 'Cleanup2' started after < 1 ms
+Message from the cleanup method
+Message from the Dispose method
+Cleanup completed after 4 ms
+    
+*** Deployment ***
+    
+Some information about the assemblies
+    
+----------------------------------------
+    
+    
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
+DisplayName : 'TestMethod1(2,2) - Passed'
+Duration    : 20000 ticks
+Outcome     : Passed
+ErrorMessage: ''
+Messages    :
+Test with data from the second data row attribute
+Test passed after 2 ms
+    
+*** Setup ***
+Message from the constructor
+Setup method 'Setup1' started after 1 ms
+Setup method 'Setup2' started after 1 ms
+Message from the Setup method
+Setup completed after 3 ms
+    
+*** Cleanup ***
+Cleanup method 'Cleanup1' started after < 1 ms
+Cleanup method 'Cleanup2' started after < 1 ms
+Message from the cleanup method
+Message from the Dispose method
+Cleanup completed after 4 ms
+    
+*** Deployment ***
+    
+Some information about the assemblies
+    
+----------------------------------------";
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            #endregion
+
+            #region Create parser
+            var actualTestResults = new List<TestResult>();
+            var cancelHandlerCalled = false;
+            var actual = new UnitTestsOutputParser(
+                TestSelection,
+                null,
+                ReportPrefix,
+                (result) => actualTestResults.AddRange(result),
+                () => cancelHandlerCalled = true,
+                cancellationTokenSource.Token
+            );
+            #endregion
+
+            #region Send output
+            actual.AddOutput(output1);
+            cancellationTokenSource.Cancel();
+            actual.AddOutput(output2);
+            actual.Flush();
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(cancelHandlerCalled);
             actualTestResults.AssertResults(TestSelection, expectedTestResults);
             #endregion
         }

@@ -167,21 +167,15 @@ namespace nanoFramework.TestFramework.Tooling.Tools
     public sealed class TestExecutor_TestCases_Parameters : TestHost_Parameters, Communicator.IMessage
     {
         /// <summary>
-        /// The path of the assemblies to examine to discover the unit tests to execute
+        /// Description of the test case in a test assembly.
         /// </summary>
-        [JsonProperty("S")]
-        public List<string> Sources
-        {
-            get; set;
-        }
-
         public sealed class TestCase
         {
             /// <summary>
-            /// Gets or sets the index of the test case in the selection to be run
+            /// Gets or sets the path to the assembly that contains the test case.
             /// </summary>
-            [JsonProperty("I")]
-            public int Index
+            [JsonProperty("S")]
+            public string AssemblyFilePath
             {
                 get; set;
             }
@@ -206,11 +200,10 @@ namespace nanoFramework.TestFramework.Tooling.Tools
         }
 
         /// <summary>
-        /// Get the test cases to execute. The key is the source/path to the assembly that contains
-        /// the test cases (value).
+        /// Get the test cases to execute.
         /// </summary>
         [JsonProperty("T")]
-        public Dictionary<string, List<TestCase>> TestCases
+        public List<TestCase> TestCases
         {
             get; set;
         }
@@ -521,23 +514,23 @@ namespace nanoFramework.TestFramework.Tooling.Tools
                                 else
                                 {
                                     // Process message but do not wait for that to finish
-                                    int messageIndex = nextMessageIndex++;
-                                    var task = Task.Run(() =>
+                                    lock (processingTasks)
                                     {
-                                        try
+                                        int messageIndex = nextMessageIndex++;
+                                        var task = Task.Run(() =>
                                         {
-                                            _messageProcessor(this, message, _cancellationTokenSource.Token);
-                                        }
-                                        finally
-                                        {
-                                            lock (this)
+                                            try
                                             {
-                                                processingTasks.Remove(messageIndex);
+                                                _messageProcessor(this, message, _cancellationTokenSource.Token);
                                             }
-                                        }
-                                    });
-                                    lock (this)
-                                    {
+                                            finally
+                                            {
+                                                lock (this)
+                                                {
+                                                    processingTasks.Remove(messageIndex);
+                                                }
+                                            }
+                                        });
                                         processingTasks[messageIndex] = task;
                                     }
                                 }
@@ -557,7 +550,7 @@ namespace nanoFramework.TestFramework.Tooling.Tools
 
             // Do not end this task before all message processing is done
             Task[] runningTasks;
-            lock (this)
+            lock (processingTasks)
             {
                 runningTasks = processingTasks.Values.ToArray();
             }

@@ -14,7 +14,7 @@ namespace nanoFramework.TestFramework.Tooling
     /// Helper to het information on the available real hardware devices
     /// and to run unit tests on the devices.
     /// </summary>
-    public sealed class RealHardwareDeviceHelper
+    public sealed class RealHardwareDeviceHelper : TestCaseExecutionOrchestration.IRealHardwareDevice
     {
         #region Fields
         private readonly NanoDeviceBase _device;
@@ -26,35 +26,6 @@ namespace nanoFramework.TestFramework.Tooling
         #endregion
 
         #region Construction
-        /// <summary>
-        /// Find all available real hardware devices that are allowed according to the configuration.
-        /// The devices are passed to a method so that the caller can start running code on that device.
-        /// It may take quite some time for this method to finish, e.g., because it is waiting for timeouts
-        /// for serial ports that are not responding.
-        /// </summary>
-        /// <param name="configuration">Configuration that determines how to run the unit tests.</param>
-        /// <param name="deviceFound">Method to receive a real hardware device that is found.
-        /// The method may be called simultaneously from different threads.</param>
-        /// <param name="logger">Method to pass process information to the caller.</param>
-        public static async Task GetAvailable(TestFrameworkConfiguration configuration, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger)
-        {
-            if (deviceFound is null)
-            {
-                return;
-            }
-            if (configuration.AllowRealHardware)
-            {
-                if (configuration.AllowSerialPorts.Count > 0)
-                {
-                    await GetForSelectedPorts(configuration.AllowSerialPorts, deviceFound, logger);
-                }
-                else
-                {
-                    await GetAllAvailable(configuration.ExcludeSerialPorts, deviceFound, logger);
-                }
-            }
-        }
-
         /// <summary>
         /// Get all available real hardware devices.
         /// The devices are passed to a method so that the caller can start running code on that device.

@@ -50,25 +50,13 @@ namespace nanoFramework.TestFramework.TestAdapter
             }
 
             var testSelection = tests.ToList();
-            int selectionIndex = 0;
 
             var logMessenger = new TestAdapterLogger(frameworkHandle);
             _testHost = TestHost.Start(
                 new TestExecutor_TestCases_Parameters()
                 {
-                    TestCases = (from tc in testSelection
-                                 select (tc.Source, new TestExecutor_TestCases_Parameters.TestCase()
-                                 {
-                                     FullyQualifiedName = tc.FullyQualifiedName,
-                                     DisplayName = tc.DisplayName,
-                                     Index = selectionIndex++
-                                 }))
-                                 .GroupBy((tc) => tc.Source)
-                                 .ToDictionary(
-                                    g => g.Key,
-                                    g => (from i in g
-                                          select i.Item2).ToList()
-                                 )
+                    TestCases = new List<TestExecutor_TestCases_Parameters.TestCase>(from tc in testSelection
+                                                                                     select new TestExecutor_TestCases_Parameters.TestCase()),
                 },
                 (m, l, c) => ProcessTestCaseResults(m, testSelection, frameworkHandle),
                 new TestAdapterLogger(frameworkHandle).LogMessage

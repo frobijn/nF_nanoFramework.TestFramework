@@ -342,7 +342,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     if (attribute != testClassAttribute)
                     {
-                        logger?.Invoke(LoggingLevel.Verbose, $"{attribute.Source?.ForMessage() ?? classType.FullName}: Warning: Only one attribute that implements '{nameof(ITestClass)}' is allowed. Only the first one is used, subsequent attributes are ignored.");
+                        logger?.Invoke(LoggingLevel.Warning, $"{attribute.Source?.ForMessage() ?? classType.FullName}: Warning: Only one attribute that implements '{nameof(ITestClass)}' is allowed. Only the first one is used, subsequent attributes are ignored.");
                     }
                 }
 
@@ -376,7 +376,7 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (attribute != deploymentProxy)
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"{attribute.Source?.ForMessage() ?? classType.FullName}: Warning: Only one attribute that implements '{nameof(IDeploymentConfiguration)}' is allowed. Only the first one is used, subsequent attributes are ignored.");
+                            logger?.Invoke(LoggingLevel.Warning, $"{attribute.Source?.ForMessage() ?? classType.FullName}: Warning: Only one attribute that implements '{nameof(IDeploymentConfiguration)}' is allowed. Only the first one is used, subsequent attributes are ignored.");
                         }
                     }
 
@@ -504,13 +504,13 @@ namespace nanoFramework.TestFramework.Tooling
                              where !(a is SetupProxy) && !(a is CleanupProxy) && !(a is DeploymentConfigurationProxy)
                              select a).Any())
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: No other attributes are allowed when the attributes that implement '{nameof(ICleanup)}'/'{nameof(IDeploymentConfiguration)}'/'{nameof(ISetup)}' are present. Extra attributes are ignored.");
+                            logger?.Invoke(LoggingLevel.Warning, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: No other attributes are allowed when the attributes that implement '{nameof(ICleanup)}'/'{nameof(IDeploymentConfiguration)}'/'{nameof(ISetup)}' are present. Extra attributes are ignored.");
                         }
                         if ((from a in methodAttributes
                              where a is DeploymentConfigurationProxy
                              select a).Count() > 1)
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: Only one attribute is allowed that implements '{nameof(IDeploymentConfiguration)}'. The first attribute will be used.");
+                            logger?.Invoke(LoggingLevel.Warning, $"{sourceLocation?.ForMessage() ?? $"{classType.FullName}.{method.Name}"}: Warning: Only one attribute is allowed that implements '{nameof(IDeploymentConfiguration)}'. The first attribute will be used.");
                         }
                     }
                 }

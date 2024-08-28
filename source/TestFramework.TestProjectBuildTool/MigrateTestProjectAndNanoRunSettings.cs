@@ -69,7 +69,7 @@ namespace nanoFramework.TestFramework.TestProjectBuildTool
                 }
                 catch (Exception ex)
                 {
-                    logger?.Invoke(LoggingLevel.Verbose, $"The file '{oldNanoSettingsFilePath}' cannot be parsed - migration is skipped: {ex.Message}");
+                    logger?.Invoke(LoggingLevel.Warning, $"The file '{oldNanoSettingsFilePath}' cannot be parsed - migration is skipped: {ex.Message}");
                 }
                 if (!(settings?.Root is null))
                 {

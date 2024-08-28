@@ -539,7 +539,6 @@ ErrorMessage: 'Setup failed'
             #endregion
 
             #region Generate the application
-            AssemblyHelper.CopyAssemblies(testDirectoryPath, "TestFramework.Tooling.Tests.Execution.v3");
             logger = new LogMessengerMock();
             UnitTestLauncherGenerator.Application application = generator.GenerateAsApplication(testDirectoryPath, logger);
 
@@ -554,7 +553,7 @@ ErrorMessage: 'Setup failed'
 
             logger = new LogMessengerMock();
             var outputCollector = new StringBuilder();
-            bool result = nanoClr.RunAssembliesAsync(application.Assemblies, null, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger)
+            bool result = nanoClr.RunAssembliesAsync(application.Assemblies, null, LoggingLevel.Detailed, (o) => outputCollector.AppendLine(o), logger, null)
                                 .GetAwaiter().GetResult();
             logger.AssertEqual("", LoggingLevel.Error);
             Assert.IsTrue(result);

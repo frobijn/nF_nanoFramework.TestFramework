@@ -57,7 +57,7 @@ namespace nanoFramework.TestFramework.Tooling
                 string sourceFilePath = Path.Combine(projectDirectory, sourceFile);
                 if (!File.Exists(sourceFilePath))
                 {
-                    logger(LoggingLevel.Verbose, $"Source file not found: '{sourceFilePath}'");
+                    logger(LoggingLevel.Verbose, $"Source file listed in project '{Path.GetFileName(projectFilePath)}' is not found: '{sourceFilePath}'");
                 }
                 else
                 {
