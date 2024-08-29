@@ -6,6 +6,7 @@ Most of the v3 features are already implemented and can be tested via the hands-
 
     - Update the *Unit Test Project* to include the new test platform
     - Add a new *Unit Test Debug Project* is added.
+    - Virtual device: option to start the nanoClr that is specified in nano.runsettings for the current solution.
 
 - Creation of NuGet packages:
 

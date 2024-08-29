@@ -16,10 +16,6 @@ namespace TestFramework.Tooling.Tests
     [TestCategory("Unit test launcher")]
     public sealed class UnitTestLauncherGeneratorTest_Discovery_v3 : TestUsingTestFrameworkToolingTestsDiscovery_v3
     {
-        #region Test context and helper
-
-        #endregion
-
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
@@ -67,7 +63,7 @@ namespace nanoFramework.TestFramework.Tools
                 typeof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions), 1,
                 (rsm) =>
                 {
-                    rsm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.Setup), new object[] { CFG_1, CFG_2, CFG_3 });
+                    rsm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.Setup), new object[] { CFG_1, CFG_2, -1 });
                 },
                 null,
                 (rtm, rdr) =>
@@ -82,7 +78,7 @@ namespace nanoFramework.TestFramework.Tools
                 (rtm, rdr) =>
                 {
                     rtm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test), null);
-                    rtm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2), new object[] { s_cfg_4 });
+                    rtm(nameof(global::TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2), new object[] { s_cfg_3 });
                 }
             );
         }
@@ -91,10 +87,8 @@ namespace nanoFramework.TestFramework.Tools
         private const string CFG_1 = ""Value\r\nfor\r\nxyzzy"";
         /// <summary>Value for deployment configuration key 'Device ID'</summary>
         private const long CFG_2 = 42;
-        /// <summary>Value for deployment configuration key 'Address'</summary>
-        private const int CFG_3 = -1;
         /// <summary>Value for deployment configuration key 'Make and model'</summary>
-        private static readonly byte[] s_cfg_4 = new byte[] {
+        private static readonly byte[] s_cfg_3 = new byte[] {
             3,1,4,1,5,
         };
 #endregion
@@ -287,11 +281,42 @@ ErrorMessage: 'Setup failed'
             logger.AssertEqual("");
             #endregion
 
+            #region Create the application
             logger = new LogMessengerMock();
             UnitTestLauncherGenerator.Application application = generator.GenerateAsApplication(applicationAssemblyDirectoryPath, logger);
+            #endregion
 
+            #region Assert it is created as expected
             logger.AssertEqual("");
             Assert.IsTrue(File.Exists(assemblyFilePath));
+
+            if (withDeploymentConfiguration)
+            {
+                Assert.AreEqual(
+@"TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile: Address
+".Trim().Replace("\r\n", "\n") + '\n',
+                    string.Join("\n", from tc in application.MissingDeploymentConfigurationKeys
+                                      orderby tc.Key.FullyQualifiedName, tc.Key.DisplayName
+                                      select $"{tc.Key.FullyQualifiedName} - {tc.Key.DisplayName}: {string.Join(";", from key in tc.Value orderby key select key)}"
+                                ) + '\n'
+                );
+            }
+            else
+            {
+                Assert.AreEqual(
+@"TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile: Address;Device ID;xyzzy
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2: Make and model
+".Trim().Replace("\r\n", "\n") + '\n',
+                    string.Join("\n", from tc in application.MissingDeploymentConfigurationKeys
+                                      orderby tc.Key.FullyQualifiedName, tc.Key.DisplayName
+                                      select $"{tc.Key.FullyQualifiedName} - {tc.Key.DisplayName}: {string.Join(";", from key in tc.Value orderby key select key)}"
+                                ) + '\n'
+                );
+            }
+            #endregion
+
+
+
             return (generator, application);
         }
 

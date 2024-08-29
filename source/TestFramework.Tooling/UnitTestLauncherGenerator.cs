@@ -20,6 +20,7 @@ namespace nanoFramework.TestFramework.Tooling
         #region Fields
         private readonly Dictionary<string, string> _sourceFiles = new Dictionary<string, string>();
         private readonly HashSet<string> _testAssemblyDirectoryPaths = new HashSet<string>();
+        private readonly Dictionary<TestCase, HashSet<string>> _missingDeploymentConfigurationKeys = new Dictionary<TestCase, HashSet<string>>();
         private const string MAIN_SOURCEFILE = "UnitTestLauncher.Main.cs";
         private const string ASSEMBLY_NAME = "nanoFramework.UnitTestLauncher";
         #endregion
@@ -111,9 +112,12 @@ namespace nanoFramework.TestFramework.Tooling
             /// Create the application information
             /// </summary>
             /// <param name="assemblies">List of assemblies to load for the unit test</param>
-            public Application(IReadOnlyList<string> assemblies)
+            /// <param name="missingDeploymentConfigurationKeys">The deployment keys for which no value could be retrieved (value of the
+            /// dictionary) while it is used to execute a test case (key of the dictionary).</param>
+            public Application(IReadOnlyList<string> assemblies, IReadOnlyDictionary<TestCase, HashSet<string>> missingDeploymentConfigurationKeys)
             {
                 Assemblies = assemblies;
+                MissingDeploymentConfigurationKeys = missingDeploymentConfigurationKeys;
             }
             #endregion
 
@@ -133,6 +137,15 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 get;
             } = Guid.NewGuid().ToString("N");
+
+            /// <summary>
+            /// Get the deployment keys for which no value could be retrieved (value of the
+            /// dictionary) while it is used to execute a test case (key of the dictionary).
+            /// </summary>
+            public IReadOnlyDictionary<TestCase, HashSet<string>> MissingDeploymentConfigurationKeys
+            {
+                get;
+            }
             #endregion
         }
 
@@ -152,7 +165,7 @@ namespace nanoFramework.TestFramework.Tooling
                 return null;
             }
 
-            var result = new Application(assemblies);
+            var result = new Application(assemblies, _missingDeploymentConfigurationKeys);
             string mainSource = GetSourceCode(MAIN_SOURCEFILE, logger);
             if (mainSource is null)
             {
@@ -199,6 +212,16 @@ namespace nanoFramework.TestFramework.Tooling
                     configurationDataName[key] = null;
                     return null;
                 }
+                else if (valueType == typeof(int) && (int)-1 == (int)data)
+                {
+                    configurationDataName[key] = null;
+                    return null;
+                }
+                else if (valueType == typeof(long) && (long)-1L == (long)data)
+                {
+                    configurationDataName[key] = null;
+                    return null;
+                }
 
                 if (valueType == typeof(byte[]))
                 {
@@ -237,7 +260,7 @@ namespace nanoFramework.TestFramework.Tooling
                     return fieldName;
                 }
             }
-            string ConvertToArguments(IReadOnlyList<(string key, Type valueType)> requiredConfigurationKeys)
+            string ConvertToArguments(IReadOnlyList<(string key, Type valueType)> requiredConfigurationKeys, HashSet<string> missingConfigurationKeys)
             {
                 if ((requiredConfigurationKeys?.Count ?? 0) == 0)
                 {
@@ -249,6 +272,7 @@ namespace nanoFramework.TestFramework.Tooling
                     string fieldName = AddConfigurationData(key, valueType);
                     if (fieldName is null)
                     {
+                        missingConfigurationKeys.Add(key);
                         arguments.Add(valueType == typeof(int) ? "-1" : valueType == typeof(long) ? "-1L" : "null");
                     }
                     else
@@ -281,6 +305,7 @@ namespace nanoFramework.TestFramework.Tooling
                         + (int)(testGroup.Key.SetupCleanupPerTestMethod
                                     ? TestFramework.Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerTestMethod
                                     : TestFramework.Tools.UnitTestLauncher.TestClassInitialisation.SetupCleanupPerClass);
+                    var classMissingConfigurationKeys = new HashSet<string>();
 
                     code.AppendLine($"{s_bodyIndent}ForClass(");
                     code.AppendLine($"{s_bodyIndent}    typeof(global::{testGroup.Key.FullyQualifiedName}), {instantiation},");
@@ -294,7 +319,7 @@ namespace nanoFramework.TestFramework.Tooling
                         code.AppendLine($"{s_bodyIndent}    {{");
                         foreach (TestCaseGroup.SetupMethod setupMethod in testGroup.Key.SetupMethods)
                         {
-                            code.AppendLine($"{s_bodyIndent}        rsm(nameof(global::{testGroup.Key.FullyQualifiedName}.{setupMethod.MethodName}), {ConvertToArguments(setupMethod.RequiredConfigurationKeys)});");
+                            code.AppendLine($"{s_bodyIndent}        rsm(nameof(global::{testGroup.Key.FullyQualifiedName}.{setupMethod.MethodName}), {ConvertToArguments(setupMethod.RequiredConfigurationKeys, classMissingConfigurationKeys)});");
                         }
                         code.AppendLine($"{s_bodyIndent}    }},");
                     }
@@ -318,7 +343,12 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (testCase.DataRowIndex < 0)
                         {
-                            code.AppendLine($"{s_bodyIndent}        rtm(nameof(global::{testCase.FullyQualifiedName}), {ConvertToArguments(testCase.RequiredConfigurationKeys)});");
+                            var missingConfigurationKeys = new HashSet<string>(classMissingConfigurationKeys);
+                            code.AppendLine($"{s_bodyIndent}        rtm(nameof(global::{testCase.FullyQualifiedName}), {ConvertToArguments(testCase.RequiredConfigurationKeys, missingConfigurationKeys)});");
+                            if (missingConfigurationKeys.Count > 0)
+                            {
+                                _missingDeploymentConfigurationKeys[testCase] = missingConfigurationKeys;
+                            }
                         }
                     }
 
@@ -334,7 +364,12 @@ namespace nanoFramework.TestFramework.Tooling
                                      );
                     foreach (KeyValuePair<string, (TestCase, List<int>)> testMethod in perTestMethod)
                     {
-                        code.AppendLine($"{s_bodyIndent}        rdr(nameof(global::{testMethod.Key}), {ConvertToArguments(testMethod.Value.Item1.RequiredConfigurationKeys)}, {string.Join(", ", testMethod.Value.Item2)});");
+                        var missingConfigurationKeys = new HashSet<string>(classMissingConfigurationKeys);
+                        code.AppendLine($"{s_bodyIndent}        rdr(nameof(global::{testMethod.Key}), {ConvertToArguments(testMethod.Value.Item1.RequiredConfigurationKeys, missingConfigurationKeys)}, {string.Join(", ", testMethod.Value.Item2)});");
+                        if (missingConfigurationKeys.Count > 0)
+                        {
+                            _missingDeploymentConfigurationKeys[testMethod.Value.Item1] = missingConfigurationKeys;
+                        }
                     }
 
                     code.AppendLine($"{s_bodyIndent}    }}");

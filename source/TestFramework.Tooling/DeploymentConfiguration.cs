@@ -173,7 +173,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="configurationKey">Key as used in the deployment configuration</param>
         /// <param name="resultType">Required return type. Allowed types are <c>byte[]</c>, <c>int</c>, <c>long</c> and <c>string</c></param>
         /// <returns>Returns the content of a file or (if the <paramref name="resultType"/> is not <c>byte[]</c>) a value if the deployment configuration
-        /// contains data for the <paramref name="configurationKey"/>. Returns <c>null</c> (-1 for integer types) if no configuration
+        /// contains data for the <paramref name="configurationKey"/>. Returns <c>null</c> (-1 for non-nullable integer types) if no configuration
         /// data is specified, if the <paramref name="resultType"/> does not match the way the configuration is specified or
         /// if the <paramref name="configurationKey"/> is <c>null</c>.</returns>
         public object GetDeploymentConfigurationValue(string configurationKey, Type resultType)

@@ -116,7 +116,10 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// All tests have been completed. Make sure all test results have been sent.
         /// </summary>
-        public void Flush()
+        /// <param name="deviceExecutionIsAbortedReason">If the device has prematurely stopped running the unit tests,
+        /// e.g., because the maximum time has been exceeded, this is a description to be added to the tests for which
+        /// no results have been obtained.</param>
+        public void Flush(string deviceExecutionIsAbortedReason = null)
         {
             lock (this)
             {
@@ -124,7 +127,16 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     ParseOutput(_lineToBeProcessed + '\n');
                 }
-                SendGroupResults(true);
+
+                if (!string.IsNullOrWhiteSpace(deviceExecutionIsAbortedReason)
+                    || (_testClassPhase == TestClassPhases.NotStarted && _deploymentInformation.Count > 0))
+                {
+                    SendNotExecutedResults(deviceExecutionIsAbortedReason);
+                }
+                else
+                {
+                    SendGroupResults(true);
+                }
             }
         }
         #endregion
@@ -449,7 +461,7 @@ namespace nanoFramework.TestFramework.Tooling
             foreach ((int selectionIndex, TestCase testCase) in _testCases.TestCases)
             {
                 if (!_resultsSent.Contains(testCase) && (
-                    (flush && !(_cancellationToken?.IsCancellationRequested ?? false))
+                    (flush && _testClassPhase != TestClassPhases.Abort)
                     || (testCase.Group == _currentGroup && !_testsInGroup.ContainsKey(testCase))
                    ))
                 {
@@ -523,6 +535,32 @@ namespace nanoFramework.TestFramework.Tooling
             _currentOutput = null;
 
             IsAbortRequested();
+        }
+
+        private void SendNotExecutedResults(string deviceExecutionIsAbortedReason)
+        {
+            var messages = new List<string>()
+            {
+                "Test has not been run."
+            };
+            if (!string.IsNullOrWhiteSpace(deviceExecutionIsAbortedReason))
+            {
+                messages.Add(deviceExecutionIsAbortedReason);
+            }
+            if (_deploymentInformation.Count > 0)
+            {
+                messages.Add(string.Empty);
+                messages.Add("*** Deployment ***");
+                messages.AddRange(_deploymentInformation);
+            }
+
+            _testResultSink(from tc in _testCases.TestCases
+                            where !_resultsSent.Contains(tc.testCase)
+                            select new TestResult(tc.testCase, tc.selectionIndex, _comPort)
+                            {
+                                Outcome = TestResult.TestOutcome.Skipped,
+                                _messages = messages
+                            });
         }
 
         private bool IsAbortRequested()

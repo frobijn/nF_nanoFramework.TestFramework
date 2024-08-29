@@ -101,13 +101,14 @@ namespace nanoFramework.TestFramework.Tooling
                                   );
             }
 
-            // Executing tests on virtual devices
+            // Execute tests on virtual devices
             RunTestsOnVirtualDevices();
 
             // Wait until all devices have been discovered.
             discoverDevices?.Wait();
 
             // Wait until all asynchronous tasks have been completed
+            // This includes running virtual devices and running tests on discovered devices
             WaitForAsyncTasks();
         }
 
@@ -341,6 +342,12 @@ namespace nanoFramework.TestFramework.Tooling
         /// </summary>
         private void RunTestsOnVirtualDevices()
         {
+            if (_virtualDeviceExecution.Count == 0)
+            {
+                return;
+            }
+            Logger.Invoke(LoggingLevel.Verbose, $"Running unit tests on {(_maxVirtualDevices > _virtualDeviceExecution.Count ? _virtualDeviceExecution.Count : _maxVirtualDevices)} virtual devices in parallel.");
+
             int numberOfRunningVirtualDevices = 0;
             var selections = _virtualDeviceExecution.Keys.ToList();
             int selectionIndex = 0;
@@ -394,12 +401,60 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Execute a single test assembly on a virtual device
         /// </summary>
-        /// <param name="selection"></param>
+        /// <param name="selection">Selection of tests to run on the device.</param>
         private void RunTestOnVirtualDevice(TestCaseSelection selection)
         {
-            #region Initialize the virtual device and generate the unit test launcher
+            TestFrameworkConfiguration configuration = _virtualDeviceExecution[selection].Configuration;
+            NanoCLRHelper nanoClr = null;
+
+            UnitTestLauncherGenerator.Application application = InitializeUnitTestLauncherAndDevice
+                (
+                    selection,
+                    null,
+                    null,
+                    (l) => nanoClr = new NanoCLRHelper(configuration, l)
+                );
+            if (application is null)
+            {
+                return;
+            }
+
+            ParseOutputAndHandleCancellation(
+                selection,
+                application,
+                null,
+                configuration.VirtualDeviceTimeout,
+                (parser, ct) => nanoClr.RunAssembliesAsync(
+                                    application.Assemblies,
+                                    configuration.PathToLocalCLRInstance,
+                                    configuration.Logging,
+                                    parser,
+                                    Logger,
+                                    ct
+                                )
+                                .GetAwaiter().GetResult()
+            );
+        }
+        #endregion
+
+        #region Common for all devices
+        /// <summary>
+        /// Generate the unit test launcher and initialize the device
+        /// </summary>
+        /// <param name="selection">Selection of tests to run on the device.</param>
+        /// <param name="deploymentConfiguration">Deployment configuration for the tests.</param>
+        /// <param name="comPort">COM port the device is connected to.</param>
+        /// <param name="initializeDevice">Method to initialize the device.</param>
+        /// <returns>The generated application, or <c>null</c> if the tests cannot be run on the device.</returns>
+        private UnitTestLauncherGenerator.Application InitializeUnitTestLauncherAndDevice(
+            TestCaseSelection selection,
+            DeploymentConfiguration deploymentConfiguration,
+            string comPort, Action<LogMessenger> initializeDevice)
+        {
+            var deviceName = string.IsNullOrWhiteSpace(comPort) ? "Virtual nanoDevice" : $"device connected to {comPort}";
+
             var messages = new List<string>();
-            var hasErrors = false;
+            bool hasErrors = false;
             void LogToTestResults(LoggingLevel level, string message)
             {
                 if (level >= LoggingLevel.Warning)
@@ -412,15 +467,13 @@ namespace nanoFramework.TestFramework.Tooling
                 }
             }
 
-            var configuration = _virtualDeviceExecution[selection].Configuration;
             UnitTestLauncherGenerator.Application application = null;
-            NanoCLRHelper nanoClr = null;
             try
             {
-                var generator = new UnitTestLauncherGenerator(selection, null, false, LogToTestResults);
+                var generator = new UnitTestLauncherGenerator(selection, deploymentConfiguration, false, LogToTestResults);
                 application = generator.GenerateAsApplication(Path.GetDirectoryName(selection.AssemblyFilePath), LogToTestResults);
 
-                nanoClr = new NanoCLRHelper(configuration, LogToTestResults);
+                initializeDevice?.Invoke(LogToTestResults);
             }
             catch (Exception ex)
             {
@@ -429,7 +482,7 @@ namespace nanoFramework.TestFramework.Tooling
 
             if (hasErrors || application is null)
             {
-                LogToTestResults(LoggingLevel.Error, "Test is not executed as the virtual device could not be initialized.");
+                LogToTestResults(LoggingLevel.Error, $"Test is not executed as the {deviceName} could not be initialized.");
                 RunAsync(() =>
                         AddTestResults(from tc in selection.TestCases
                                        select new TestResult(tc.testCase, tc.selectionIndex, null)
@@ -439,54 +492,83 @@ namespace nanoFramework.TestFramework.Tooling
                                        },
                                        null)
                     );
-                Logger.Invoke(LoggingLevel.Warning, $"Tests from '{selection.AssemblyFilePath}' are not executed on the virtual device as the virtual device could not be initialized.");
+                Logger.Invoke(LoggingLevel.Warning, $"Tests from '{selection.AssemblyFilePath}' are not executed on the {deviceName} as the {deviceName} could not be initialized.");
+                application = null;
             }
-            #endregion
+            return application;
+        }
 
-            #region Run the tests in the assembly and process the results
-            // Cancellation of the virtual device execution is either a timeout, or signalled by the output processor
-            var cancelNanoClr = configuration.VirtualDeviceTimeout.HasValue
-                ? new CancellationTokenSource(configuration.VirtualDeviceTimeout.Value)
+        /// <summary>
+        /// Helper to parse the output from the device and properly handle timeouts and cancel requests.
+        /// </summary>
+        /// <param name="selection">Selection of tests to run on the device.</param>
+        /// <param name="application">Unit test launcher application.</param>
+        /// <param name="comPort">COM port the device is connected to.</param>
+        /// <param name="timeout">Timeout for running tests on the device.</param>
+        /// <param name="runTests">Method to run the tests on the device.</param>
+        private void ParseOutputAndHandleCancellation(TestCaseSelection selection, UnitTestLauncherGenerator.Application application,
+            string comPort, int? timeout,
+            Action<Action<string>, CancellationToken> runTests)
+        {
+            var deviceName = string.IsNullOrWhiteSpace(comPort) ? "Virtual nanoDevice" : $"device connected to {comPort}";
+
+            // Cancellation of the device execution is either a timeout, or signalled by the output processor
+            CancellationTokenSource cancelExecutionOnDevice = timeout.HasValue
+                ? new CancellationTokenSource(timeout.Value)
                 : new CancellationTokenSource();
+
 
             var outputProcessor = new UnitTestsOutputParser(
                     selection,
-                    null,
+                    comPort,
                     Guid.NewGuid().ToString("N"),
-                    (testResults) => AddTestResults(testResults, "Virtual nanoDevice"),
-                    () => cancelNanoClr.Cancel(), // Abort request honoured, nanoClr can now also stop
+                    (testResults) => AddTestResults(
+                            AddMissingDeploymentConfigurationKeysMessage(application, testResults),
+                            deviceName
+                        ),
+                    () => cancelExecutionOnDevice.Cancel(), // Abort request honoured, device can now also stop
                     CancellationToken
                );
 
-            nanoClr.RunAssembliesAsync(
-                application.Assemblies,
-                configuration.PathToLocalCLRInstance,
-                configuration.Logging,
-                (o) => outputProcessor.AddOutput(o),
-                Logger,
-                cancelNanoClr.Token)
-                .GetAwaiter().GetResult();
+            runTests((o) => outputProcessor.AddOutput(o), cancelExecutionOnDevice.Token);
+
+            outputProcessor.Flush(cancelExecutionOnDevice.IsCancellationRequested && !CancellationToken.IsCancellationRequested ?
+                $"Execution of the unit tests on the {deviceName} was aborted after {timeout} ms."
+                : null);
 
             if (CancellationToken.IsCancellationRequested)
             {
-                Logger.Invoke(LoggingLevel.Warning, $"Execution of tests from '{selection.AssemblyFilePath}' on Virtual nanoDevice cancelled on request.");
-                // No outputProcessor.Flush() required; outputProcessor has already sent all results
+                Logger.Invoke(LoggingLevel.Warning, $"Execution of tests from '{selection.AssemblyFilePath}' on the {deviceName} was cancelled on request.");
             }
-            else if (cancelNanoClr.IsCancellationRequested)
-            {
-                // Execution of the unit tests has timed out; do not flush the output processor
-                // as it is not clear whether all information about the tests in the current test
-                // class has been passed to the output processor.
-            }
-            else
-            {
-                outputProcessor.Flush();
-            }
-            #endregion
         }
-        #endregion
 
-        #region Helpers
+        /// <summary>
+        /// Add a message about missing deployment configuration keys to the tests, if applicable.
+        /// </summary>
+        /// <param name="application">Information about the missing keys.</param>
+        /// <param name="testResults">Test results to add the information to.</param>
+        /// <returns>The (un)modified results.</returns>
+        private IEnumerable<TestResult> AddMissingDeploymentConfigurationKeysMessage(UnitTestLauncherGenerator.Application application, IEnumerable<TestResult> testResults)
+        {
+            foreach (TestResult testResult in testResults)
+            {
+                if (application.MissingDeploymentConfigurationKeys.TryGetValue(testResult.TestCase, out HashSet<string> missingKeys))
+                {
+                    var messages = new List<string>(testResult._messages);
+                    if (messages.Count > 0)
+                    {
+                        messages.Add(string.Empty);
+                    }
+                    messages.Add("*** Deployment configuration ***");
+                    messages.Add($@"No data available for: {string.Join(", ", from k in missingKeys
+                                                                              orderby k
+                                                                              select $"'{k}'")}");
+                    testResult._messages = messages;
+                }
+                yield return testResult;
+            }
+        }
+
         /// <summary>
         /// Helper to run code asynchronously. Need to keep a reference to the
         /// task to be able to wait for all (still) running tasks to complete.
