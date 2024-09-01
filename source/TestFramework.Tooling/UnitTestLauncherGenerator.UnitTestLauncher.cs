@@ -33,6 +33,7 @@ namespace nanoFramework.TestFramework.Tools
         public static void Run(string reportPrefix)
         {
             new UnitTestLauncher(reportPrefix).RunUnitTests();
+            Console.WriteLine($"{reportPrefix}:{Communication.AllTestsDone}");
         }
         #endregion
 
@@ -43,7 +44,7 @@ namespace nanoFramework.TestFramework.Tools
         }
         #endregion
 
-        #region Selection of tests
+        #region Execution of selected unit tests
         /// <summary>
         /// Get test class information for a candidate test class.
         /// The <see cref="RunUnitTests"/> method will be generated based on the selection of tests.
@@ -51,7 +52,7 @@ namespace nanoFramework.TestFramework.Tools
         private partial void RunUnitTests();
         #endregion
 
-        #region Execution of unit tests
+        #region Execution of unit tests in a test class
         public delegate void RunSetupMethods(RunSetupMethod runSetupMethod);
 
         public delegate void RunSetupMethod(string setupMethodName, object[] configurationData);

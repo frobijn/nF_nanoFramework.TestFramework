@@ -89,11 +89,12 @@
     <Compile Include="../../source/TestFramework/Tools/TestDeviceProxy.cs">
       <Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
     </Compile>
+    <Compile Include="AssemblyMetadataTest.cs" />
     <Compile Include="DebugTestCasesSpecificationTest.cs" />
     <Compile Include="DeploymentConfigurationTest.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\RealHardwareSerialPorts.cs" />
-    <Compile Include="Helpers\TestAdapterTestHostMock.cs" />
+    <Compile Include="Helpers\InterProcessParentChildMock.cs" />
     <Compile Include="Helpers\TestDirectoryHelper.cs" />
     <Compile Include="Helpers\TestResultsHelper.cs" />
     <Compile Include="Helpers\TestUsingTestFrameworkToolingTestsDiscovery_v3.cs" />
@@ -117,7 +118,9 @@
     <Compile Include="TestFrameworkProxy\TestOnVirtualDeviceProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\TraitsProxyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tools\CommunicatorTest.cs" />
+    <Compile Include="InterProcessCommunicatorTest.cs" />
+    <Compile Include="TestsRunnerOrchestrationTest.cs" />
+    <Compile Include="TestsRunnerExecutionTest.cs" />
     <Compile Include="Tools\DebugProjectBuildToolTest.cs" />
     <Compile Include="Tools\TestAdapterDiscovererTest.cs" />
     <Compile Include="Tools\TestAdapterTestCasesExecutorTest.cs" />
@@ -130,6 +133,10 @@
     <None Include="ProjectSourceInventoryTest\InvalidProject.nfproj" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\source\TestFramework.Tooling.Shared\nanoFramework.TestFramework.Tooling.Shared.csproj">
+      <Project>{22aec17a-1744-4b28-9612-6b09aa5e92b8}</Project>
+      <Name>nanoFramework.TestFramework.Tooling.Shared</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\source\TestFramework.Tooling\nanoFramework.TestFramework.Tooling.csproj">
       <Project>{D10594AF-5494-4A91-8456-D7CDC4CA0459}</Project>
       <Name>nanoFramework.TestFramework.Tooling</Name>

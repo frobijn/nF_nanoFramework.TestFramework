@@ -18,7 +18,7 @@ namespace nanoFramework.TestFramework.TestAdapter
     internal sealed class TestHost
     {
         #region Fields
-        private readonly TestAdapterCommunicator _testAdapter;
+        private readonly InterProcessParent _testAdapter;
         private Process _testHostProcess;
         #endregion
 
@@ -35,8 +35,8 @@ namespace nanoFramework.TestFramework.TestAdapter
         /// The method is started with a cancellation token that indicates that cancel has been requested.
         /// </remarks>
         public static TestHost Start(
-            Communicator.IMessage parameters,
-            TestAdapterCommunicator.ProcessMessage processMessage,
+            InterProcessCommunicator.IMessage parameters,
+            InterProcessParent.ProcessMessage processMessage,
             LogMessenger logger)
         {
             // Find the test host
@@ -52,7 +52,7 @@ namespace nanoFramework.TestFramework.TestAdapter
             var testHost = new TestHost(processMessage, logger);
 
             // Start the test host
-            testHost._testAdapter.StartTestHost((a1, a2, a3) =>
+            testHost._testAdapter.StartChildProcess((a1, a2, a3) =>
             {
                 testHost._testHostProcess = Process.Start(
                     new ProcessStartInfo(testHostApplication)
@@ -72,9 +72,9 @@ namespace nanoFramework.TestFramework.TestAdapter
         /// <summary>
         /// Create the communicator
         /// </summary>
-        private TestHost(TestAdapterCommunicator.ProcessMessage processMessage, LogMessenger logger)
+        private TestHost(InterProcessParent.ProcessMessage processMessage, LogMessenger logger)
         {
-            _testAdapter = new TestAdapterCommunicator(processMessage, logger);
+            _testAdapter = new InterProcessParent(TestAdapterMessages.Types, processMessage, logger);
         }
 
         #endregion
@@ -86,7 +86,7 @@ namespace nanoFramework.TestFramework.TestAdapter
         /// <typeparam name="T"></typeparam>
         /// <param name="message"></param>
         public void SendMessage<T>(T message)
-            where T : Communicator.IMessage
+            where T : InterProcessCommunicator.IMessage
         {
             _testAdapter.SendMessage(message);
         }

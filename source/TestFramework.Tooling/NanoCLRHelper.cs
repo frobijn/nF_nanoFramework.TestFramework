@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,7 +20,7 @@ namespace nanoFramework.TestFramework.Tooling
     /// <summary>
     /// Helper to ensure the correct version of the nanoCLR tool is available
     /// </summary>
-    public class NanoCLRHelper
+    public class NanoCLRHelper : TestsRunner.IVirtualDevice
     {
         #region Construction
         /// <summary>
@@ -95,10 +96,9 @@ namespace nanoFramework.TestFramework.Tooling
 
         #region Methods
         /// <summary>
-        /// Execute an application consisting of a set of assemblies on
-        /// the Virtual Device.
+        /// Execute an application consisting of a set of assemblies on a new instance of the Virtual Device.
         /// </summary>
-        /// <param name="assemblyFilePaths">Paths to the assembly files</param>
+        /// <param name="assemblies">The assemblies to execute. One of the assemblies must be a program.</param>
         /// <param name="localCLRInstanceFilePath">Path to a local instance of the nanoFramework CLR. Pass <c>null</c> tio use the default CLR.</param>
         /// <param name="logging">Level of logging in the virtual device.</param>
         /// <param name="processOutput">Action to process the output that is provided in chunks. Pass <c>null</c> if the output is not required.</param>
@@ -106,7 +106,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="cancellationToken">Cancellation token that can be cancelled to abort the application.</param>
         /// <returns>Indicates whether the execution of nanoCLR was successful and did not result in an error.</returns>
         public async Task<bool> RunAssembliesAsync(
-            IEnumerable<string> assemblyFilePaths,
+            IEnumerable<AssemblyMetadata> assemblies,
             string localCLRInstanceFilePath,
             LoggingLevel logging,
             Action<string> processOutput,
@@ -117,7 +117,7 @@ namespace nanoFramework.TestFramework.Tooling
             StringBuilder arguments = new StringBuilder();
 
             // assemblies to load
-            arguments.Append($"run --assemblies \"{string.Join("\" \"", assemblyFilePaths)}\"");
+            arguments.Append($"run --assemblies \"{string.Join("\" \"", from a in assemblies select a.NanoFrameworkAssemblyFilePath)}\"");
 
             // should we use a local nanoCLR instance?
             if (!string.IsNullOrEmpty(localCLRInstanceFilePath))
@@ -126,7 +126,7 @@ namespace nanoFramework.TestFramework.Tooling
             }
 
             // if requested, set diagnostic output
-            if (logging > LoggingLevel.None)
+            if (logging == LoggingLevel.Detailed)
             {
                 arguments.Append(" -v diag");
             }
@@ -146,10 +146,9 @@ namespace nanoFramework.TestFramework.Tooling
                  })
             );
 
-            CancellationTokenSource cts = cancellationToken.HasValue ? null : new CancellationTokenSource();
             try
             {
-                CommandResult cliResult = await cmd.ExecuteAsync(cancellationToken ?? cts.Token);
+                CommandResult cliResult = await cmd.ExecuteAsync(cancellationToken ?? default);
                 int exitCode = cliResult.ExitCode;
 
                 if (exitCode != 0)
@@ -166,10 +165,17 @@ namespace nanoFramework.TestFramework.Tooling
                 logger?.Invoke(LoggingLevel.Warning, $"nanoCLR aborted on request or after timeout.");
                 return false;
             }
-            finally
-            {
-                cts?.Dispose();
-            }
+        }
+        Task<bool> TestsRunner.IVirtualDevice.RunAssembliesAsync(
+            IEnumerable<AssemblyMetadata> assemblies,
+            string localCLRInstanceFilePath,
+            LoggingLevel logging,
+            string reportPrefix,
+            Action<string> processOutput,
+            LogMessenger logger,
+            CancellationToken cancellationToken)
+        {
+            return RunAssembliesAsync(assemblies, localCLRInstanceFilePath, logging, processOutput, logger, cancellationToken);
         }
         #endregion
 

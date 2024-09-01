@@ -51,6 +51,7 @@ Some information about the assemblies
 Some output from the test
 {ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method1Name}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ");
             actual.Flush();
             #endregion
@@ -61,7 +62,7 @@ Some output from the test
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
 DisplayName : 'TestMethod - Test has not been run'
 Duration    : 0 ticks
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
@@ -77,7 +78,7 @@ Some information about the assemblies
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
 DisplayName : 'TestMethod1(1,1) - Test has not been run'
 Duration    : 0 ticks
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
@@ -93,7 +94,7 @@ Some information about the assemblies
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
 DisplayName : 'TestMethod1(2,2) - Test has not been run'
 Duration    : 0 ticks
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
@@ -126,7 +127,7 @@ Some information about the assemblies
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 DisplayName : 'Test2 - Test has not been run'
 Duration    : 0 ticks
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
@@ -142,7 +143,7 @@ Some information about the assemblies
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
 DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
 Duration    : 0 ticks
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
@@ -211,6 +212,8 @@ Message from the Dispose method
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ";
             string expectedTestResults = @"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
@@ -443,6 +446,8 @@ Message from the Dispose method
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ";
             string expectedTestResults = @"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
@@ -688,6 +693,8 @@ Message from the Dispose method
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ";
             string expectedTestResults = @"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
@@ -697,32 +704,32 @@ Outcome     : Passed
 ErrorMessage: ''
 Messages    :
 Output from the test method
-    
+
 More output from the test method
-    
+
 Test passed after 5 ms
-    
+
 *** Setup ***
 Message from the constructor
 Setup method 'Setup1' started after 1 ms
 Setup method 'Setup2' started after 1 ms
 Message from the Setup method
 Setup completed after 3 ms
-    
+
 *** Cleanup ***
 Cleanup method 'Cleanup1' started after < 1 ms
 Cleanup method 'Cleanup2' started after < 1 ms
 Message from the cleanup method
 Message from the Dispose method
 Cleanup completed after 4 ms
-    
+
 *** Deployment ***
-    
+
 Some information about the assemblies
-    
+
 ----------------------------------------
-    
-    
+
+
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
 DisplayName : 'TestMethod1(1,1) - Passed'
@@ -732,28 +739,28 @@ ErrorMessage: ''
 Messages    :
 Test with data from the first data row attribute
 Test passed after 1 ms
-    
+
 *** Setup ***
 Message from the constructor
 Setup method 'Setup1' started after 1 ms
 Setup method 'Setup2' started after 1 ms
 Message from the Setup method
 Setup completed after 3 ms
-    
+
 *** Cleanup ***
 Cleanup method 'Cleanup1' started after < 1 ms
 Cleanup method 'Cleanup2' started after < 1 ms
 Message from the cleanup method
 Message from the Dispose method
 Cleanup completed after 4 ms
-    
+
 *** Deployment ***
-    
+
 Some information about the assemblies
-    
+
 ----------------------------------------
-    
-    
+
+
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
 DisplayName : 'TestMethod1(2,2) - Passed'
@@ -763,25 +770,73 @@ ErrorMessage: ''
 Messages    :
 Test with data from the second data row attribute
 Test passed after 2 ms
-    
+
 *** Setup ***
 Message from the constructor
 Setup method 'Setup1' started after 1 ms
 Setup method 'Setup2' started after 1 ms
 Message from the Setup method
 Setup completed after 3 ms
-    
+
 *** Cleanup ***
 Cleanup method 'Cleanup1' started after < 1 ms
 Cleanup method 'Cleanup2' started after < 1 ms
 Message from the cleanup method
 Message from the Dispose method
 Cleanup completed after 4 ms
-    
+
 *** Deployment ***
-    
+
 Some information about the assemblies
-    
+
+----------------------------------------
+
+
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
+DisplayName : 'Test - Test has not been run'
+Duration    : 0 ticks
+Outcome     : Skipped
+ErrorMessage: 'Test has not been run'
+Messages    :
+Test has not been run.
+
+*** Deployment ***
+
+Some information about the assemblies
+
+----------------------------------------
+
+
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
+DisplayName : 'Test2 - Test has not been run'
+Duration    : 0 ticks
+Outcome     : Skipped
+ErrorMessage: 'Test has not been run'
+Messages    :
+Test has not been run.
+
+*** Deployment ***
+
+Some information about the assemblies
+
+----------------------------------------
+
+
+----------------------------------------
+Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
+DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
+Duration    : 0 ticks
+Outcome     : Skipped
+ErrorMessage: 'Test has not been run'
+Messages    :
+Test has not been run.
+
+*** Deployment ***
+
+Some information about the assemblies
+
 ----------------------------------------";
 
             var cancellationTokenSource = new CancellationTokenSource();
@@ -789,7 +844,7 @@ Some information about the assemblies
 
             #region Create parser
             var actualTestResults = new List<TestResult>();
-            var cancelHandlerCalled = false;
+            bool cancelHandlerCalled = false;
             var actual = new UnitTestsOutputParser(
                 TestSelection,
                 null,
@@ -967,7 +1022,6 @@ Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
-Timeout!
     
 *** Deployment ***
     
@@ -984,7 +1038,6 @@ Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
-Timeout!
     
 *** Deployment ***
     
@@ -1001,7 +1054,6 @@ Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.
-Timeout!
     
 *** Deployment ***
     
@@ -1022,7 +1074,7 @@ Some information about the assemblies
 
             #region Send output
             actual.AddOutput(output);
-            actual.Flush("Timeout!");
+            actual.Flush(true);
             #endregion
 
             #region Assert
@@ -1210,6 +1262,8 @@ Exception in cleanup!
 Exception in cleanup!
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.CleanupFail, communicateByNames)}:Exception
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ");
             actual.Flush();
             #endregion
@@ -1359,6 +1413,8 @@ Exception in Dispose!
 Exception in constructor!
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.SetupFail, communicateByNames)}:Exception
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ");
             actual.Flush();
             #endregion
@@ -1515,6 +1571,8 @@ Exception!
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:MethodCleanup
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}:Exception
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
+
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ");
             actual.Flush();
             #endregion
@@ -1673,6 +1731,8 @@ $@"
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.MethodError, communicateByNames)}:Setup method not found
+
+{ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ");
             actual.Flush();
             #endregion
@@ -1777,7 +1837,7 @@ Setup method not found
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
 DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
 Duration    : 0 ticks
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 Messages    :
 Test has not been run.

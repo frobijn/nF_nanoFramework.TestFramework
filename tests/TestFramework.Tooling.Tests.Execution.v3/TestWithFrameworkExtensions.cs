@@ -9,9 +9,10 @@ namespace TestFramework.Tooling.Execution.Tests
     [TestClass]
     public class TestWithFrameworkExtensions
     {
-        [DeploymentConfiguration("data.bin", "data.txt")]
+        [DeploymentConfiguration("data.bin", "data.txt"), Setup]
         public void Setup(byte[] binary, string text)
         {
+            OutputHelper.WriteLine("Deployment configuration 'xyzzy' should have a unique value");
             Assert.IsNotNull(binary);
             Assert.IsFalse(string.IsNullOrEmpty(text));
         }
@@ -19,6 +20,7 @@ namespace TestFramework.Tooling.Execution.Tests
         [TestOnDeviceWithSomeFile(@"xyzzy")]
         public void TestDeviceWithSomeFile()
         {
+            OutputHelper.WriteLine("Deployment configuration 'xyzzy' has a unique value");
         }
     }
 }

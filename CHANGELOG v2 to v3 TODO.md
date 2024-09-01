@@ -14,6 +14,7 @@ Most of the v3 features are already implemented and can be tested via the hands-
     - Creation of the nanoFramework.TestFramework.UnitTestsProject package that includes the test adapter and MSBuild tool to support the *Unit Test Project*; this has the nanoFramework.TestFramework.Core package as dependency.
     - Creation of the nanoFramework.TestFramework.DebugTestsProject package, to support the *Unit Test Debug Project*
     - Creation of the nanoFramework.TestFramework.Tooling package, required to test more complex test framework extensions.
+    - Creation of the nanoFramework.TestFramework.Tooling.Shared package, companion to nanoFramework.TestFramework.Tooling.
 
 
 - Documentation on using VSTest

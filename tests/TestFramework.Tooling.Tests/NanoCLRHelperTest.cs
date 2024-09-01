@@ -64,6 +64,7 @@ $@"Error: *** Failed to locate nanoCLR instance '{nanoCLRFilePath}' ***
         }
 
         [TestMethod]
+        [DoNotParallelize]
         public void NanoCLR_Global_RequiredVersion_Available()
         {
             var logger = new LogMessengerMock();
@@ -87,6 +88,7 @@ Verbose: nanoCLR instance updated to Vx
         }
 
         [TestMethod]
+        [DoNotParallelize]
         public void NanoCLR_Global_Update()
         {
             var logger = new LogMessengerMock();
@@ -109,6 +111,7 @@ Verbose: No need to update. Running Vx
         }
 
         [TestMethod]
+        [DoNotParallelize]
         public void NanoCLR_Global_NoUpdate()
         {
             var logger = new LogMessengerMock();

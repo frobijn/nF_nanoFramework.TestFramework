@@ -80,8 +80,8 @@ ErrorMessage: ''
 
 
 ----------------------------------------
-Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.Setup
-DisplayName : 'Setup - Passed'
+Test        : TestFramework.Tooling.Execution.Tests.TestClassWithMultipleSetupCleanup.TestFramework.Tooling.Execution.Tests.TestClassWithMultipleSetupCleanup.Test
+DisplayName : 'Test - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -186,7 +186,7 @@ ErrorMessage: 'Setup failed'
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.SkippedInSetup.TestFramework.Tooling.Execution.Tests.SkippedInSetup.Test
 DisplayName : 'Test - Test has not been run'
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 ----------------------------------------
 
@@ -194,7 +194,7 @@ ErrorMessage: 'Test has not been run'
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.SkippedInConstructor.TestFramework.Tooling.Execution.Tests.SkippedInConstructor.Test
 DisplayName : 'Test - Test has not been run'
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 ----------------------------------------
 
@@ -324,17 +324,17 @@ ErrorMessage: ''
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile
-DisplayName : 'TestDeviceWithSomeFile - Passed'
+DisplayName : 'TestDeviceWithSomeFile - Setup failed'
+Outcome     : Failed
+ErrorMessage: 'Setup failed'
+----------------------------------------
+
+
+----------------------------------------
+Test        : TestFramework.Tooling.Execution.Tests.TestClassWithMultipleSetupCleanup.TestFramework.Tooling.Execution.Tests.TestClassWithMultipleSetupCleanup.Test
+DisplayName : 'Test - Passed'
 Outcome     : Passed
 ErrorMessage: ''
-----------------------------------------
-
-
-----------------------------------------
-Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.Setup
-DisplayName : 'Setup - Test failed'
-Outcome     : Failed
-ErrorMessage: 'Test failed'
 ----------------------------------------
 
 
@@ -437,7 +437,7 @@ ErrorMessage: 'Setup failed'
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.SkippedInSetup.TestFramework.Tooling.Execution.Tests.SkippedInSetup.Test
 DisplayName : 'Test - Test has not been run'
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 ----------------------------------------
 
@@ -445,7 +445,7 @@ ErrorMessage: 'Test has not been run'
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.SkippedInConstructor.TestFramework.Tooling.Execution.Tests.SkippedInConstructor.Test
 DisplayName : 'Test - Test has not been run'
-Outcome     : None
+Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
 ----------------------------------------
 

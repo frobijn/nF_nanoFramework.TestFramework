@@ -20,9 +20,9 @@ namespace nanoFramework.TestFramework.Tooling
         #region Fields
         private readonly TestCaseSelection _testCases;
         private readonly string _reportPrefix;
-        private readonly string _comPort;
+        private readonly string _serialPort;
         private readonly Action<IEnumerable<TestResult>> _testResultSink;
-        private readonly Action _parsingAborted;
+        private readonly Action _stopRunningTests;
         private readonly CancellationToken? _cancellationToken;
         private readonly HashSet<TestCase> _resultsSent = new HashSet<TestCase>();
         private string _lineToBeProcessed = null;
@@ -56,13 +56,13 @@ namespace nanoFramework.TestFramework.Tooling
         /// Create the parser
         /// </summary>
         /// <param name="testCases">The selection of test cases being run</param>
-        /// <param name="comPort">In case the test is run on real hardware: the COM-port
+        /// <param name="serialPort">In case the test is run on real hardware: the serial port
         /// of the device the test is executed on.</param>
         /// <param name="reportPrefix">The prefix used in the tests to mark messages
         /// from the unit test launcher.</param>
         /// <param name="testResultSink">Method that will receive the test results</param>
-        public UnitTestsOutputParser(TestCaseSelection testCases, string comPort, string reportPrefix, Action<IEnumerable<TestResult>> testResultSink)
-            : this(testCases, comPort, reportPrefix, testResultSink, null, null)
+        public UnitTestsOutputParser(TestCaseSelection testCases, string serialPort, string reportPrefix, Action<IEnumerable<TestResult>> testResultSink)
+            : this(testCases, serialPort, reportPrefix, testResultSink, null, null)
         {
         }
 
@@ -70,21 +70,21 @@ namespace nanoFramework.TestFramework.Tooling
         /// Create the parser
         /// </summary>
         /// <param name="testCases">The selection of test cases being run</param>
-        /// <param name="comPort">In case the test is run on real hardware: the COM-port
+        /// <param name="serialPort">In case the test is run on real hardware: the serial port
         /// of the device the test is executed on.</param>
         /// <param name="reportPrefix">The prefix used in the tests to mark messages
         /// from the unit test launcher.</param>
         /// <param name="testResultSink">Method that will receive the test results</param>
-        /// <param name="parsingAborted">Method called when the parsing of output has been aborted in response to cancellation of <paramref name="cancellationToken"/>.</param>
+        /// <param name="stopRunningTests">Method called if the parsing of output is complete, or if parsing has been aborted in response to cancellation of <paramref name="cancellationToken"/>.</param>
         /// <param name="cancellationToken">Cancellation token that indicates whether the execution of tests should be aborted (gracefully).</param>
-        public UnitTestsOutputParser(TestCaseSelection testCases, string comPort, string reportPrefix, Action<IEnumerable<TestResult>> testResultSink, Action parsingAborted, CancellationToken? cancellationToken)
+        public UnitTestsOutputParser(TestCaseSelection testCases, string serialPort, string reportPrefix, Action<IEnumerable<TestResult>> testResultSink, Action stopRunningTests, CancellationToken? cancellationToken)
         {
             _testCases = testCases;
-            _comPort = comPort;
+            _serialPort = serialPort;
             _reportPrefix = reportPrefix;
             _testResultSink = testResultSink;
             _currentOutput = _deploymentInformation;
-            _parsingAborted = parsingAborted;
+            _stopRunningTests = stopRunningTests;
             _cancellationToken = cancellationToken;
             _testClassPhase = TestClassPhases.NotStarted;
         }
@@ -116,10 +116,9 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// All tests have been completed. Make sure all test results have been sent.
         /// </summary>
-        /// <param name="deviceExecutionIsAbortedReason">If the device has prematurely stopped running the unit tests,
-        /// e.g., because the maximum time has been exceeded, this is a description to be added to the tests for which
-        /// no results have been obtained.</param>
-        public void Flush(string deviceExecutionIsAbortedReason = null)
+        /// <param name="executionHasStopped">Indicates that the execution of unit tests has been stopped
+        /// before all unit tests have been executed.</param>
+        public void Flush(bool executionHasStopped = false)
         {
             lock (this)
             {
@@ -128,10 +127,10 @@ namespace nanoFramework.TestFramework.Tooling
                     ParseOutput(_lineToBeProcessed + '\n');
                 }
 
-                if (!string.IsNullOrWhiteSpace(deviceExecutionIsAbortedReason)
+                if (executionHasStopped
                     || (_testClassPhase == TestClassPhases.NotStarted && _deploymentInformation.Count > 0))
                 {
-                    SendNotExecutedResults(deviceExecutionIsAbortedReason);
+                    SendNotExecutedResults();
                 }
                 else
                 {
@@ -185,8 +184,17 @@ namespace nanoFramework.TestFramework.Tooling
                         // Nothing else to do that to ignore it.
                         continue;
                     }
-
-                    if (match.Groups["type"].Value == "C")
+                    if (!match.Groups["type"].Success)
+                    {
+                        // Communication about the unit test launcher
+                        SendGroupResults(false);
+                        if (communication == UnitTestLauncher.Communication.AllTestsDone)
+                        {
+                            // Processing is complete
+                            _stopRunningTests?.Invoke();
+                        }
+                    }
+                    else if (match.Groups["type"].Value == "C")
                     {
                         #region Messages at the test class level
                         string fqn = match.Groups["fqn"].Value;
@@ -331,7 +339,7 @@ namespace nanoFramework.TestFramework.Tooling
                             {
                                 if (!_testsInGroup.TryGetValue(_currentTestCase, out TestResult testResult))
                                 {
-                                    _testsInGroup[_currentTestCase] = testResult = new TestResult(_currentTestCase, selectionIndex, _comPort);
+                                    _testsInGroup[_currentTestCase] = testResult = new TestResult(_currentTestCase, selectionIndex, _serialPort);
                                 }
                                 _currentOutput = testResult._messages;
                             }
@@ -398,6 +406,8 @@ namespace nanoFramework.TestFramework.Tooling
         |
         ((?<prefix>[^:\s\r\n]+) : (?<type>[CDM]) : (?<fqn>[^#:]+) ( \#(?<row>[0-9]+) ){0,1} : (?<time>[0-9]+) : (?<com>[A-Z0-9]+) ( : (?<msg>.+)){0,1})
         |
+        ((?<prefix>[^:\s\r\n]+) : (?<com>[A-Z0-9]+))
+        |
         (?<output>[^\r\n]+)
     )\r{0,1}\n
 )
@@ -461,11 +471,14 @@ namespace nanoFramework.TestFramework.Tooling
             foreach ((int selectionIndex, TestCase testCase) in _testCases.TestCases)
             {
                 if (!_resultsSent.Contains(testCase) && (
-                    (flush && _testClassPhase != TestClassPhases.Abort)
+                    flush
                     || (testCase.Group == _currentGroup && !_testsInGroup.ContainsKey(testCase))
                    ))
                 {
-                    var testResult = new TestResult(testCase, selectionIndex, _comPort);
+                    var testResult = new TestResult(testCase, selectionIndex, _serialPort)
+                    {
+                        Outcome = TestResult.TestOutcome.Skipped
+                    };
                     _testsInGroup[testCase] = testResult;
                     testResult._messages.Add("Test has not been run.");
                 }
@@ -537,16 +550,12 @@ namespace nanoFramework.TestFramework.Tooling
             IsAbortRequested();
         }
 
-        private void SendNotExecutedResults(string deviceExecutionIsAbortedReason)
+        private void SendNotExecutedResults()
         {
             var messages = new List<string>()
             {
                 "Test has not been run."
             };
-            if (!string.IsNullOrWhiteSpace(deviceExecutionIsAbortedReason))
-            {
-                messages.Add(deviceExecutionIsAbortedReason);
-            }
             if (_deploymentInformation.Count > 0)
             {
                 messages.Add(string.Empty);
@@ -556,7 +565,7 @@ namespace nanoFramework.TestFramework.Tooling
 
             _testResultSink(from tc in _testCases.TestCases
                             where !_resultsSent.Contains(tc.testCase)
-                            select new TestResult(tc.testCase, tc.selectionIndex, _comPort)
+                            select new TestResult(tc.testCase, tc.selectionIndex, _serialPort)
                             {
                                 Outcome = TestResult.TestOutcome.Skipped,
                                 _messages = messages
@@ -573,11 +582,11 @@ namespace nanoFramework.TestFramework.Tooling
                     if (_testClassPhase != TestClassPhases.Abort)
                     {
                         _testClassPhase = TestClassPhases.Abort;
-                        if (!(_parsingAborted is null))
+                        if (!(_stopRunningTests is null))
                         {
                             try
                             {
-                                _parsingAborted.Invoke();
+                                _stopRunningTests.Invoke();
                             }
                             catch
                             {

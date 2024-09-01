@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 
@@ -70,7 +71,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// if there are no limitations. The setting is ignored if <see cref="AllowRealHardware"/>
         /// is <c>false</c>.
         /// </summary>
-        public IReadOnlyList<string> AllowSerialPorts { get; set; } = new string[] { };
+        public List<string> AllowSerialPorts { get; set; } = new List<string>();
 
         /// <summary>
         /// Exclude the serial port(s) from the search for real hardware devices to run the tests on.
@@ -79,7 +80,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// if there are no ports to exclude. The setting is ignored if <see cref="AllowRealHardware"/>
         /// is <c>false</c>.
         /// </summary>
-        public IReadOnlyList<string> ExcludeSerialPorts { get; set; } = new string[] { };
+        public List<string> ExcludeSerialPorts { get; set; } = new List<string>();
 
         /// <summary>
         /// The maximum time in milliseconds the execution of the tests in a single test assembly on real hardware is allowed to take.
@@ -123,7 +124,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Level of logging for Unit Test execution.
         /// </summary>
-        public LoggingLevel Logging { get; set; } = LoggingLevel.None;
+        public LoggingLevel Logging { get; set; } = LoggingLevel.Warning;
 
         /// <summary>
         /// Get the path to the file with deployment configuration for the device connected to the specified serial port.
@@ -263,7 +264,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     if (!string.IsNullOrWhiteSpace(allowSerialPorts.Value))
                     {
-                        AllowSerialPorts = allowSerialPorts.Value.Split(',', ';');
+                        AllowSerialPorts = allowSerialPorts.Value.Split(',', ';').ToList();
                     }
                 }
 
@@ -274,7 +275,7 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (!string.IsNullOrWhiteSpace(excludeSerialPorts.Value))
                         {
-                            ExcludeSerialPorts = excludeSerialPorts.Value.Split(',', ';');
+                            ExcludeSerialPorts = excludeSerialPorts.Value.Split(',', ';').ToList();
                         }
                     }
 
@@ -309,7 +310,7 @@ namespace nanoFramework.TestFramework.Tooling
 
                 if (!backwardCompatible)
                 {
-                    MaxVirtualDevices = (int)ReadXmlInteger(nameof(MaxVirtualDevices), MaxVirtualDevices);
+                    MaxVirtualDevices = ReadXmlInteger(nameof(MaxVirtualDevices), MaxVirtualDevices);
 
                     VirtualDeviceTimeout = ReadXmlInteger(nameof(VirtualDeviceTimeout), VirtualDeviceTimeout);
                 }
@@ -404,18 +405,29 @@ namespace nanoFramework.TestFramework.Tooling
 
             if (isUserFile)
             {
-                if (AllowRealHardware && AllowSerialPorts.Count > 0)
+                if (AllowRealHardware)
                 {
-                    AddNode(nameof(AllowSerialPorts), string.Join(";", AllowSerialPorts));
-
-                    foreach (string serialPort in AllowSerialPorts)
+                    if (AllowSerialPorts.Count > 0)
                     {
-                        if (_deploymentConfiguration.TryGetValue(serialPort, out string filePath))
+                        AddNode(nameof(AllowSerialPorts), string.Join(";", AllowSerialPorts));
+                    }
+
+                    foreach (KeyValuePair<string, string> deploymentConfiguration in from dc in _deploymentConfiguration
+                                                                                     orderby dc.Key
+                                                                                     select dc)
+                    {
+                        if ((AllowSerialPorts.Count == 0 && !ExcludeSerialPorts.Contains(deploymentConfiguration.Key))
+                            || AllowSerialPorts.Contains(deploymentConfiguration.Key))
                         {
                             XmlElement node = Document().CreateElement(DeploymentConfiguration);
                             runSettings.AppendChild(node);
-                            AddNode(DeploymentConfiguration_SerialPort, serialPort, node);
-                            AddNode(DeploymentConfiguration_File, PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), filePath), node);
+                            AddNode(DeploymentConfiguration_SerialPort, deploymentConfiguration.Key, node);
+                            string relativePath = deploymentConfiguration.Value;
+                            if (Path.IsPathRooted(relativePath))
+                            {
+                                relativePath = PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), relativePath);
+                            }
+                            AddNode(DeploymentConfiguration_File, relativePath, node);
                         }
                     }
                 }
@@ -470,13 +482,16 @@ namespace nanoFramework.TestFramework.Tooling
             #region Save/delete file
             if (document is null)
             {
-                try
+                if (File.Exists(settingsFilePath))
                 {
-                    File.Delete(settingsFilePath);
-                }
-                catch (Exception ex)
-                {
-                    logger?.Invoke(LoggingLevel.Error, $"Cannot delete '{settingsFilePath}': {ex.Message}");
+                    try
+                    {
+                        File.Delete(settingsFilePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.Invoke(LoggingLevel.Error, $"Cannot delete '{settingsFilePath}': {ex.Message}");
+                    }
                 }
             }
             else

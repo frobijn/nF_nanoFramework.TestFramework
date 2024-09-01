@@ -114,7 +114,7 @@ namespace nanoFramework.TestFramework.Tooling
             /// <param name="assemblies">List of assemblies to load for the unit test</param>
             /// <param name="missingDeploymentConfigurationKeys">The deployment keys for which no value could be retrieved (value of the
             /// dictionary) while it is used to execute a test case (key of the dictionary).</param>
-            public Application(IReadOnlyList<string> assemblies, IReadOnlyDictionary<TestCase, HashSet<string>> missingDeploymentConfigurationKeys)
+            internal Application(IReadOnlyList<AssemblyMetadata> assemblies, IReadOnlyDictionary<TestCase, HashSet<string>> missingDeploymentConfigurationKeys)
             {
                 Assemblies = assemblies;
                 MissingDeploymentConfigurationKeys = missingDeploymentConfigurationKeys;
@@ -125,7 +125,7 @@ namespace nanoFramework.TestFramework.Tooling
             /// <summary>
             /// List of assemblies to load for the unit test
             /// </summary>
-            public IReadOnlyList<string> Assemblies
+            public IReadOnlyList<AssemblyMetadata> Assemblies
             {
                 get;
             }
@@ -159,7 +159,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// application could not be created.</returns>
         public Application GenerateAsApplication(string applicationAssemblyDirectoryPath, LogMessenger logger)
         {
-            var assemblies = new List<string>();
+            var assemblies = new List<AssemblyMetadata>();
             if (!FindAssemblies(assemblies, applicationAssemblyDirectoryPath, logger))
             {
                 return null;
@@ -401,7 +401,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="assemblies">List of assemblies to fill</param>
         /// <param name="applicationAssemblyDirectoryPath">Directory where the generated application's assembly is written to.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        private bool FindAssemblies(List<string> assemblies, string applicationAssemblyDirectoryPath, LogMessenger logger)
+        private bool FindAssemblies(List<AssemblyMetadata> assemblies, string applicationAssemblyDirectoryPath, LogMessenger logger)
         {
             foreach (string directoryPath in _testAssemblyDirectoryPaths)
             {
@@ -411,7 +411,7 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (Path.GetFileNameWithoutExtension(file) != ASSEMBLY_NAME)
                         {
-                            assemblies.Add(file);
+                            assemblies.Add(new AssemblyMetadata(file));
                         }
                     }
                 }
@@ -423,29 +423,32 @@ namespace nanoFramework.TestFramework.Tooling
                 return false;
             }
 
-            foreach (string file in Directory.EnumerateFiles(applicationAssemblyDirectoryPath, $"{ASSEMBLY_NAME}.*"))
+            if (Directory.Exists(applicationAssemblyDirectoryPath))
             {
-                try
+                foreach (string file in Directory.EnumerateFiles(applicationAssemblyDirectoryPath, $"{ASSEMBLY_NAME}.*"))
                 {
-                    File.Delete(file);
-                }
-                catch (Exception ex)
-                {
-                    logger?.Invoke(LoggingLevel.Error, $"Application generation aborted: cannot delete {Path.GetFileName(file)}: {ex.Message}");
-                    return false;
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.Invoke(LoggingLevel.Error, $"Application generation aborted: cannot delete {Path.GetFileName(file)}: {ex.Message}");
+                        return false;
+                    }
                 }
             }
             return true;
         }
 
-        private bool GenerateApplication(List<string> assemblies, string applicationAssemblyDirectoryPath, string mainSourceCode, LogMessenger logger)
+        private bool GenerateApplication(List<AssemblyMetadata> assemblies, string applicationAssemblyDirectoryPath, string mainSourceCode, LogMessenger logger)
         {
             string assemblyFilePath = Path.Combine(applicationAssemblyDirectoryPath, ASSEMBLY_NAME + ".dll");
 
             CSharpCompilation compilation = CSharpCompilation.Create(Path.GetFileName(assemblyFilePath))
                                             .WithOptions(new CSharpCompilationOptions(OutputKind.ConsoleApplication))
-                                            .AddReferences(from filePath in assemblies
-                                                           select MetadataReference.CreateFromFile(Path.ChangeExtension(filePath, ".dll")));
+                                            .AddReferences(from a in assemblies
+                                                           select MetadataReference.CreateFromFile(a.AssemblyFilePath));
 
             var sources = new List<string>(SourceFiles.Values) {
                 mainSourceCode
@@ -456,6 +459,7 @@ namespace nanoFramework.TestFramework.Tooling
             }
 
             bool success = true;
+            Directory.CreateDirectory(Path.GetDirectoryName(assemblyFilePath));
             Microsoft.CodeAnalysis.Emit.EmitResult compiled = compilation.Emit(assemblyFilePath);
             if (compiled.Diagnostics.Length > 0)
             {
@@ -487,11 +491,11 @@ namespace nanoFramework.TestFramework.Tooling
             string peFilePath = Path.Combine(applicationAssemblyDirectoryPath, ASSEMBLY_NAME + ".pe");
 
             var arguments = new List<string>();
-            foreach (string assembly in assemblies)
+            foreach (AssemblyMetadata assembly in assemblies)
             {
                 arguments.Add("-LoadHints");
-                arguments.Add(Path.GetFileNameWithoutExtension(assembly));
-                arguments.Add(Path.ChangeExtension(PathHelper.GetRelativePath(applicationAssemblyDirectoryPath, assembly), ".dll"));
+                arguments.Add(Path.GetFileNameWithoutExtension(assembly.AssemblyFilePath));
+                arguments.Add(PathHelper.GetRelativePath(applicationAssemblyDirectoryPath, assembly.AssemblyFilePath));
             }
             arguments.Add("-verbose");
 
@@ -513,7 +517,7 @@ namespace nanoFramework.TestFramework.Tooling
                 logger?.Invoke(LoggingLevel.Error, $"Compilation to nanoFramework assembly failed:{Environment.NewLine}{cliResult.StandardError}{Environment.NewLine}MetadataProcessor output:{Environment.NewLine}{cliResult.StandardOutput}");
                 return false;
             }
-            assemblies.Insert(0, peFilePath);
+            assemblies.Insert(0, new AssemblyMetadata(assemblyFilePath));
             return true;
         }
 

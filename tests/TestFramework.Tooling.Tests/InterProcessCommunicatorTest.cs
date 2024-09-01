@@ -14,10 +14,10 @@ namespace TestFramework.Tooling.Tests.Tools
 {
     [TestClass]
     [TestCategory("Visual Studio/VSTest")]
-    public sealed class CommunicatorTest
+    public sealed class InterProcessCommunicatorTest
     {
         [TestMethod]
-        public void Communicator_Test_MessageExchange()
+        public void InterProcessCommunicator_Test_MessageExchange()
         {
             #region Setup
             string id = Guid.NewGuid().ToString();
@@ -27,10 +27,10 @@ namespace TestFramework.Tooling.Tests.Tools
             };
             #endregion
 
-            var actual = new TestAdapterTestHostMock(null, null, null);
+            var actual = new InterProcessParentChildMock(null, null, null);
 
             #region Send from test adapter to test host
-            actual.TestAdapter.SendMessage(message);
+            actual.Parent.SendMessage(message);
 
             actual.WaitUntilProcessingIsCompleted();
             Assert.AreEqual(message.GetType(), actual.ReceivedByTestHost.FirstOrDefault()?.GetType());
@@ -38,8 +38,8 @@ namespace TestFramework.Tooling.Tests.Tools
             #endregion
 
             #region Send from test host to test adapter
-            actual = new TestAdapterTestHostMock(null, null, null);
-            actual.TestHost.SendMessage(message);
+            actual = new InterProcessParentChildMock(null, null, null);
+            actual.Child.SendMessage(message);
 
             actual.WaitUntilProcessingIsCompleted();
             Assert.AreEqual(message.GetType(), actual.ReceivedByTestAdapter.FirstOrDefault()?.GetType());
@@ -48,7 +48,7 @@ namespace TestFramework.Tooling.Tests.Tools
         }
 
         [TestMethod]
-        public void Communicator_Test_LogExchange()
+        public void InterProcessCommunicator_Test_LogExchange()
         {
             #region Setup
             string id = Guid.NewGuid().ToString();
@@ -57,14 +57,14 @@ namespace TestFramework.Tooling.Tests.Tools
             #region Exchange all log messages
             var logger = new LogMessengerMock();
 
-            var actual = new TestAdapterTestHostMock((_, testHostLogger, __) =>
+            var actual = new InterProcessParentChildMock((_, testHostLogger, __) =>
             {
                 testHostLogger(LoggingLevel.Detailed, id); // Send a log message from host to adapter
                 testHostLogger(LoggingLevel.Verbose, id);
                 testHostLogger(LoggingLevel.Error, id);
             }, null, logger);
 
-            actual.TestAdapter.SendMessage(new TestDiscoverer_Parameters()
+            actual.Parent.SendMessage(new TestDiscoverer_Parameters()
             {
                 LogLevel = (int)LoggingLevel.Detailed // instruct test host to use detailed logging
             });
@@ -79,14 +79,14 @@ Error: {id}");
             #region Exchange only error messages
             logger = new LogMessengerMock();
 
-            actual = new TestAdapterTestHostMock((_, testHostLogger, __) =>
+            actual = new InterProcessParentChildMock((_, testHostLogger, __) =>
             {
                 testHostLogger(LoggingLevel.Detailed, id);
                 testHostLogger(LoggingLevel.Verbose, id);
                 testHostLogger(LoggingLevel.Error, id);
             }, null, logger);
 
-            actual.TestAdapter.SendMessage(new TestDiscoverer_Parameters()
+            actual.Parent.SendMessage(new TestDiscoverer_Parameters()
             {
                 LogLevel = (int)LoggingLevel.Error
             });
@@ -97,7 +97,7 @@ Error: {id}");
         }
 
         [TestMethod]
-        public void Communicator_Cancel()
+        public void InterProcessCommunicator_Cancel()
         {
             #region Setup
             string id = Guid.NewGuid().ToString();
@@ -109,10 +109,10 @@ Error: {id}");
 
             #region Start test host and cancellation
             bool testHostProcessMessageStarted = false;
-            TestAdapterTestHostMock actual = null;
+            InterProcessParentChildMock actual = null;
 
             // Simulate processing on the test host
-            void testHostProcessMessage(Communicator.IMessage _, LogMessenger __, CancellationToken cancellationToken)
+            void testHostProcessMessage(InterProcessCommunicator.IMessage _, LogMessenger __, CancellationToken cancellationToken)
             {
                 testHostProcessMessageStarted = true;
                 while (!cancellationToken.IsCancellationRequested)
@@ -120,12 +120,12 @@ Error: {id}");
                     // Wait for cancellation
                     Thread.Sleep(100);
                 }
-                actual.TestHost.SendMessage(message);
+                actual.Child.SendMessage(message);
             }
 
             // Start the simulation
-            actual = new TestAdapterTestHostMock(testHostProcessMessage, null, null);
-            actual.TestAdapter.SendMessage(message);
+            actual = new InterProcessParentChildMock(testHostProcessMessage, null, null);
+            actual.Parent.SendMessage(message);
 
             // Wait until the test host has started processing the task
             while (!testHostProcessMessageStarted)
@@ -134,7 +134,7 @@ Error: {id}");
             }
 
             // Cancel what the test host is doing
-            actual.TestAdapter.Cancel();
+            actual.Parent.Cancel();
 
             // Wait for all processing to be completed
             actual.WaitUntilProcessingIsCompleted();

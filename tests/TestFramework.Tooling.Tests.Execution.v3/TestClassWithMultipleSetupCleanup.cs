@@ -29,6 +29,13 @@ namespace TestFramework.Tooling.Execution.Tests
         }
         private bool _setup2Called;
 
+        [TestMethod]
+        public void Test()
+        {
+            _testMethodCalled = true;
+        }
+        private bool _testMethodCalled;
+
         [Cleanup]
         public void Cleanup1()
         {
@@ -49,6 +56,7 @@ namespace TestFramework.Tooling.Execution.Tests
             Assert.IsTrue(_constructorCalled, "Constructor called");
             Assert.IsTrue(_setup1Called, "Setup called");
             Assert.IsTrue(_setup2Called, "Setup2 called");
+            Assert.IsTrue(_testMethodCalled, "TestMethod called");
             Assert.IsTrue(_cleanup1Called, "Cleanup called");
             Assert.IsTrue(_cleanup2Called, "Cleanup2 called");
         }

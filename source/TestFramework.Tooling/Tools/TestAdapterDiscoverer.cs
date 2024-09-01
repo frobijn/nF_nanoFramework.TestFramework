@@ -19,7 +19,7 @@ namespace nanoFramework.TestFramework.Tooling.Tools
 		/// <param name="parameters">The parameters to the <c>ITestDiscoverer.DiscoverTests</c> method.</param>
 		/// <param name="sendMessage">Method to send messages with the results to the test adapter.</param>
 		/// <param name="logger">Logger to pass messages to the test host/test adapter</param>
-		public static void Run (TestDiscoverer_Parameters parameters, Action<Communicator.IMessage> sendMessage, LogMessenger logger)
+		public static void Run (TestDiscoverer_Parameters parameters, Action<InterProcessCommunicator.IMessage> sendMessage, LogMessenger logger)
 		{
 			var testCases = new TestCaseCollection (
 				parameters.Sources,

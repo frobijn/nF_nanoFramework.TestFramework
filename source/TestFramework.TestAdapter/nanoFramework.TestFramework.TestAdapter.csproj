@@ -83,12 +83,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../TestFramework.Tooling/Tools/TestAdapterTestHostMessaging.cs">
-      <Link>TestFramework.Tooling/Tools/TestAdapterTestHostMessaging.cs</Link>
-    </Compile>
-    <Compile Include="../TestFramework.Tooling/LogMessenger.cs">
-      <Link>TestFramework.Tooling/LogMessenger.cs</Link>
-    </Compile>
     <Compile Include="TestAdapterLogger.cs" />
     <Compile Include="TestDiscoverer.cs" />
     <Compile Include="TestExecutor.cs" />
@@ -99,6 +93,12 @@
     <None Include="app.config" />
     <None Include="IncludeTestHost.props" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TestFramework.Tooling.Shared\nanoFramework.TestFramework.Tooling.Shared.csproj">
+      <Project>{22aec17a-1744-4b28-9612-6b09aa5e92b8}</Project>
+      <Name>nanoFramework.TestFramework.Tooling.Shared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

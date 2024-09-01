@@ -19,12 +19,12 @@ namespace nanoFramework.TestFramework.TestHost
             }
             if (args.Length > 2)
             {
-                var testHost = TestHostCommunicator.Start(args[0], args[1], args[2], Process);
+                var testHost = InterProcessChild.Start(args[0], args[1], args[2], TestAdapterMessages.Types, Process);
                 testHost.WaitUntilProcessingIsCompleted();
             }
         }
 
-        private static void Process(Communicator.IMessage message, Action<Communicator.IMessage> sendMessage, LogMessenger logger, CancellationToken token)
+        private static void Process(InterProcessCommunicator.IMessage message, Action<InterProcessCommunicator.IMessage> sendMessage, LogMessenger logger, CancellationToken token)
         {
             if (message is TestDiscoverer_Parameters discoverer)
             {

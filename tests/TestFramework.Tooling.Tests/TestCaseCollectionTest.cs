@@ -328,6 +328,35 @@ G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
         }
         #endregion
 
+        #region TestFramework.Tooling.Tests.Hardware_esp32.v3
+        /// <summary>
+        /// The purpose of this test is to verify that a test assembly can be analysed
+        /// that depends on hardware-specific native assemblies.
+        /// </summary>
+        [TestMethod]
+        public void TestCases_Hardware_esp32_v3()
+        {
+            string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Hardware_esp32.v3");
+            string assemblyFilePath = TestProjectHelper.FindNFUnitTestAssembly(projectFilePath);
+            var logger = new LogMessengerMock();
+            string pathPrefix = Path.GetDirectoryName(projectFilePath) + Path.DirectorySeparatorChar;
+
+            var actual = new TestCaseCollection(assemblyFilePath, true, projectFilePath, logger);
+
+            Assert.IsNotNull(actual.TestCases);
+            logger.AssertEqual("");
+
+            AssertTestCaseCollectionFQNDisplayName(actual.TestCases,
+$@"G000T000 TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly 'UseEsp32NativeAssembly'");
+
+            AssertSourceLocationTraits(actual.TestCases,
+$@"G000T000 @{pathPrefix}HardwareSpecificTest.cs(18,21) '@esp32', '@Real hardware' DC()");
+
+            AssertRunInformation(actual.TestCases,
+$@"G000T000 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly");
+        }
+        #endregion
+
         #region Multiple assemblies, no source, no logger
         [TestMethod]
         public void TestCases_Multiple_Assemblies()

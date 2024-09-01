@@ -35,7 +35,7 @@ namespace nanoFramework.TestFramework.TestAdapter
             .WaitUnitCompleted();
         }
 
-        private static void ProcessTestHostMessage(Communicator.IMessage message, ITestCaseDiscoverySink discoverySink)
+        private static void ProcessTestHostMessage(InterProcessCommunicator.IMessage message, ITestCaseDiscoverySink discoverySink)
         {
             if (message is TestDiscoverer_DiscoveredTests tests)
             {

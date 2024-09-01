@@ -226,10 +226,18 @@
         "type": "Project",
         "dependencies": {
           "CliWrap": "[3.6.6, )",
+          "ICSharpCode.Decompiler": "[7.2.1.6856, )",
           "Microsoft.CodeAnalysis.CSharp": "[4.11.0, )",
           "Newtonsoft.Json": "[13.0.3, )",
           "Newtonsoft.Json.Schema": "[4.0.1, )",
+          "nanoFramework.TestFramework.Tooling.Shared": "[1.0.0, )",
           "nanoFramework.Tools.Debugger.Net": "[2.4.42, )"
+        }
+      },
+      "nanoframework.testframework.tooling.shared": {
+        "type": "Project",
+        "dependencies": {
+          "Newtonsoft.Json": "[13.0.3, )"
         }
       }
     }

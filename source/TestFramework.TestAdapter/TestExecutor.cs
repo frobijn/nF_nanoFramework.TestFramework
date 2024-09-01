@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.Tools;
 
 namespace nanoFramework.TestFramework.TestAdapter
@@ -64,7 +65,7 @@ namespace nanoFramework.TestFramework.TestAdapter
             _testHost?.WaitUnitCompleted();
         }
 
-        private static void ProcessTestCaseResults(Communicator.IMessage message, List<TestCase> selection, ITestExecutionRecorder testRecorder)
+        private static void ProcessTestCaseResults(InterProcessCommunicator.IMessage message, List<TestCase> selection, ITestExecutionRecorder testRecorder)
         {
             if (message is TestExecutor_TestResults testResults)
             {

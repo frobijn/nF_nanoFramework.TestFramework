@@ -40,11 +40,12 @@
 
   <ItemGroup>
      <PackageReference Include="CliWrap" Version="3.6.6" />
+     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
      <PackageReference Include="nanoFramework.Tools.Debugger.Net" Version="2.4.42" />
      <!-- <PackageReference Include="nanoFramework.Tools.MetadataProcessor" Version="1.12.1" GeneratePathProperty="true" /> -->
      <PackageReference Include="Nerdbank.GitVersioning">
-      <Version>3.6.141</Version>
+      <Version>3.6.143</Version>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -101,8 +102,9 @@
 	</Compile>
 	<Compile Include="AssemblyLoader.cs" />
 	<Compile Include="DeploymentConfiguration.cs" />
+	<Compile Include="AssemblyMetadata.cs" />
 	<Compile Include="RealHardwareDeviceHelper.cs" />
-	<Compile Include="TestCaseExecutionOrchestration.cs" />
+	<Compile Include="TestsRunner.cs" />
 	<Compile Include="Tools\DebugProjectBuildTool.cs" />
 	<Compile Include="NanoCLRHelper.cs" />
 	<Compile Include="PathHelper.cs" />
@@ -117,7 +119,6 @@
 	<Compile Include="TestFrameworkProxy\DataRowProxy.cs" />
 	<Compile Include="TestFrameworkProxy\DeploymentConfigurationProxy.cs" />
 	<Compile Include="TestFrameworkProxy\FrameworkMismatchException.cs" />
-	<Compile Include="LogMessenger.cs" />
 	<Compile Include="TestFrameworkProxy\SetupProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestClassProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TestDeviceProxy.cs" />
@@ -127,11 +128,9 @@
 	<Compile Include="TestFrameworkProxy\TestMethodProxy.cs" />
 	<Compile Include="TestFrameworkProxy\TraitsProxy.cs" />
 	<Compile Include="TestCaseCollection.cs" />
-	<Compile Include="TestFrameworkConfiguration.cs" />
 	<Compile Include="TestResult.cs" />
 	<Compile Include="Tools\TestAdapterDiscoverer.cs" />
 	<Compile Include="Tools\TestAdapterTestCasesExecutor.cs" />
-	<Compile Include="Tools\TestAdapterTestHostMessaging.cs" />
 	<Compile Include="UnitTestsOutputParser.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs" />
@@ -186,6 +185,10 @@
     <Content Include="MetaDataProcessor\nanoFramework.Tools.MetadataProcessor.pdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\TestFramework.Tooling.Shared\nanoFramework.TestFramework.Tooling.Shared.csproj" />
   </ItemGroup>
   
   <ItemGroup>

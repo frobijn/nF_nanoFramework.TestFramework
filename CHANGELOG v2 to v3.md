@@ -239,11 +239,15 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 
 - The test adapter is changed from `nanoFramework.TestAdapter` to `nanoFramework.TestFramework.TestAdapter`, to make sure the v3 version will never overwrite a v2 version and to have a name consistent with the other test framework tools. Most code has moved from the test adapter to `nanoFramework.TestFramework.Tooling`. The URI to identify the test adapter / executor has been changed as well, so Visual Studio / VSTest won't be confused.
 
+- A new .NET Standard 2 class library `nanoFramework.TestFramework.Tooling.Shared` contains some functionality that is required in tools that run in environments that cannot host the `nanoFramework.TestFramework.Tooling` library, e.g., .NET (non-Framework) build tools and the test adapter.
+
 - New NuGet packages are introduced:
 
     - `nanoFramework.TestFramework.DebugTestsProject` with the support for the new debug-unit-tests project
     
     - `nanoFramework.TestFramework.Tooling` for the .NET Framework library of the same name, as this is required to unit test / debug more complex test framework extensions. It will also help people who want to create new/custom tools that work with unit tests.
+    
+    - `nanoFramework.TestFramework.Tooling.Shared` for the .NET Framework library of the same name, as this is a companion to `nanoFramework.TestFramework.Tooling` for custom tool hosts that can be on a target platform/process environment that does not support by `nanoFramework.TestFramework.Tooling` (and custom tools that want to work with the test framework configuration).
 
 - The `nanoFramework.TestFramework` package is discontinued and replaced by `nanoFramework.TestFramework.Core` and `nanoFramework.TestFramework.TestProject`.
 

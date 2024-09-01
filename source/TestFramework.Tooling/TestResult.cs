@@ -18,13 +18,13 @@ namespace nanoFramework.TestFramework.Tooling
         /// </summary>
         /// <param name="testCase">Test case for which this is a result</param>
         /// <param name="index">Index of the test case in the selection; pass -1 for a new test case.</param>
-        /// <param name="comPort">In case the test is run on real hardware: the COM-port
+        /// <param name="serialPort">In case the test is run on real hardware: the COM-port
         /// of the device the test is executed on.</param>
-        internal TestResult(TestCase testCase, int index, string comPort)
+        internal TestResult(TestCase testCase, int index, string serialPort)
         {
             TestCase = testCase;
             Index = index;
-            COMPort = comPort;
+            SerialPort = serialPort;
             Outcome = TestOutcome.None;
             ErrorMessage = "Test has not been run";
         }
@@ -49,10 +49,10 @@ namespace nanoFramework.TestFramework.Tooling
         }
 
         /// <summary>
-        /// In case the test is run on real hardware: the COM-port
+        /// In case the test is run on real hardware: the serial port
         /// of the device the test is executed on.
         /// </summary>
-        public string COMPort
+        public string SerialPort
         {
             get;
             internal set;
@@ -105,9 +105,9 @@ namespace nanoFramework.TestFramework.Tooling
         /// Get the display name of the test.
         /// </summary>
         public string DisplayName
-            => COMPort is null
+            => SerialPort is null
                 ? $"{TestCase.DisplayName} - {(string.IsNullOrEmpty(ErrorMessage) ? Outcome.ToString() : ErrorMessage)}"
-                : $"{TestCase.DisplayNameWithoutDevice(TestCase.DisplayName)} [{COMPort}] - {(string.IsNullOrEmpty(ErrorMessage) ? Outcome.ToString() : ErrorMessage)}";
+                : $"{TestCase.DisplayNameWithoutDevice(TestCase.DisplayName)} [{SerialPort}] - {(string.IsNullOrEmpty(ErrorMessage) ? Outcome.ToString() : ErrorMessage)}";
 
         /// <summary>
         /// Get a short description why the test did not pass

@@ -13,3 +13,4 @@ clrversion
 csproj
 vstest
 mscorlib
+decompiler

@@ -21,8 +21,8 @@ namespace TestFramework.Tooling.Tests.Tools
             #region Setup
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v3");
             string assemblyFilePath = TestProjectHelper.FindNFUnitTestAssembly(projectFilePath);
-            var messagesSent = new List<Communicator.IMessage>();
-            void sendMessage(Communicator.IMessage message)
+            var messagesSent = new List<InterProcessCommunicator.IMessage>();
+            void sendMessage(InterProcessCommunicator.IMessage message)
             {
                 lock (messagesSent)
                 {
@@ -57,7 +57,7 @@ Error: {Path.GetDirectoryName(projectFilePath)}\TestWithALotOfErrors.cs(55,10): 
                 nameof (TestDiscoverer_DiscoveredTests.TestCase.LineNumber),
                 nameof (TestDiscoverer_DiscoveredTests.TestCase.Traits)
             };
-            foreach (Communicator.IMessage message in messagesSent)
+            foreach (InterProcessCommunicator.IMessage message in messagesSent)
             {
                 if (message is TestDiscoverer_DiscoveredTests discovered)
                 {

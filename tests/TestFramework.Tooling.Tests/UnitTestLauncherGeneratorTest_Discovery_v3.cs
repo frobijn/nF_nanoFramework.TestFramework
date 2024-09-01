@@ -106,10 +106,13 @@ namespace nanoFramework.TestFramework.Tools
 
             Assert.IsNotNull(actual?.ReportPrefix);
             Assert.AreNotEqual(0, actual.Assemblies.Count);
-            Assert.AreEqual("nanoFramework.UnitTestLauncher.pe", Path.GetFileName(actual.Assemblies[0]));
+            Assert.AreEqual("nanoFramework.UnitTestLauncher.pe", Path.GetFileName(actual.Assemblies[0].NanoFrameworkAssemblyFilePath));
             Assert.IsTrue((from a in actual.Assemblies
-                           where Path.GetFileName(a) == "nanoFramework.TestFramework.pe"
-                           select Path.GetFileName(a)).Any());
+                           where Path.GetFileName(a.NanoFrameworkAssemblyFilePath) == "TestFramework.Tooling.Tests.Discovery.v3.pe"
+                           select a).Any());
+            Assert.IsTrue((from a in actual.Assemblies
+                           where Path.GetFileName(a.NanoFrameworkAssemblyFilePath) == "nanoFramework.TestFramework.pe"
+                           select a).Any());
         }
 
         [TestMethod]

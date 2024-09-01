@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -60,7 +61,7 @@ namespace TestFramework.Tooling.Tests
             AssertConfiguration(new TestFrameworkConfiguration()
             {
                 AllowRealHardware = true,
-                AllowSerialPorts = new string[] { "COM9" },
+                AllowSerialPorts = new List<string>() { "COM9" },
                 CLRVersion = "v1.0",
                 Logging = LoggingLevel.Verbose,
                 PathToLocalCLRInstance = Path.GetFullPath(Path.Combine(testBaseDirectory, "..", "clr", "custom.bin"))
@@ -116,7 +117,7 @@ namespace TestFramework.Tooling.Tests
             AssertConfiguration(new TestFrameworkConfiguration()
             {
                 AllowRealHardware = false,
-                AllowSerialPorts = new string[] { "COM9" },
+                AllowSerialPorts = new List<string>() { "COM9" },
                 CLRVersion = "v1.0",
                 Logging = LoggingLevel.Verbose,
                 PathToLocalCLRInstance = Path.GetFullPath(Path.Combine(testSubDirectory, "clr", "custom.bin"))
@@ -224,8 +225,8 @@ namespace TestFramework.Tooling.Tests
                 new TestFrameworkConfiguration()
                 {
                     AllowRealHardware = false,
-                    AllowSerialPorts = new string[] { "COM9", "COM11", "COM42" },
-                    ExcludeSerialPorts = new string[] { "COM30", "COM31" },
+                    AllowSerialPorts = new List<string>() { "COM9", "COM11", "COM42" },
+                    ExcludeSerialPorts = new List<string>() { "COM30", "COM31" },
                     RealHardwareTimeout = 120000,
                     PathToLocalNanoCLR = Path.Combine(globalDirectory, "clr", "nanoclr.exe"),
                     CLRVersion = "v1.0",
@@ -264,8 +265,8 @@ namespace TestFramework.Tooling.Tests
                 new TestFrameworkConfiguration()
                 {
                     AllowRealHardware = false,
-                    AllowSerialPorts = new string[] { "COM42" },
-                    ExcludeSerialPorts = new string[] { "COM30", "COM31" },
+                    AllowSerialPorts = new List<string>() { "COM42" },
+                    ExcludeSerialPorts = new List<string>() { "COM30", "COM31" },
                     RealHardwareTimeout = 120000,
                     PathToLocalNanoCLR = Path.Combine(globalDirectory, "clr", "nanoclr.exe"),
                     CLRVersion = "v1.0",
@@ -304,8 +305,8 @@ namespace TestFramework.Tooling.Tests
                 new TestFrameworkConfiguration()
                 {
                     AllowRealHardware = true,
-                    AllowSerialPorts = new string[] { "COM11", "COM42" },
-                    ExcludeSerialPorts = new string[] { "COM30", "COM31" },
+                    AllowSerialPorts = new List<string>() { "COM11", "COM42" },
+                    ExcludeSerialPorts = new List<string>() { "COM30", "COM31" },
                     RealHardwareTimeout = 120000,
                     PathToLocalNanoCLR = Path.Combine(globalDirectory, "clr", "nanoclr.exe"),
                     CLRVersion = "v1.0",

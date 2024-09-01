@@ -19,6 +19,7 @@ namespace TestFramework.Tooling.Execution.Tests
         [DeploymentConfiguration("RGB LED pin")]
         public void MethodToRunOnRealHardware(int ledPin)
         {
+            OutputHelper.WriteLine("Test method runs on esp32 only");
             Assert.AreNotEqual(-1, ledPin);
         }
 
@@ -27,6 +28,7 @@ namespace TestFramework.Tooling.Execution.Tests
         [DataRow((int)123)]
         public void MethodToRunOnRealHardwareWithData(long ledPin, int data)
         {
+            OutputHelper.WriteLine("[DataRow] runs on esp32 only");
             Assert.AreNotEqual(-1, ledPin);
             Assert.AreEqual(123, data);
         }
