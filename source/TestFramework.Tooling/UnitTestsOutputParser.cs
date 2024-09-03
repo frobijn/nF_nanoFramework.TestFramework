@@ -22,7 +22,7 @@ namespace nanoFramework.TestFramework.Tooling
         private readonly string _reportPrefix;
         private readonly string _serialPort;
         private readonly Action<IEnumerable<TestResult>> _testResultSink;
-        private readonly Action _stopRunningTests;
+        private Action _stopRunningTests;
         private readonly CancellationToken? _cancellationToken;
         private readonly HashSet<TestCase> _resultsSent = new HashSet<TestCase>();
         private string _lineToBeProcessed = null;
@@ -122,6 +122,7 @@ namespace nanoFramework.TestFramework.Tooling
         {
             lock (this)
             {
+                _stopRunningTests = null;
                 if (!(_lineToBeProcessed is null))
                 {
                     ParseOutput(_lineToBeProcessed + '\n');
@@ -136,6 +137,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     SendGroupResults(true);
                 }
+                _testClassPhase = TestClassPhases.Abort;
             }
         }
         #endregion
@@ -166,7 +168,7 @@ namespace nanoFramework.TestFramework.Tooling
                 else if (match.Groups["prefix"].Value != _reportPrefix)
                 {
                     // A unit test is trying to impersonate the unit test launcher!
-                    _currentOutput?.Add(match.Value.Replace("\r", "").Replace("\r", ""));
+                    _currentOutput?.Add(match.Value.Replace("\r", "").Replace("\n", ""));
                 }
                 else
                 {
@@ -568,7 +570,7 @@ namespace nanoFramework.TestFramework.Tooling
                             select new TestResult(tc.testCase, tc.selectionIndex, _serialPort)
                             {
                                 Outcome = TestResult.TestOutcome.Skipped,
-                                _messages = messages
+                                _messages = messages.ToList()
                             });
         }
 

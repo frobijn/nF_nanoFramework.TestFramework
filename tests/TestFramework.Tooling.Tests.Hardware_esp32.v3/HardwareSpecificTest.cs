@@ -10,14 +10,14 @@ namespace TestFramework.Tooling.Hardware_esp32.Tests
     /// Test class that uses an ESP32-specific class library.
     /// </summary>
     [TestClass]
-    [TestOnPlatform("esp32")]
+    [TestOnPlatform("ESP32")]
     public class HardwareSpecificTest
     {
         [TestMethod]
         [Trait("Hardware required")]
         public void UseEsp32NativeAssembly()
         {
-            OutputHelper.WriteLine($"Use esp32 native assembly");
+            OutputHelper.WriteLine($"Use ESP32 native assembly");
             Configuration.GetFunctionPin(DeviceFunction.I2C2_DATA);
         }
     }

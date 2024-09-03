@@ -52,6 +52,20 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         }
         #endregion
 
+        #region Properties
+        /// <summary>
+        /// Platform that describes the family the device belongs to.
+        /// </summary>
+        public string Platform
+            => _device.Platform();
+
+        /// <summary>
+        /// Target name that denotes the firmware installed on the device.
+        /// </summary>
+        public string TargetName
+            => _device.TargetName();
+        #endregion
+
         #region Methods
         /// <summary>
         /// Get the instance that implements the <see cref="ITestDevice"/> interface on the nanoCLR

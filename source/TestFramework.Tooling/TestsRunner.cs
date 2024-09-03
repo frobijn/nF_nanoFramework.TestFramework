@@ -168,17 +168,22 @@ namespace nanoFramework.TestFramework.Tooling
             /// Execute an application consisting of a set of assemblies on the device.
             /// </summary>
             /// <param name="assemblies">The assemblies to execute. One of the assemblies must be a program.</param>
+            /// <param name="logging">Level of logging in the virtual device.</param>
             /// <param name="reportPrefix">The prefix to use to report information about running unit tests.</param>
             /// <param name="processOutput">Action to process the output that is provided in chunks.</param>
             /// <param name="logger">Logger to pass process information to the caller.</param>
-            /// <param name="cancellationToken">Cancellation token that should be cancelled to stop running the <paramref name="communication"/>,
-            /// e.g., if all required output has been received or if running tests should be aborted.</param>
+            /// <param name="createRunCancellationToken">Cancellation token that should be created to end running the unit tests.
+            /// It is called just before the execution of the unit tests is started.</param>
+            /// <param name="cancellationToken">Cancellation token that should be cancelled to stop/abort the initialization of the device
+            /// and running of the unit tests, e.g., if the processing of the output is complete or if running tests is cancelled.</param>
             /// <returns>Indicates whether the execution on the device was successful and did not result in an error.</returns>
             Task<bool> RunAssembliesAsync(
                 IEnumerable<AssemblyMetadata> assemblies,
+                LoggingLevel logging,
                 string reportPrefix,
                 Action<string> processOutput,
                 LogMessenger logger,
+                Func<CancellationToken?> createRunCancellationToken,
                 CancellationToken cancellationToken);
             #endregion
         }
@@ -230,7 +235,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="deviceFound">Method to call when a device is found.</param>
         protected virtual async Task DiscoverAllRealHardware(IEnumerable<string> excludeSerialPorts, Action<IRealHardwareDevice> deviceFound)
         {
-            await RealHardwareDeviceHelper.GetAllAvailable(excludeSerialPorts, deviceFound, Logger);
+            await RealHardwareDeviceHelper.GetAllAvailable(excludeSerialPorts, deviceFound, Logger, CancellationToken);
         }
 
         /// <summary>
@@ -240,7 +245,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="deviceFound">Method to call when a device is found.</param>
         protected virtual async Task DiscoverSelectedRealHardware(IEnumerable<string> serialPorts, Action<IRealHardwareDevice> deviceFound)
         {
-            await RealHardwareDeviceHelper.GetForSelectedPorts(serialPorts, deviceFound, Logger);
+            await RealHardwareDeviceHelper.GetForSelectedPorts(serialPorts, deviceFound, Logger, CancellationToken);
         }
 
         /// <summary>
@@ -313,7 +318,7 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 var logger = realHardware.Value as ITestsExecutionLogger;
 
-                string projectFilePath = ProjectSourceInventory.FindProjectFilePath(realHardware.Key.AssemblyFilePath, Logger);
+                string projectFilePath = ProjectSourceInventory.FindProjectFilePath(realHardware.Key.AssemblyFilePath, logger.Log);
                 if (projectFilePath is null)
                 {
                     _realHardwareExecution.Remove(realHardware.Key);
@@ -332,20 +337,23 @@ namespace nanoFramework.TestFramework.Tooling
                     continue;
                 }
                 realHardware.Value.ProjectDirectoryPath = Path.GetDirectoryName(projectFilePath);
-                realHardware.Value.Configuration = TestFrameworkConfiguration.Read(realHardware.Value.ProjectDirectoryPath, false, Logger);
+                realHardware.Value.Configuration = TestFrameworkConfiguration.Read(realHardware.Value.ProjectDirectoryPath, false, logger.Log);
 
                 if (!realHardware.Value.Configuration.AllowRealHardware)
                 {
                     _realHardwareExecution.Remove(realHardware.Key);
 
-                    logger.Log(LoggingLevel.Error, "Test is not executed as the test framework configuration does not allow running tests on real hardware.");
-
+                    var messages = new List<string>()
+                    {
+                        "Test is not executed as the test framework configuration does not allow running tests on real hardware."
+                    };
                     RunAsync(() =>
                         AddTestResults(null,
                                        from tc in realHardware.Key.TestCases
                                        select new TestResult(tc.testCase, tc.selectionIndex, null)
                                        {
-                                           Outcome = TestResult.TestOutcome.Skipped
+                                           Outcome = TestResult.TestOutcome.Skipped,
+                                           _messages = messages.ToList()
                                        },
                                        logger)
                     );
@@ -401,7 +409,7 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 var logger = virtualDevice.Value as ITestsExecutionLogger;
 
-                string projectFilePath = ProjectSourceInventory.FindProjectFilePath(virtualDevice.Key.AssemblyFilePath, Logger);
+                string projectFilePath = ProjectSourceInventory.FindProjectFilePath(virtualDevice.Key.AssemblyFilePath, logger.Log);
                 if (projectFilePath is null)
                 {
                     _virtualDeviceExecution.Remove(virtualDevice.Key);
@@ -420,7 +428,7 @@ namespace nanoFramework.TestFramework.Tooling
                     continue;
                 }
                 virtualDevice.Value.ProjectDirectoryPath = Path.GetDirectoryName(projectFilePath);
-                virtualDevice.Value.Configuration = TestFrameworkConfiguration.Read(virtualDevice.Value.ProjectDirectoryPath, false, Logger);
+                virtualDevice.Value.Configuration = TestFrameworkConfiguration.Read(virtualDevice.Value.ProjectDirectoryPath, false, logger.Log);
 
                 if (!(virtualDevice.Value.Configuration.PathToLocalNanoCLR is null))
                 {
@@ -492,48 +500,58 @@ namespace nanoFramework.TestFramework.Tooling
             Action<LogMessenger> initializeDevice,
             ITestsExecutionLogger logger)
         {
-            string applicationAssemblyDirectoryPath = Path.Combine(
-                projectDirectoryPath,
-                "obj",
-                "nF",
-                PathHelper.GetRelativePath(projectDirectoryPath, Path.GetDirectoryName(selection.AssemblyFilePath)),
-                serialPort ?? "VD");
-
-            UnitTestLauncherGenerator.Application application = null;
             try
             {
-                var generator = new UnitTestLauncherGenerator(selection, deploymentConfiguration, false, logger.Log);
-                application = generator.GenerateAsApplication(applicationAssemblyDirectoryPath, logger.Log);
+                string applicationAssemblyDirectoryPath = Path.Combine(
+                    projectDirectoryPath,
+                    "obj",
+                    "nF",
+                    PathHelper.GetRelativePath(projectDirectoryPath, Path.GetDirectoryName(selection.AssemblyFilePath)),
+                    serialPort is null
+                        ? "VD"
+                        : $"_{serialPort}"); // Cannot use only serialPort, that is an invalid directory name.
 
-                initializeDevice?.Invoke(logger.Log);
+                UnitTestLauncherGenerator.Application application = null;
+                try
+                {
+                    var generator = new UnitTestLauncherGenerator(selection, deploymentConfiguration, false, logger.Log);
+                    application = generator.GenerateAsApplication(applicationAssemblyDirectoryPath, logger.Log);
+
+                    initializeDevice?.Invoke(logger.Log);
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(LoggingLevel.Error, $"An unexpected error prevented the execution of the test: {ex.Message}");
+                }
+
+                if (logger.HasErrors || application is null)
+                {
+                    logger.Log(LoggingLevel.Error, $"Test is not executed as the {logger.DeviceName} could not be initialized.");
+                    RunAsync(() =>
+                            AddTestResults(application,
+                                           from tc in selection.TestCases
+                                           select new TestResult(tc.testCase, tc.selectionIndex, null)
+                                           {
+                                               Outcome = TestResult.TestOutcome.Skipped
+                                           },
+                                           logger)
+                        );
+                    application = null;
+                }
+                else
+                {
+                    foreach (AssemblyMetadata assembly in application.Assemblies)
+                    {
+                        logger.Log(LoggingLevel.Detailed, $"Deploying assembly {Path.GetFileNameWithoutExtension(assembly.NanoFrameworkAssemblyFilePath)} version {assembly.Version}{(assembly.NativeVersion is null ? "" : $", requires native assembly version {assembly.NativeVersion}")}.");
+                    }
+                }
+                return application;
             }
             catch (Exception ex)
             {
-                logger.Log(LoggingLevel.Error, $"An unexpected error prevented the execution of the test: {ex.Message}");
+                logger.Log(LoggingLevel.Error, $"Unexpected error while initializing the unit test launcher and the device: {ex.Message}");
+                throw;
             }
-
-            if (logger.HasErrors || application is null)
-            {
-                logger.Log(LoggingLevel.Error, $"Test is not executed as the {logger.DeviceName} could not be initialized.");
-                RunAsync(() =>
-                        AddTestResults(application,
-                                       from tc in selection.TestCases
-                                       select new TestResult(tc.testCase, tc.selectionIndex, null)
-                                       {
-                                           Outcome = TestResult.TestOutcome.Skipped
-                                       },
-                                       logger)
-                    );
-                application = null;
-            }
-            else
-            {
-                foreach (AssemblyMetadata assembly in application.Assemblies)
-                {
-                    logger.Log(LoggingLevel.Detailed, $"Deploying assembly {Path.GetFileNameWithoutExtension(assembly.NanoFrameworkAssemblyFilePath)} version {assembly.Version}{(assembly.NativeVersion is null ? "" : $", requires native assembly version {assembly.NativeVersion}")}.");
-                }
-            }
-            return application;
         }
 
         /// <summary>
@@ -548,39 +566,82 @@ namespace nanoFramework.TestFramework.Tooling
         private void ParseOutputAndHandleCancellation(
             TestCaseSelection selection, UnitTestLauncherGenerator.Application application,
             string serialPort, int? timeout,
-            Action<string, Action<string>, CancellationToken> runTests,
+            Action<string, Action<string>, Func<CancellationToken?>, CancellationToken> runTests,
             ITestsExecutionLogger logger)
         {
-            // Cancellation of the device execution is either a timeout, or signalled by the output processor
-            CancellationTokenSource cancelExecutionOnDevice = timeout.HasValue
-                ? new CancellationTokenSource(timeout.Value)
-                : new CancellationTokenSource();
-
-            string reportPrefix = Guid.NewGuid().ToString("N");
-            var outputProcessor = new UnitTestsOutputParser(
-                    selection,
-                    serialPort,
-                    reportPrefix,
-                    (testResults) => AddTestResults(application, testResults, logger),
-                    () => cancelExecutionOnDevice.Cancel(), // Device can stop running now
-                    CancellationToken
-               );
-
-            runTests(reportPrefix, (o) => outputProcessor.AddOutput(o), cancelExecutionOnDevice.Token);
-
-            if (CancellationToken.IsCancellationRequested)
+            CancellationTokenSource cancelExecutionOnDevice = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            CancellationTokenSource timeoutExecutionOnDevice = null;
+            UnitTestsOutputParser outputProcessor = null;
+            try
             {
-                logger.Log(LoggingLevel.Verbose, $"Execution of tests from '{selection.AssemblyFilePath}' on the {logger.DeviceName} was cancelled on request.");
-                outputProcessor.Flush();
+                bool outputIsComplete = false;
+
+                outputProcessor = new UnitTestsOutputParser(
+                        selection,
+                        serialPort,
+                        application.ReportPrefix,
+                        (testResults) => AddTestResults(application, testResults, logger),
+                        () =>
+                        {
+                            // Use a lock as this method can be called even after running of the
+                            // tests has been completed. It stops only after a call to outputProcessor.Flush.
+                            lock (application)
+                            {
+                                outputIsComplete = true;
+                                cancelExecutionOnDevice?.Cancel(); // Device can stop running now
+                            }
+                        },
+                        CancellationToken
+                   );
+
+                runTests(
+                    application.ReportPrefix,
+                    (o) => outputProcessor.AddOutput(o),
+                    () =>
+                        CancellationToken.IsCancellationRequested
+                        ? new CancellationToken(true)
+                        : timeout.HasValue
+                            ? (timeoutExecutionOnDevice = new CancellationTokenSource(timeout.Value)).Token
+                            : (CancellationToken?)null,
+                    cancelExecutionOnDevice.Token
+                );
+
+                if (CancellationToken.IsCancellationRequested)
+                {
+                    logger.Log(LoggingLevel.Warning, $"Execution of tests was cancelled on request.");
+                    outputProcessor.Flush();
+                }
+                else
+                {
+                    lock (application)
+                    {
+                        if (!outputIsComplete && (timeoutExecutionOnDevice?.IsCancellationRequested ?? false))
+                        {
+                            logger.Log(LoggingLevel.Warning, $"Execution of the tests on the {logger.DeviceName} timed out after {timeout} ms.");
+                            outputProcessor.Flush(true);
+                        }
+                        else
+                        {
+                            outputProcessor.Flush(!outputIsComplete);
+                        }
+                    }
+                }
             }
-            else if (cancelExecutionOnDevice.IsCancellationRequested)
+            catch (Exception ex)
             {
-                logger.Log(LoggingLevel.Verbose, $"Execution of the unit tests on the {logger.DeviceName} was aborted after {timeout} ms.");
-                outputProcessor.Flush(true);
+                logger.Log(LoggingLevel.Error, $"Unexpected error while executing unit tests and parsing the output of the tests: {ex.Message}");
+                outputProcessor?.Flush(true);
+                throw;
             }
-            else
+            finally
             {
-                outputProcessor.Flush();
+                lock (application)
+                {
+                    cancelExecutionOnDevice?.Dispose();
+                    cancelExecutionOnDevice = null;
+                    timeoutExecutionOnDevice?.Dispose();
+                    timeoutExecutionOnDevice = null;
+                }
             }
         }
 
@@ -588,10 +649,16 @@ namespace nanoFramework.TestFramework.Tooling
         /// Add test results to the collection of test results.
         /// </summary>
         /// <param name="application">Application created to run the tests. Pass <c>null</c> if the application has not yet been created.</param>
-        /// <param name="testResults">New test results to add.</param>
+        /// <param name="originalTestResults">New test results to add.</param>
         /// <param name="logger">Logger for the execution of the unit tests on this device.</param>
-        private void AddTestResults(UnitTestLauncherGenerator.Application application, IEnumerable<TestResult> testResults, ITestsExecutionLogger logger)
+        private void AddTestResults(UnitTestLauncherGenerator.Application application, IEnumerable<TestResult> originalTestResults, ITestsExecutionLogger logger)
         {
+            var testResults = originalTestResults.ToList();
+            if (testResults.Count == 0)
+            {
+                return;
+            }
+
             if (!(application is null))
             {
                 foreach (TestResult testResult in testResults)
@@ -617,7 +684,7 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         testResult._messages.Add(string.Empty);
                     }
-                    testResult._messages.Add("*** Device initialization ***");
+                    testResult._messages.Add("*** Device initialization and test execution ***");
                     testResult._messages.AddRange(logger.LogMessages);
                 }
             }
@@ -649,7 +716,7 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                     catch (Exception ex)
                     {
-                        Logger.Invoke(LoggingLevel.Detailed, $"Unexpected error while executing unit tests: {ex.Message}");
+                        Logger.Invoke(LoggingLevel.Error, $"Unexpected error while executing unit tests: {ex.Message}");
                     }
                     lock (_runningTasks)
                     {
@@ -812,10 +879,10 @@ namespace nanoFramework.TestFramework.Tooling
             /// Cached result of the <see cref="TestOnRealHardwareProxy.ShouldTestOnDevice(TestDeviceProxy)"/>
             /// method for this device, per device selector.
             /// </summary>
-            internal Dictionary<TestOnRealHardwareProxy, bool> ShouldRunOnDevice
+            internal Dictionary<TestOnRealHardwareProxy, (bool? shouldRun, string errorMessage)> ShouldRunOnDevice
             {
                 get;
-            } = new Dictionary<TestOnRealHardwareProxy, bool>();
+            } = new Dictionary<TestOnRealHardwareProxy, (bool?, string)>();
 
             /// <summary>
             /// The test case selection filtered for execution by the <see cref="Device"/>.
@@ -867,65 +934,84 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="device">Device to run the tests on.</param>
         private void RunTestsOnRealHardware(IRealHardwareDevice device)
         {
-            while (true)
+            try
             {
-                bool waitForInvestigations = false;
-
-                foreach (KeyValuePair<TestCaseSelection, RealHardwareExecution> selection in _realHardwareExecution)
+                while (true)
                 {
-                    RealHardwareExecutionOnDevice context = null;
+                    bool waitForInvestigations = false;
 
-                    #region Can this test assembly be investigated and executed?
-                    lock (selection.Value.OnDevice)
+                    foreach (KeyValuePair<TestCaseSelection, RealHardwareExecution> selection in _realHardwareExecution)
                     {
-                        // We don't want the same assembly under investigation for two devices,
-                        // as at some point the data for both devices may be needed.
-                        // Instead of pausing at that point, it is easier to skip the test assembly
-                        // and start with the next.
-                        if ((from c in selection.Value.OnDevice
-                             where c.Value.Stage == RealHardwareExecutionOnDevice.ExecutionStage.Investigating
-                             select c).Any())
+                        if (CancellationToken.IsCancellationRequested)
                         {
-                            waitForInvestigations = true;
-                            continue;
-                        };
-                        if (selection.Value.OnDevice.ContainsKey(device.SerialPort))
-                        {
-                            // Already run in a previous iteration
-                            continue;
+                            return;
                         }
-                        selection.Value.OnDevice[device.SerialPort] = context = new RealHardwareExecutionOnDevice(selection.Value, device.SerialPort)
-                        {
-                            FilteredSelection = new TestCaseSelection(selection.Key.AssemblyFilePath)
-                        };
-                    }
-                    #endregion
+                        RealHardwareExecutionOnDevice context = null;
 
-                    SelectTestsToRun(selection.Key, context, device);
-
-                    if (context.FilteredSelection.TestCases.Count > 0)
-                    {
+                        #region Can this test assembly be investigated and executed?
                         lock (selection.Value.OnDevice)
                         {
-                            context.Stage = RealHardwareExecutionOnDevice.ExecutionStage.Running;
+                            // We don't want the same assembly under investigation for two devices,
+                            // as at some point the data for both devices may be needed.
+                            // Instead of pausing at that point, it is easier to skip the test assembly
+                            // and start with the next.
+                            if ((from c in selection.Value.OnDevice
+                                 where c.Value.Stage == RealHardwareExecutionOnDevice.ExecutionStage.Investigating
+                                 select c).Any())
+                            {
+                                waitForInvestigations = true;
+                                continue;
+                            };
+                            if (selection.Value.OnDevice.ContainsKey(device.SerialPort))
+                            {
+                                // Already run in a previous iteration
+                                continue;
+                            }
+                            selection.Value.OnDevice[device.SerialPort] = context = new RealHardwareExecutionOnDevice(selection.Value, device.SerialPort)
+                            {
+                                FilteredSelection = new TestCaseSelection(selection.Key.AssemblyFilePath)
+                            };
                         }
-                        RunTestsOnRealHardwareDevice(selection.Key, context, device);
+                        #endregion
+
+                        SelectTestsToRun(selection.Key, context, device);
+
+                        if (context.FilteredSelection.TestCases.Count > 0)
+                        {
+                            if (CancellationToken.IsCancellationRequested)
+                            {
+                                return;
+                            }
+                            lock (selection.Value.OnDevice)
+                            {
+                                context.Stage = RealHardwareExecutionOnDevice.ExecutionStage.Running;
+                            }
+                            RunTestsOnRealHardwareDevice(selection.Key, context, device);
+                        }
+                        if (CancellationToken.IsCancellationRequested)
+                        {
+                            return;
+                        }
+                        lock (selection.Value.OnDevice)
+                        {
+                            context.Stage = RealHardwareExecutionOnDevice.ExecutionStage.Done;
+                        }
                     }
 
-                    lock (selection.Value.OnDevice)
+                    if (waitForInvestigations)
                     {
-                        context.Stage = RealHardwareExecutionOnDevice.ExecutionStage.Done;
+                        Task.Delay(100).GetAwaiter().GetResult();
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
-
-                if (waitForInvestigations)
-                {
-                    Task.Delay(100).GetAwaiter().GetResult();
-                }
-                else
-                {
-                    break;
-                }
+            }
+            finally
+            {
+                // Dispose of the device
+                (device as IDisposable)?.Dispose();
             }
         }
 
@@ -992,24 +1078,38 @@ namespace nanoFramework.TestFramework.Tooling
 
                 foreach (TestOnRealHardwareProxy selector in testCase.testCase.RealHardwareDeviceSelectors)
                 {
-                    if (!context.ShouldRunOnDevice.TryGetValue(selector, out bool shouldRun))
+                    if (!context.ShouldRunOnDevice.TryGetValue(selector, out (bool? shouldRun, string errorMessage) shouldRun))
                     {
                         try
                         {
-                            context.ShouldRunOnDevice[selector] = shouldRun = selector.ShouldTestOnDevice(context.Device);
+                            context.ShouldRunOnDevice[selector] = shouldRun = (selector.ShouldTestOnDevice(context.Device), null);
                         }
                         catch (Exception ex)
                         {
-                            errorInAttributeEvaluation = true;
                             if (!(selector.Source is null))
                             {
-                                messages.Add($"{selector.Source.ForMessage()}: Error: Cannot evaluate '{nameof(ITestOnRealHardware.ShouldTestOnDevice)}': {ex.Message}");
+                                shouldRun = (null, $"{selector.Source.ForMessage()}: Error: Cannot evaluate '{nameof(ITestOnRealHardware.ShouldTestOnDevice)}': {(ex.InnerException ?? ex).Message}");
+                            }
+                            else
+                            {
+                                shouldRun = (null, null);
                             }
                         }
                     }
-                    if (shouldRun)
+                    if (shouldRun.shouldRun.HasValue)
                     {
-                        shouldRunTest = true;
+                        if (shouldRun.shouldRun.Value)
+                        {
+                            shouldRunTest = true;
+                        }
+                    }
+                    else
+                    {
+                        errorInAttributeEvaluation = true;
+                        if (!(shouldRun.errorMessage is null))
+                        {
+                            messages.Add(shouldRun.errorMessage);
+                        }
                     }
                 }
 
@@ -1021,8 +1121,9 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         ErrorMessage = "Real hardware test selection failed",
                         Outcome = TestResult.TestOutcome.Skipped,
-                        _messages = messages
+                        _messages = messages.ToList()
                     });
+                    continue;
                 }
                 else if (!shouldRunTest)
                 {
@@ -1033,7 +1134,7 @@ namespace nanoFramework.TestFramework.Tooling
                         {
                             ErrorMessage = "Real hardware device not suitable",
                             Outcome = TestResult.TestOutcome.Skipped,
-                            _messages = messages
+                            _messages = messages.ToList()
                         });
                     }
                     continue;
@@ -1051,34 +1152,50 @@ namespace nanoFramework.TestFramework.Tooling
                         // The test is also running/has been run on another device
                         // Is this device different?
                         devicesAreEqual = true;
-                        var areDevicesEqual = new Dictionary<TestOnRealHardwareProxy, bool>();
+                        // Cache the result of the evaluation of each selector, so that is is evaluated only once per device pair.
+                        var areDevicesEqual = new Dictionary<TestOnRealHardwareProxy, (bool? areEqual, string errorMessage)>();
 
                         foreach (TestOnRealHardwareProxy selector in testCase.testCase.RealHardwareDeviceSelectors)
                         {
-                            if (context.ShouldRunOnDevice[selector] && otherContext.ShouldRunOnDevice[selector])
+                            if (context.ShouldRunOnDevice[selector].shouldRun == true && otherContext.ShouldRunOnDevice[selector].shouldRun == true)
                             {
                                 // This selector says the test should run on both devices
                                 // Are the two devices the same kind of device?
-                                if (!areDevicesEqual.TryGetValue(selector, out bool areEqual))
+                                if (!areDevicesEqual.TryGetValue(selector, out (bool? areEqual, string errorMessage) areEqual))
                                 {
                                     try
                                     {
-                                        areDevicesEqual[selector] = areEqual = selector.AreDevicesEqual(otherContext.Device, context.Device);
+                                        areDevicesEqual[selector] = areEqual = (selector.AreDevicesEqual(otherContext.Device, context.Device), null);
                                     }
                                     catch (Exception ex)
                                     {
-                                        errorInAttributeEvaluation = true;
                                         if (!(selector.Source is null))
                                         {
-                                            messages.Add($"{selector.Source.ForMessage()}: Error: Cannot evaluate '{nameof(ITestOnRealHardware.AreDevicesEqual)}': {ex.Message}");
+                                            areEqual = (null, $"{selector.Source.ForMessage()}: Error: Cannot evaluate '{nameof(ITestOnRealHardware.AreDevicesEqual)}': {(ex.InnerException ?? ex).Message}");
+                                        }
+                                        else
+                                        {
+                                            areEqual = (null, null);
                                         }
                                     }
                                 }
-                                if (!areEqual)
+                                if (areEqual.areEqual.HasValue)
                                 {
-                                    devicesAreEqual = false;
-                                    break;
+                                    if (!areEqual.areEqual.Value)
+                                    {
+                                        devicesAreEqual = false;
+                                        break;
+                                    }
                                 }
+                                else
+                                {
+                                    errorInAttributeEvaluation = true;
+                                    if (!(areEqual.errorMessage is null))
+                                    {
+                                        messages.Add(areEqual.errorMessage);
+                                    }
+                                }
+
                             }
                         }
                         if (!devicesAreEqual)
@@ -1096,8 +1213,9 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         ErrorMessage = "Real hardware test selection failed",
                         Outcome = TestResult.TestOutcome.Skipped,
-                        _messages = messages
+                        _messages = messages.ToList()
                     });
+                    continue;
                 }
                 else if (devicesAreEqual)
                 {
@@ -1109,7 +1227,7 @@ namespace nanoFramework.TestFramework.Tooling
                         {
                             ErrorMessage = "Already executed on an equivalent device",
                             Outcome = TestResult.TestOutcome.Skipped,
-                            _messages = messages
+                            _messages = messages.ToList()
                         });
                     }
                     continue;
@@ -1145,21 +1263,25 @@ namespace nanoFramework.TestFramework.Tooling
                 return;
             }
 
+            CancellationTokenSource timeoutToken = null;
             ParseOutputAndHandleCancellation(
                 context.FilteredSelection,
                 application,
                 device.SerialPort,
                 configuration.RealHardwareTimeout,
-                (reportPrefix, parser, ct) => device.RunAssembliesAsync(
+                (reportPrefix, parser, ctt, ct) => device.RunAssembliesAsync(
                                                 application.Assemblies,
+                                                configuration.Logging,
                                                 reportPrefix,
                                                 parser,
-                                                Logger,
+                                                (context as ITestsExecutionLogger).Log,
+                                                ctt,
                                                 ct
                                             )
                                             .GetAwaiter().GetResult(),
                 context
             );
+            timeoutToken?.Dispose();
         }
 
         /// <summary>
@@ -1172,13 +1294,44 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 var notRun = new List<TestResult>();
 
+                var messages = new List<string>();
+                if (selection.Value.OnDevice.Count == 0)
+                {
+                    if (selection.Value.Configuration.AllowSerialPorts.Count > 0
+                        || selection.Value.Configuration.ExcludeSerialPorts.Count > 0)
+                    {
+                        messages.Add($"No real hardware nanoDevices found within the limitations imposed by the {TestFrameworkConfiguration.SettingsFileName}/{TestFrameworkConfiguration.UserSettingsFileName} configuration.");
+                    }
+                    else
+                    {
+                        messages.Add("No real hardware nanoDevices found.");
+                    }
+                }
+                else
+                {
+                    messages.Add("No suitable real hardware device found to run the test on.");
+                    messages.Add("Available devices:");
+                    foreach (KeyValuePair<string, RealHardwareExecutionOnDevice> device in from d in selection.Value.OnDevice
+                                                                                           orderby d.Key
+                                                                                           select d)
+                    {
+                        string deploymentConfigurationPath = selection.Value.Configuration.DeploymentConfigurationFilePath(device.Key);
+                        if (!(device.Value.DeploymentConfiguration is null))
+                        {
+                            deploymentConfigurationPath = $", deployment configuration: '{deploymentConfigurationPath}'";
+                        }
+                        messages.Add($"{device.Key}: target '{device.Value.Device.TargetName}', platform: '{device.Value.Device.Platform}'{deploymentConfigurationPath}");
+                    }
+                }
+
                 foreach ((int selectionIndex, TestCase testCase) in selection.Key.TestCases)
                 {
                     if (!_testCasesWithResult.Contains(testCase))
                     {
                         notRun.Add(new TestResult(testCase, selectionIndex, null)
                         {
-                            ErrorMessage = "No suitable hardware available"
+                            ErrorMessage = "No suitable hardware available",
+                            _messages = messages.ToList()
                         });
                     }
                 }
@@ -1333,14 +1486,14 @@ namespace nanoFramework.TestFramework.Tooling
                 application,
                 null,
                 configuration.VirtualDeviceTimeout,
-                (reportPrefix, parser, ct) => virtualDevice.RunAssembliesAsync(
+                (reportPrefix, parser, ctt, ct) => virtualDevice.RunAssembliesAsync(
                                                     application.Assemblies,
                                                     configuration.PathToLocalCLRInstance,
                                                     configuration.Logging,
                                                     reportPrefix,
                                                     parser,
-                                                    Logger,
-                                                    ct
+                                                    (_virtualDeviceExecution[selection] as ITestsExecutionLogger).Log,
+                                                    ctt() ?? ct
                                                 )
                                                 .GetAwaiter().GetResult(),
                 _virtualDeviceExecution[selection]

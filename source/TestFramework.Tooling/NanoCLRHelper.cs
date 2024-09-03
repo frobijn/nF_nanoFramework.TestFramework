@@ -131,7 +131,7 @@ namespace nanoFramework.TestFramework.Tooling
                 arguments.Append(" -v diag");
             }
 
-            logger?.Invoke(LoggingLevel.Verbose,
+            logger?.Invoke(LoggingLevel.Detailed,
                 $"Launching nanoCLR with these arguments: '{arguments}'");
 
             // launch nanoCLR
@@ -142,7 +142,7 @@ namespace nanoFramework.TestFramework.Tooling
                  .WithStandardOutputPipe(PipeTarget.ToDelegate((o) =>
                  {
                      output.AppendLine(o);
-                     processOutput?.Invoke(o);
+                     processOutput?.Invoke($"{o}\n");
                  })
             );
 
@@ -182,7 +182,7 @@ namespace nanoFramework.TestFramework.Tooling
         #region Version update
         private bool InstallNanoClr(string localPath, bool checkForUpdate, LogMessenger logger)
         {
-            logger?.Invoke(LoggingLevel.Verbose, "Install/update nanoclr tool");
+            logger?.Invoke(LoggingLevel.Detailed, "Install/update nanoclr tool");
 
             // get installed tool version (if installed)
             Command cmd = Cli.Wrap(localPath is null ? "nanoclr" : localPath)
@@ -205,7 +205,7 @@ namespace nanoFramework.TestFramework.Tooling
                     if (regexResult.Success)
                     {
                         NanoClrIsInstalled = true;
-                        logger?.Invoke(LoggingLevel.Verbose, $"Running nanoclr v{regexResult.Groups["version"].Value}");
+                        logger?.Invoke(LoggingLevel.Detailed, $"Running nanoclr v{regexResult.Groups["version"].Value}");
 
                         if (checkForUpdate)
                         {
@@ -249,7 +249,7 @@ namespace nanoFramework.TestFramework.Tooling
                             }
                             else
                             {
-                                logger?.Invoke(LoggingLevel.Verbose, $"No need to update. Running v{latestPackageVersion}");
+                                logger?.Invoke(LoggingLevel.Detailed, $"No need to update. Running v{latestPackageVersion}");
 
                                 performInstallUpdate = false;
                             }
@@ -290,7 +290,7 @@ namespace nanoFramework.TestFramework.Tooling
 
                         if (regexResult.Success)
                         {
-                            logger?.Invoke(LoggingLevel.Verbose, $"Install/update successful. Running v{regexResult.Groups["version"].Value}");
+                            logger?.Invoke(LoggingLevel.Detailed, $"Install/update successful. Running v{regexResult.Groups["version"].Value}");
 
                             NanoClrIsInstalled = true;
                         }
@@ -327,7 +327,7 @@ namespace nanoFramework.TestFramework.Tooling
             string clrVersion,
             LogMessenger logger)
         {
-            logger?.Invoke(LoggingLevel.Verbose, "Update nanoCLR instance");
+            logger?.Invoke(LoggingLevel.Detailed, "Update nanoCLR instance");
 
             string arguments = "instance --update";
 
@@ -355,7 +355,7 @@ namespace nanoFramework.TestFramework.Tooling
 
                     if (regexResult.Success)
                     {
-                        logger?.Invoke(LoggingLevel.Verbose,
+                        logger?.Invoke(LoggingLevel.Detailed,
                             $"nanoCLR instance updated to v{regexResult.Groups["version"].Value}");
                     }
                     else

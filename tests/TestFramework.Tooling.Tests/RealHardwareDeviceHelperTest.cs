@@ -40,6 +40,7 @@ namespace TestFramework.Tooling.Tests
 
         [TestMethod]
         [TestCategory("@Real hardware")]
+        [DoNotParallelize]
         public void RealHardwareDevice_DeviceByPort()
         {
             string realHardwarePort = RealHardwareSerialPorts.GetSerialPortNames(1, 0).First();
@@ -63,6 +64,7 @@ namespace TestFramework.Tooling.Tests
 
         [TestMethod]
         [TestCategory("@Real hardware")]
+        [DoNotParallelize]
         public void RealHardwareDevice_AllAvailable()
         {
             var realHardwarePorts = RealHardwareSerialPorts.GetAllSerialPortNames().ToList();

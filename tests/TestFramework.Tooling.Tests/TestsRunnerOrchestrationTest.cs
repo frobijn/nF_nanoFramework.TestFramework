@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tools;
 using TestFramework.Tooling.Tests.Helpers;
@@ -18,9 +19,13 @@ namespace TestFramework.Tooling.Tests
     /// <summary>
     /// Tests for the orchestration functionality of <see cref="TestsRunner"/>:
     /// which tests are selected to run on which device, parallel execution of tests,
-    /// timeouts, cancel. The tests use mocks for devices that do not run any tests.
+    /// timeouts, cancel. The tests use mocks for devices that do not run any tests, the
+    /// outputs of the devices and hence test results are test data. These unit tests still
+    /// can be used to verify the correct output processing and completeness of test results.
     /// </summary>
     [TestClass]
+    [TestCategory("Visual Studio/VSTest")]
+    [TestCategory("Test execution")]
     public sealed class TestsRunnerOrchestrationTest
     {
         /// <summary>
@@ -30,10 +35,21 @@ namespace TestFramework.Tooling.Tests
         /// on each device is correct; that is done in <see cref="TestsRunnerExecutionTest.TestsRunner_TestSelection"/>.
         /// </summary>
         [TestMethod]
-        public void TestsRunner_TestsAreRun()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void TestsRunner_TestsAreRun(bool withDeviceInitializationLogging)
         {
             #region Setup and "run" tests
             TestsRunnerTester actual = CreateFor(2, 3);
+
+            string id = Guid.NewGuid().ToString("N");
+            if (withDeviceInitializationLogging)
+            {
+                foreach (DeviceMock device in actual.Devices)
+                {
+                    device.InitializationLog = (l) => l(LoggingLevel.Warning, id);
+                }
+            }
 
             actual.Run();
             #endregion
@@ -42,10 +58,43 @@ namespace TestFramework.Tooling.Tests
             actual.Logger.AssertEqual("");
             actual.AssertAtLeastOneResultPerTestCase();
 
-            // No test should have an outcome None => all tests should have been run
+            // No test should have an outcome None => all tests should have been run (or skipped)
+            // Except on one test, as the simulated output does not contain the result of that test.
             Assert.IsFalse((from tr in actual.TestResults
                             where tr.Outcome == TestResult.TestOutcome.None
+                                && !(
+                                    tr.TestCase.ShouldRunOnRealHardware
+                                    && tr.TestCase.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware"
+                                    )
                             select tr).Any());
+            Assert.IsTrue((from tr in actual.TestResults
+                           where tr.Outcome != TestResult.TestOutcome.None
+                               && (
+                                   tr.TestCase.ShouldRunOnRealHardware
+                                   && tr.TestCase.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware"
+                                   )
+                           select tr).Any());
+
+            if (withDeviceInitializationLogging)
+            {
+                // All tests should have the device initialization message,
+                // except the hardware ones that are not run and the ones that are skipped because of
+                // exceptions when evaluating the ITestOnRealHardware methods
+                Assert.IsFalse((from tr in actual.TestResults
+                                where !(
+                                        tr.TestCase.ShouldRunOnRealHardware
+                                        && (tr.TestCase.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware"
+                                            ||
+                                            tr.TestCase.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_ShouldTestOnDevice"
+                                            ||
+                                            tr.TestCase.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_AreDevicesEqual"
+                                            )
+                                       )
+                                      && !(from m in tr.Messages
+                                           where m.Contains(id)
+                                           select m).Any()
+                                select tr).Any());
+            }
 
             // All hardware tests should have been run on exactly one device,
             // except the one based on the xyzzy-deployment configuration
@@ -55,18 +104,63 @@ namespace TestFramework.Tooling.Tests
                                  .GroupBy(tr => tr.TestCase)
                                  .ToDictionary(
                                     g => g.Key,
-                                    g => (from tr in g
-                                          select tr.SerialPort).ToList()
+                                    g => g.ToList()
                                     );
-            foreach (var testCase in devicePerTest)
+            foreach (KeyValuePair<TestCase, List<TestResult>> testCase in devicePerTest)
             {
                 if (testCase.Key.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile")
                 {
+                    // This is the test requiring xyzzy-deployment configuration
                     Assert.AreEqual(3, testCase.Value.Count, testCase.Key.FullyQualifiedName);
+
+                    TestResult testResult = testCase.Value[0];
+
+                    // Not all deployment information was present; check that a message about that is present
+                    Assert.IsTrue((from m in testResult.Messages
+                                   where m.Contains("data.bin")
+                                   select m).Any());
+                }
+                else if (testCase.Key.FullyQualifiedName.StartsWith("TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_"))
+                {
+                    // Exceptions occur when evaluating the method of the ITestOnRealHardware attribute.
+                    Assert.AreEqual(3, testCase.Value.Count, testCase.Key.FullyQualifiedName);
+
+                    TestResult testResult = testCase.Value[0];
+
+                    if (testCase.Key.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_ShouldTestOnDevice")
+                    {
+                        // This test should be skipped and an error message should be present
+                        Assert.AreEqual(TestResult.TestOutcome.Skipped, testResult.Outcome);
+                        Assert.IsTrue((from m in testResult.Messages
+                                       where m.Contains(nameof(ITestOnRealHardware.ShouldTestOnDevice))
+                                       select m).Any());
+                        Assert.IsFalse((from m in testResult.Messages
+                                        where m.Contains(nameof(ITestOnRealHardware.AreDevicesEqual))
+                                        select m).Any());
+                    }
+                    else if (testCase.Key.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_AreDevicesEqual")
+                    {
+                        // This test should be skipped and an error message should be present
+                        Assert.AreEqual(TestResult.TestOutcome.Skipped, testResult.Outcome);
+                        Assert.IsFalse((from m in testResult.Messages
+                                        where m.Contains(nameof(ITestOnRealHardware.ShouldTestOnDevice))
+                                        select m).Any());
+                        Assert.IsTrue((from m in testResult.Messages
+                                       where m.Contains(nameof(ITestOnRealHardware.AreDevicesEqual))
+                                       select m).Any());
+                    }
                 }
                 else
                 {
+                    // Other real hardware test
                     Assert.AreEqual(1, testCase.Value.Count, testCase.Key.FullyQualifiedName);
+
+                    TestResult testResult = testCase.Value[0];
+
+                    // The missing deployment information for xyzzy should not be reported here
+                    Assert.IsFalse((from m in testResult.Messages
+                                    where m.Contains("data.bin")
+                                    select m).Any(), testCase.Key.FullyQualifiedName);
                 }
             }
             #endregion
@@ -88,9 +182,11 @@ namespace TestFramework.Tooling.Tests
             TestsRunnerTester actual = CreateFor(2, 3);
 
             // If the devices are not run in parallel, the next line will never return.
-            (_, CancellationTokenSource paused) = actual.RunAndWaitUntilAllDevicesAreRunning();
+            (Task testRunner, CancellationTokenSource paused) = actual.RunAndWaitUntilAllDevicesAreRunning();
 
             paused.Cancel(); // To end waiting async tasks
+            testRunner.Wait();
+            paused?.Dispose();
         }
 
         /// <summary>
@@ -244,6 +340,7 @@ namespace TestFramework.Tooling.Tests
             // Let the devices continue to end this test
             pauseRunning.Cancel();
             testRunner.Wait();
+            pauseRunning.Dispose();
 
             // No test should have been run
             Assert.IsFalse((from tr in actual.TestResults
@@ -265,6 +362,45 @@ namespace TestFramework.Tooling.Tests
             Assert.IsTrue((from tr in actual.TestResults
                            where tr.SerialPort is null
                            select tr).Any());
+        }
+
+
+
+        /// <summary>
+        /// Verify that in case of detailed logging, a test result for a test case is available
+        /// for each real hardware device.
+        /// </summary>
+        [TestMethod]
+        public void TestsRunner_DetailedLogging()
+        {
+            // Setup
+            TestsRunnerTester actual = CreateFor(1, 3, (configuration) =>
+            {
+                configuration.Logging = LoggingLevel.Detailed;
+            });
+
+            // Run the tests
+            actual.Run();
+
+            #region Assert the test results
+            actual.Logger.AssertEqual("", LoggingLevel.Warning);
+            actual.AssertAtLeastOneResultPerTestCase();
+
+            // All hardware tests should have one result per device,
+            // even if the test is not run on that device.
+            var devicePerTest = (from tr in actual.TestResults
+                                 where tr.TestCase.ShouldRunOnRealHardware
+                                 select tr)
+                                 .GroupBy(tr => tr.TestCase)
+                                 .ToDictionary(
+                                    g => g.Key,
+                                    g => g.ToList()
+                                    );
+            foreach (KeyValuePair<TestCase, List<TestResult>> testCase in devicePerTest)
+            {
+                Assert.AreEqual(3, testCase.Value.Count, testCase.Key.FullyQualifiedName);
+            }
+            #endregion
         }
 
         #region Helpers
@@ -337,7 +473,7 @@ namespace TestFramework.Tooling.Tests
                                 + Output_AllTestsDone
                             : TestFrameworkToolingTestsDiscovery_v2.Output
                                 + Output_AllTestsDone,
-                    Platform = "esp32",
+                    Platform = "ESP32",
                     Target = "SomeTarget"
                 })
                 .AddDeploymentConfiguration("deployment_configuration_32.json",
@@ -356,7 +492,7 @@ namespace TestFramework.Tooling.Tests
                                 + Output_AllTestsDone
                             : TestFrameworkToolingTestsDiscovery_v2.Output
                                 + Output_AllTestsDone,
-                    Platform = "esp32",
+                    Platform = "ESP32",
                     Target = "SomeTarget"
                 })
                 .AddDeploymentConfiguration("deployment_configuration_33.json",
@@ -636,6 +772,7 @@ namespace TestFramework.Tooling.Tests
                 VirtualDeviceMock device = _virtualDevices[_nextVirtualDevice++];
                 device.Configuration = configuration;
                 device.Tester = this;
+                device.InitializationLog?.Invoke(logger);
                 return device;
             }
             #endregion
@@ -664,6 +801,14 @@ namespace TestFramework.Tooling.Tests
             /// Indicates whether the device is currently running tests.
             /// </summary>
             public bool IsRunning
+            {
+                get; set;
+            }
+
+            /// <summary>
+            /// Method called in the initialization of the device to log something about the device initialization.
+            /// </summary>
+            public Action<LogMessenger> InitializationLog
             {
                 get; set;
             }
@@ -797,11 +942,14 @@ namespace TestFramework.Tooling.Tests
 
             async Task<bool> TestsRunner.IRealHardwareDevice.RunAssembliesAsync(
                 IEnumerable<AssemblyMetadata> assemblies,
+                LoggingLevel logging,
                 string reportPrefix, Action<string> processOutput,
                 LogMessenger logger,
+                Func<CancellationToken?> createRunCancellationToken,
                 CancellationToken cancellationToken)
             {
-                return await RunAssembliesAsync(assemblies, reportPrefix, processOutput, logger, cancellationToken);
+                InitializationLog?.Invoke(logger);
+                return await RunAssembliesAsync(assemblies, reportPrefix, processOutput, logger, createRunCancellationToken() ?? cancellationToken);
             }
             #endregion
         }
@@ -992,10 +1140,14 @@ $@"@@@:C:TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions:0:{Un
             /// test project as executed on a real hardware device esp32 device that has an integer value for "RGB LED pin"
             /// in the deployment configuration.
             /// </summary>
+            /// <remarks>
+            /// Output for TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware
+            /// left out on purpose, so that it will be reported as not run.
+            /// </remarks>
             public static readonly string Output_Device_esp32 =
 $@"@@@:C:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes:0:{UnitTestLauncher.Communication.Start}
-@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware:0:{UnitTestLauncher.Communication.Start}
-@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware:0:{UnitTestLauncher.Communication.Pass}
+Not in output:::@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware:0:{UnitTestLauncher.Communication.Start}
+Not in output:::@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware:0:{UnitTestLauncher.Communication.Pass}
 @@@:D:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData#0:0:{UnitTestLauncher.Communication.Start}
 @@@:D:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData#0:0:{UnitTestLauncher.Communication.Pass}
 @@@:C:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes:0:{UnitTestLauncher.Communication.Done}

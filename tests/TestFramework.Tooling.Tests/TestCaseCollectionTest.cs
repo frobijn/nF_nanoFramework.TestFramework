@@ -189,29 +189,29 @@ G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes
 
             AssertSourceLocationTraits(actual.TestCases,
 $@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
-G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@test', '@Real hardware' DC()
+G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@TEST', '@Real hardware' DC()
 G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
-G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@test', '@Real hardware' DC()
+G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@TEST', '@Real hardware' DC()
 G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device' DC()
-G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@test', '@Real hardware' DC()
+G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@TEST', '@Real hardware' DC()
 G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device' DC()
-G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@test', '@Real hardware' DC()
+G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@TEST', '@Real hardware' DC()
 G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device' DC()
-G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@test', '@Real hardware' DC()
+G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@TEST', '@Real hardware' DC()
 G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device' DC()
-G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@test', '@Real hardware' DC()
+G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@TEST', '@Real hardware' DC()
 G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device' DC()
-G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@test', '@Real hardware' DC()
+G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@TEST', '@Real hardware' DC()
 G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device' DC()
-G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@test', '@DeviceWithSomeFile', '@Real hardware' DC()
+G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@TEST', '@DeviceWithSomeFile', '@Real hardware' DC()
 G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '@Virtual Device' DC()
-G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '@test', '@Real hardware' DC()
+G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '@TEST', '@Real hardware' DC()
 G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '@Virtual Device' DC(Byte[] 'Make and model')
-G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '@test', '@Real hardware' DC(Byte[] 'Make and model')
+G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '@TEST', '@Real hardware' DC(Byte[] 'Make and model')
 G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device' DC()
-G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@test', '@Real hardware' DC()
+G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@TEST', '@Real hardware' DC()
 G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@Virtual Device' DC(Int32 'RGB LED pin', Int64 'Device ID')
-G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@test', '@esp32', '@Real hardware' DC(Int32 'RGB LED pin', Int64 'Device ID')");
+G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@TEST', '@ESP32', '@Real hardware' DC(Int32 'RGB LED pin', Int64 'Device ID')");
 
             AssertRunInformation(actual.TestCases,
 $@"G001T000 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
@@ -245,10 +245,10 @@ G007T001 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
                                 select tc).Count());
 
             // Assert selection of real hardware test cases
-            var esp32Device = new TestDeviceProxy(new TestDeviceMock(Guid.NewGuid().ToString(), "esp32"));
+            var esp32Device = new TestDeviceProxy(new TestDeviceMock(Guid.NewGuid().ToString(), "ESP32"));
             foreach (TestCase testCase in actual.TestCases)
             {
-                if (testCase.ShouldRunOnRealHardware && testCase.Traits.Contains("@esp32"))
+                if (testCase.ShouldRunOnRealHardware && testCase.Traits.Contains("@ESP32"))
                 {
                     Assert.IsTrue(testCase.RealHardwareDeviceSelectors?.Any());
                     Assert.IsTrue((from s in testCase.RealHardwareDeviceSelectors
@@ -350,7 +350,7 @@ G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
 $@"G000T000 TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly 'UseEsp32NativeAssembly'");
 
             AssertSourceLocationTraits(actual.TestCases,
-$@"G000T000 @{pathPrefix}HardwareSpecificTest.cs(18,21) '@esp32', '@Real hardware' DC()");
+$@"G000T000 @{pathPrefix}HardwareSpecificTest.cs(18,21) '@ESP32', '@Real hardware' DC()");
 
             AssertRunInformation(actual.TestCases,
 $@"G000T000 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly");

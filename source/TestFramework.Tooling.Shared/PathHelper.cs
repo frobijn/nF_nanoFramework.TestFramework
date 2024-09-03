@@ -28,13 +28,20 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            string fromAbsolutePath = Path.Combine(Path.GetFullPath(relativeTo), "dummy");
-            string toAbsolutePath = Path.GetFullPath(path);
-            if (!Path.GetPathRoot(fromAbsolutePath).Equals(Path.GetPathRoot(toAbsolutePath), StringComparison.OrdinalIgnoreCase))
+            if (!Path.IsPathRooted(path))
             {
-                return path;
+                return path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             }
-            return new Uri(fromAbsolutePath).MakeRelativeUri(new Uri(toAbsolutePath)).ToString().Replace('/', Path.DirectorySeparatorChar);
+            else
+            {
+                string fromAbsolutePath = Path.Combine(Path.GetFullPath(relativeTo), "dummy");
+                string toAbsolutePath = Path.GetFullPath(path);
+                if (!Path.GetPathRoot(fromAbsolutePath).Equals(Path.GetPathRoot(toAbsolutePath), StringComparison.OrdinalIgnoreCase))
+                {
+                    return path;
+                }
+                return new Uri(fromAbsolutePath).MakeRelativeUri(new Uri(toAbsolutePath)).ToString().Replace('/', Path.DirectorySeparatorChar);
+            }
         }
     }
 }

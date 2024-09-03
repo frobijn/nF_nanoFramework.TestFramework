@@ -42,7 +42,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                 Assert.Inconclusive();
             }
 
-            var testDevice = new TestDeviceProxy(new TestDeviceMock("*", "esp32"));
+            var testDevice = new TestDeviceProxy(new TestDeviceMock("*", "ESP32"));
             Assert.IsTrue(actual.RealHardwareDeviceSelectors?.Any());
             Assert.IsTrue((from s in actual.RealHardwareDeviceSelectors
                            where s.ShouldTestOnDevice(testDevice)

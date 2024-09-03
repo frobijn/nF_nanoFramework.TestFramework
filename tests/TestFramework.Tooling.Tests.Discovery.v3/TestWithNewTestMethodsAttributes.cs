@@ -16,7 +16,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         {
         }
 
-        [TestOnPlatform("esp32")]
+        [TestOnPlatform("ESP32")]
         [DeploymentConfiguration("RGB LED pin", "Device ID")]
         public void MethodWithNewTestMethods(int ledPin, long ID)
         {

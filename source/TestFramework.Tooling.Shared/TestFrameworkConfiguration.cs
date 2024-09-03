@@ -143,7 +143,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="serialPort">Name of the serial port (e.g., COM9)</param>
         /// <param name="path">The full path to the file, or a path relative to the directory where the settings file resides that provided
         /// these settings. Pass <c>null</c> if no deployment configuration is available.</param>
-        public void SetDeploymentConfigurationFilePath(string serialPort, string path)
+        /// <returns>This configuration.</returns>
+        public TestFrameworkConfiguration SetDeploymentConfigurationFilePath(string serialPort, string path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -153,6 +154,7 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 _deploymentConfiguration[serialPort] = path;
             }
+            return this;
         }
         #endregion
 
@@ -262,10 +264,7 @@ namespace nanoFramework.TestFramework.Tooling
                 XmlNode allowSerialPorts = node.SelectSingleNode(backwardCompatible ? "RealHardwarePort" : nameof(AllowSerialPorts))?.FirstChild;
                 if (allowSerialPorts != null && allowSerialPorts.NodeType == XmlNodeType.Text)
                 {
-                    if (!string.IsNullOrWhiteSpace(allowSerialPorts.Value))
-                    {
-                        AllowSerialPorts = allowSerialPorts.Value.Split(',', ';').ToList();
-                    }
+                    AllowSerialPorts = allowSerialPorts.Value.Split(',', ';').ToList();
                 }
 
                 if (!backwardCompatible)
@@ -273,10 +272,7 @@ namespace nanoFramework.TestFramework.Tooling
                     XmlNode excludeSerialPorts = node.SelectSingleNode(nameof(ExcludeSerialPorts))?.FirstChild;
                     if (excludeSerialPorts != null && excludeSerialPorts.NodeType == XmlNodeType.Text)
                     {
-                        if (!string.IsNullOrWhiteSpace(excludeSerialPorts.Value))
-                        {
-                            ExcludeSerialPorts = excludeSerialPorts.Value.Split(',', ';').ToList();
-                        }
+                        ExcludeSerialPorts = excludeSerialPorts.Value.Split(',', ';').ToList();
                     }
 
                     RealHardwareTimeout = ReadXmlInteger(nameof(RealHardwareTimeout), RealHardwareTimeout);
@@ -357,6 +353,32 @@ namespace nanoFramework.TestFramework.Tooling
         #region Methods
         /// <summary>
         /// Create a <see cref="SettingsFileName"/>/<see cref="UserSettingsFileName"/> pair of configuration files
+        /// that contains all settings that have a non-default value or, if <paramref name="globalSettingsDirectoryPath"/> is specified,
+        /// a value that is different from the configuration in that directory.
+        /// Existing files will be overwritten or, if not needed, deleted.
+        /// </summary>
+        /// <param name="settingsDirectoryPath">The path to the directory where the settings should be saved</param>
+        /// <param name="globalSettingsDirectoryPath">The path to directory where the configuration is stored that is the base for this settings.
+        /// Can be a path relative to the <paramref name="settingsDirectoryPath"/>.</param>
+        /// <param name="logger">Method to pass processing information to the caller. Pass <c>null</c> if no log information is required.</param>
+        public void SaveSettings(string settingsDirectoryPath, string globalSettingsDirectoryPath, LogMessenger logger)
+        {
+            TestFrameworkConfiguration defaultConfiguration = string.IsNullOrWhiteSpace(globalSettingsDirectoryPath)
+                ? new TestFrameworkConfiguration()
+                : Read(globalSettingsDirectoryPath, false, logger);
+            if (defaultConfiguration is null)
+            {
+                logger?.Invoke(LoggingLevel.Error, $"Saving of settings is aborted; no valid configuration present in '{globalSettingsDirectoryPath}'");
+            }
+            else
+            {
+                SaveSettings(Path.Combine(settingsDirectoryPath, SettingsFileName), false, globalSettingsDirectoryPath, defaultConfiguration, false, logger);
+                SaveSettings(Path.Combine(settingsDirectoryPath, UserSettingsFileName), true, null, defaultConfiguration, false, logger);
+            }
+        }
+
+        /// <summary>
+        /// Create a <see cref="SettingsFileName"/>/<see cref="UserSettingsFileName"/> pair of configuration files
         /// that contains the minimal number of settings that are functionally equivalent to these settings.
         /// Existing files will be overwritten or, if not needed, deleted.
         /// </summary>
@@ -364,11 +386,16 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="logger">Method to pass processing information to the caller. Pass <c>null</c> if no log information is required.</param>
         public void SaveEffectiveSettings(string settingsDirectoryPath, LogMessenger logger)
         {
-            SaveEffectiveSettings(Path.Combine(settingsDirectoryPath, SettingsFileName), false, logger);
-            SaveEffectiveSettings(Path.Combine(settingsDirectoryPath, UserSettingsFileName), true, logger);
+            var defaultConfiguration = new TestFrameworkConfiguration();
+            SaveSettings(Path.Combine(settingsDirectoryPath, SettingsFileName), false, null, defaultConfiguration, true, logger);
+            SaveSettings(Path.Combine(settingsDirectoryPath, UserSettingsFileName), true, null, defaultConfiguration, true, logger);
         }
 
-        private void SaveEffectiveSettings(string settingsFilePath, bool isUserFile, LogMessenger logger)
+        private void SaveSettings(
+            string settingsFilePath, bool isUserFile,
+            string globalSettingsDirectoryPath, TestFrameworkConfiguration defaultConfiguration,
+            bool saveEffectiveSettings,
+            LogMessenger logger)
         {
             XmlDocument document = null;
             XmlNode runSettings = null;
@@ -398,48 +425,102 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 AddNode(name, value ? "true" : "false", parent);
             }
+
+            (bool isDifferent, string relativePath) ComparePath(string settingsValue, string defaultValue)
+            {
+                string relativePath = string.IsNullOrWhiteSpace(settingsValue)
+                    ? null
+                    : PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), settingsValue);
+                string fullPath = relativePath is null ? null : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(settingsFilePath), relativePath));
+                return (
+                    !(fullPath ?? "").Equals(defaultValue ?? "", StringComparison.OrdinalIgnoreCase),
+                    relativePath ?? ""
+                );
+            }
+
+            void AddFilePathNode(string name, string value, string defaultValue, XmlElement parent = null)
+            {
+                (bool isDifferent, string relativePath) = ComparePath(value, defaultValue);
+                if (isDifferent)
+                {
+                    AddNode(name, relativePath, parent);
+                }
+            }
             #endregion
 
             #region Save settings
-            var defaultConfiguration = new TestFrameworkConfiguration();
-
             if (isUserFile)
             {
-                if (AllowRealHardware)
+                if (AllowRealHardware || !saveEffectiveSettings)
                 {
-                    if (AllowSerialPorts.Count > 0)
+                    string allowSerialPorts = string.Join(";", from a in AllowSerialPorts
+                                                               orderby a
+                                                               select a);
+                    if (allowSerialPorts != string.Join(";", from a in defaultConfiguration.AllowSerialPorts
+                                                             orderby a
+                                                             select a))
                     {
-                        AddNode(nameof(AllowSerialPorts), string.Join(";", AllowSerialPorts));
+                        AddNode(nameof(AllowSerialPorts), allowSerialPorts);
                     }
 
-                    foreach (KeyValuePair<string, string> deploymentConfiguration in from dc in _deploymentConfiguration
-                                                                                     orderby dc.Key
-                                                                                     select dc)
+                    string excludeSerialPorts = string.Join(";", from a in ExcludeSerialPorts
+                                                                 where !saveEffectiveSettings || !AllowSerialPorts.Contains(a)
+                                                                 orderby a
+                                                                 select a);
+                    if (excludeSerialPorts != string.Join(";", from a in defaultConfiguration.ExcludeSerialPorts
+                                                               orderby a
+                                                               select a))
                     {
-                        if ((AllowSerialPorts.Count == 0 && !ExcludeSerialPorts.Contains(deploymentConfiguration.Key))
-                            || AllowSerialPorts.Contains(deploymentConfiguration.Key))
+                        AddNode(nameof(ExcludeSerialPorts), excludeSerialPorts);
+                    }
+
+                    var dcSerialPorts = new HashSet<string>(_deploymentConfiguration.Keys);
+                    dcSerialPorts.UnionWith(defaultConfiguration._deploymentConfiguration.Keys);
+
+                    foreach (string dcSerialPort in from dc in dcSerialPorts
+                                                    orderby dc
+                                                    select dc)
+                    {
+                        if (!saveEffectiveSettings
+                            || (AllowSerialPorts.Count == 0 && !ExcludeSerialPorts.Contains(dcSerialPort))
+                            || AllowSerialPorts.Contains(dcSerialPort))
                         {
-                            XmlElement node = Document().CreateElement(DeploymentConfiguration);
-                            runSettings.AppendChild(node);
-                            AddNode(DeploymentConfiguration_SerialPort, deploymentConfiguration.Key, node);
-                            string relativePath = deploymentConfiguration.Value;
-                            if (Path.IsPathRooted(relativePath))
+                            if (_deploymentConfiguration.TryGetValue(dcSerialPort, out string dcFilePath))
                             {
-                                relativePath = PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), relativePath);
+                                (bool isDifferent, string relativePath) = ComparePath(dcFilePath, defaultConfiguration.DeploymentConfigurationFilePath(dcSerialPort));
+
+                                if (isDifferent)
+                                {
+                                    XmlElement node = Document().CreateElement(DeploymentConfiguration);
+                                    runSettings.AppendChild(node);
+                                    AddNode(DeploymentConfiguration_SerialPort, dcSerialPort, node);
+                                    AddNode(DeploymentConfiguration_File, relativePath, node);
+                                }
                             }
-                            AddNode(DeploymentConfiguration_File, relativePath, node);
+                            else
+                            {
+                                XmlElement node = Document().CreateElement(DeploymentConfiguration);
+                                runSettings.AppendChild(node);
+                                AddNode(DeploymentConfiguration_SerialPort, dcSerialPort, node);
+                                AddNode(DeploymentConfiguration_File, "", node);
+                            }
                         }
                     }
                 }
             }
             else
             {
+                if (!string.IsNullOrWhiteSpace(globalSettingsDirectoryPath))
+                {
+                    AddNode(GlobalSettingsDirectoryPath, PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), globalSettingsDirectoryPath));
+                }
+
                 if (AllowRealHardware != defaultConfiguration.AllowRealHardware)
                 {
                     AddBooleanNode(nameof(AllowRealHardware), AllowRealHardware);
                 }
 
-                if (AllowRealHardware)
+                if (AllowRealHardware || !saveEffectiveSettings)
                 {
                     if (RealHardwareTimeout != defaultConfiguration.RealHardwareTimeout)
                     {
@@ -447,20 +528,14 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                 }
 
-                if (PathToLocalNanoCLR != defaultConfiguration.PathToLocalNanoCLR)
-                {
-                    AddNode(nameof(PathToLocalNanoCLR), PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), PathToLocalNanoCLR));
-                }
+                AddFilePathNode(nameof(PathToLocalNanoCLR), PathToLocalNanoCLR, defaultConfiguration.PathToLocalNanoCLR);
 
                 if (CLRVersion != defaultConfiguration.CLRVersion)
                 {
                     AddNode(nameof(CLRVersion), CLRVersion);
                 }
 
-                if (PathToLocalCLRInstance != defaultConfiguration.PathToLocalCLRInstance)
-                {
-                    AddNode(nameof(PathToLocalCLRInstance), PathHelper.GetRelativePath(Path.GetDirectoryName(settingsFilePath), PathToLocalCLRInstance));
-                }
+                AddFilePathNode(nameof(PathToLocalCLRInstance), PathToLocalCLRInstance, defaultConfiguration.PathToLocalCLRInstance);
 
                 if (MaxVirtualDevices != defaultConfiguration.MaxVirtualDevices)
                 {

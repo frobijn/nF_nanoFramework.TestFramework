@@ -461,7 +461,7 @@ Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}Tes
                 },,
                 ""TestWithFrameworkExtensions"": {
                     ""description"": ""Specify which test methods should be included. List the names (and data row attributes) of the methods in an array, or specify \""*\"" to include all test methods."",
-                    ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""TestDeviceWithSomeFile"" ] } ]
+                    ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""TestDeviceWithSomeFile"", ""TestOnDeviceWithProgrammingError_AreDevicesEqual"", ""TestOnDeviceWithProgrammingError_ShouldTestOnDevice"" ] } ]
                 },,
                 ""TestWithMethods"": {
                     ""description"": ""Specify which test methods should be included. List the names (and data row attributes) of the methods in an array, or specify \""*\"" to include all test methods."",

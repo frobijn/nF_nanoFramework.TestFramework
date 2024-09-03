@@ -24,7 +24,7 @@ namespace TestFramework.Tooling.Tests
 
         [TestMethod]
         [TestCategory("Migration v2 to v3")]
-        public void MigrateToCustomSettings()
+        public void TestFrameworkConfiguration_MigrateToCustomSettings()
         {
             string testBaseDirectory = TestDirectoryHelper.GetTestDirectory(TestContext);
 
@@ -140,7 +140,7 @@ namespace TestFramework.Tooling.Tests
         }
 
         [TestMethod]
-        public void ReadSettingsFromHierarchy()
+        public void TestFrameworkConfiguration_ReadSettingsFromHierarchy()
         {
             #region Setup
             string testBaseDirectory = TestDirectoryHelper.GetTestDirectory(TestContext);
@@ -336,6 +336,7 @@ namespace TestFramework.Tooling.Tests
 <RunSettings>
     <nanoFrameworkAdapter>
         <AllowSerialPorts>COM11;COM42</AllowSerialPorts>
+        <ExcludeSerialPorts>COM30;COM31</ExcludeSerialPorts>
         <DeploymentConfiguration>
             <SerialPort>COM11</SerialPort>
             <File>DeploymentConfiguration\DevBoard_MCU_ESP32S3_DevKitM.json</File>
@@ -349,12 +350,300 @@ namespace TestFramework.Tooling.Tests
             #endregion
         }
 
+        [TestMethod]
+        public void TestFrameworkConfiguration_SaveEffectiveSettings()
+        {
+            string testDirectory = TestDirectoryHelper.GetTestDirectory(TestContext);
+
+            #region No hardware; hardware-related settings are removed
+            TestFrameworkConfiguration actual = new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = false,
+                AllowSerialPorts = new List<string>() { "COM9", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31", "COM42" },
+                RealHardwareTimeout = 10000,
+                PathToLocalNanoCLR = "nanoclr.exe",
+                CLRVersion = "v1.0",
+                PathToLocalCLRInstance = "nanoclr.bin",
+                MaxVirtualDevices = 4,
+                VirtualDeviceTimeout = 5000,
+                Logging = LoggingLevel.Detailed
+            }.SetDeploymentConfigurationFilePath("COM42", "dc_com42.json")
+            .SetDeploymentConfigurationFilePath("COM1", "dc_com1.json");
+            var logger = new LogMessengerMock();
+            actual.SaveEffectiveSettings(testDirectory, logger);
+
+            logger.AssertEqual("");
+            Assert.IsTrue(File.Exists(Path.Combine(testDirectory, TestFrameworkConfiguration.SettingsFileName)));
+            Assert.IsFalse(File.Exists(Path.Combine(testDirectory, TestFrameworkConfiguration.UserSettingsFileName)));
+
+            logger = new LogMessengerMock();
+            var read = TestFrameworkConfiguration.Read(testDirectory, false, logger);
+            logger.AssertEqual("");
+
+            AssertConfiguration(new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = false,
+                PathToLocalNanoCLR = Path.Combine(testDirectory, "nanoclr.exe"),
+                CLRVersion = "v1.0",
+                PathToLocalCLRInstance = Path.Combine(testDirectory, "nanoclr.bin"),
+                MaxVirtualDevices = 4,
+                VirtualDeviceTimeout = 5000,
+                Logging = LoggingLevel.Detailed
+            },
+            read);
+            #endregion
+
+            #region With hardware; hardware-related settings are removed
+            actual.AllowRealHardware = true;
+            logger = new LogMessengerMock();
+            actual.SaveEffectiveSettings(testDirectory, logger);
+
+            logger.AssertEqual("");
+            Assert.IsTrue(File.Exists(Path.Combine(testDirectory, TestFrameworkConfiguration.SettingsFileName)));
+            Assert.IsTrue(File.Exists(Path.Combine(testDirectory, TestFrameworkConfiguration.UserSettingsFileName)));
+
+            logger = new LogMessengerMock();
+            read = TestFrameworkConfiguration.Read(testDirectory, false, logger);
+            logger.AssertEqual("");
+
+            AssertConfiguration(new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = true,
+                AllowSerialPorts = new List<string>() { "COM9", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31" },
+                RealHardwareTimeout = 10000,
+                PathToLocalNanoCLR = Path.Combine(testDirectory, "nanoclr.exe"),
+                CLRVersion = "v1.0",
+                PathToLocalCLRInstance = Path.Combine(testDirectory, "nanoclr.bin"),
+                MaxVirtualDevices = 4,
+                VirtualDeviceTimeout = 5000,
+                Logging = LoggingLevel.Detailed
+            }.SetDeploymentConfigurationFilePath("COM42", Path.Combine(testDirectory, "dc_com42.json")),
+            read);
+            #endregion
+
+            #region Default settings: no files; existing files are removed
+            actual = new TestFrameworkConfiguration();
+            logger = new LogMessengerMock();
+            actual.SaveEffectiveSettings(testDirectory, logger);
+
+            logger.AssertEqual("");
+            Assert.IsFalse(File.Exists(Path.Combine(testDirectory, TestFrameworkConfiguration.SettingsFileName)));
+            Assert.IsFalse(File.Exists(Path.Combine(testDirectory, TestFrameworkConfiguration.UserSettingsFileName)));
+            #endregion
+        }
+
+        [TestMethod]
+        public void TestFrameworkConfiguration_SaveSettings()
+        {
+            string testDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
+            string globalRelativePath = "global";
+            string globalDirectoryPath = Path.Combine(testDirectoryPath, globalRelativePath);
+            string projectRelativePath = "project";
+            string projectDirectoryPath = Path.Combine(testDirectoryPath, projectRelativePath);
+
+            #region Save global settings
+            TestFrameworkConfiguration globalSettings = new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = false,
+                AllowSerialPorts = new List<string>() { "COM9", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31", "COM42" },
+                RealHardwareTimeout = 10000,
+                PathToLocalNanoCLR = "nanoclr.exe",
+                CLRVersion = "v1.0",
+                PathToLocalCLRInstance = "nanoclr.bin",
+                MaxVirtualDevices = 4,
+                VirtualDeviceTimeout = 5000,
+                Logging = LoggingLevel.Detailed
+            }.SetDeploymentConfigurationFilePath("COM42", "dc_com42.json")
+            .SetDeploymentConfigurationFilePath("COM11", "dc_com11.json");
+
+            var logger = new LogMessengerMock();
+            globalSettings.SaveSettings(globalDirectoryPath, null, logger);
+
+            logger.AssertEqual("");
+            Assert.IsTrue(File.Exists(Path.Combine(globalDirectoryPath, TestFrameworkConfiguration.SettingsFileName)));
+            Assert.IsTrue(File.Exists(Path.Combine(globalDirectoryPath, TestFrameworkConfiguration.UserSettingsFileName)));
+
+            logger = new LogMessengerMock();
+            var read = TestFrameworkConfiguration.Read(globalDirectoryPath, false, logger);
+            logger.AssertEqual("");
+
+            AssertConfiguration(new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = false,
+                AllowSerialPorts = new List<string>() { "COM9", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31", "COM42" },
+                RealHardwareTimeout = 10000,
+                PathToLocalNanoCLR = Path.Combine(globalDirectoryPath, "nanoclr.exe"),
+                CLRVersion = "v1.0",
+                PathToLocalCLRInstance = Path.Combine(globalDirectoryPath, "nanoclr.bin"),
+                MaxVirtualDevices = 4,
+                VirtualDeviceTimeout = 5000,
+                Logging = LoggingLevel.Detailed
+            }.SetDeploymentConfigurationFilePath("COM42", Path.Combine(globalDirectoryPath, "dc_com42.json"))
+            .SetDeploymentConfigurationFilePath("COM11", Path.Combine(globalDirectoryPath, "dc_com11.json")),
+            read);
+            #endregion
+
+            #region Save same settings as project settings
+            logger = new LogMessengerMock();
+            TestFrameworkConfiguration projectSettings = new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = false,
+                AllowSerialPorts = new List<string>() { "COM9", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31", "COM42" },
+                RealHardwareTimeout = 10000,
+                PathToLocalNanoCLR = $"../{globalRelativePath}/nanoclr.exe",
+                CLRVersion = "v1.0",
+                PathToLocalCLRInstance = $"../{globalRelativePath}/nanoclr.bin",
+                MaxVirtualDevices = 4,
+                VirtualDeviceTimeout = 5000,
+                Logging = LoggingLevel.Detailed
+            }.SetDeploymentConfigurationFilePath("COM42", $"../{globalRelativePath}/dc_com42.json")
+            .SetDeploymentConfigurationFilePath("COM11", $"../{globalRelativePath}/dc_com11.json");
+
+            projectSettings.SaveSettings(projectDirectoryPath, globalDirectoryPath, logger);
+
+            logger.AssertEqual("");
+            Assert.IsTrue(File.Exists(Path.Combine(projectDirectoryPath, TestFrameworkConfiguration.SettingsFileName)));
+            Assert.IsFalse(File.Exists(Path.Combine(projectDirectoryPath, TestFrameworkConfiguration.UserSettingsFileName)));
+
+            logger = new LogMessengerMock();
+            read = TestFrameworkConfiguration.Read(projectDirectoryPath, false, logger);
+            logger.AssertEqual("");
+
+            AssertConfiguration(new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = false,
+                AllowSerialPorts = new List<string>() { "COM9", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31", "COM42" },
+                RealHardwareTimeout = 10000,
+                PathToLocalNanoCLR = Path.Combine(globalDirectoryPath, "nanoclr.exe"),
+                CLRVersion = "v1.0",
+                PathToLocalCLRInstance = Path.Combine(globalDirectoryPath, "nanoclr.bin"),
+                MaxVirtualDevices = 4,
+                VirtualDeviceTimeout = 5000,
+                Logging = LoggingLevel.Detailed
+            }.SetDeploymentConfigurationFilePath("COM42", Path.Combine(globalDirectoryPath, "dc_com42.json"))
+            .SetDeploymentConfigurationFilePath("COM11", Path.Combine(globalDirectoryPath, "dc_com11.json")),
+            read);
+            #endregion
+
+            #region Overwrite global settings with defaults
+            new TestFrameworkConfiguration();
+            logger = new LogMessengerMock();
+            new TestFrameworkConfiguration().SaveSettings(globalDirectoryPath, null, logger);
+
+            logger.AssertEqual("");
+            Assert.IsFalse(File.Exists(Path.Combine(testDirectoryPath, TestFrameworkConfiguration.SettingsFileName)));
+            Assert.IsFalse(File.Exists(Path.Combine(testDirectoryPath, TestFrameworkConfiguration.UserSettingsFileName)));
+
+            // Read the defaults back via the project-specific settings
+            logger = new LogMessengerMock();
+            read = TestFrameworkConfiguration.Read(projectDirectoryPath, false, logger);
+            logger.AssertEqual("");
+
+            AssertConfiguration(new TestFrameworkConfiguration(), read);
+            #endregion
+
+            #region Save different settings as project settings
+            // Restore the global settings
+            globalSettings.SaveSettings(globalDirectoryPath, null, null);
+
+            logger = new LogMessengerMock();
+            projectSettings = new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = true,
+                AllowSerialPorts = new List<string>() { "COM11", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31" },
+                RealHardwareTimeout = 8000,
+                PathToLocalNanoCLR = "nanoclr.exe",
+                CLRVersion = "v1.1",
+                PathToLocalCLRInstance = "nanoclr.bin",
+                MaxVirtualDevices = 0,
+                VirtualDeviceTimeout = 7000,
+                Logging = LoggingLevel.Verbose
+            }.SetDeploymentConfigurationFilePath("COM42", "dc_com42.json")
+            .SetDeploymentConfigurationFilePath("COM9", "dc_com9.json");
+
+            projectSettings.SaveSettings(projectDirectoryPath, globalDirectoryPath, logger);
+
+            logger = new LogMessengerMock();
+            read = TestFrameworkConfiguration.Read(projectDirectoryPath, false, logger);
+            logger.AssertEqual("");
+
+            AssertConfiguration(new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = true,
+                AllowSerialPorts = new List<string>() { "COM11", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31" },
+                RealHardwareTimeout = 8000,
+                PathToLocalNanoCLR = Path.Combine(projectDirectoryPath, "nanoclr.exe"),
+                CLRVersion = "v1.1",
+                PathToLocalCLRInstance = Path.Combine(projectDirectoryPath, "nanoclr.bin"),
+                MaxVirtualDevices = 0,
+                VirtualDeviceTimeout = 7000,
+                Logging = LoggingLevel.Verbose
+            }.SetDeploymentConfigurationFilePath("COM42", Path.Combine(projectDirectoryPath, "dc_com42.json"))
+            .SetDeploymentConfigurationFilePath("COM9", Path.Combine(projectDirectoryPath, "dc_com9.json")),
+            read);
+            #endregion
+
+            #region Overwrite global settings with defaults
+            new TestFrameworkConfiguration();
+            logger = new LogMessengerMock();
+            new TestFrameworkConfiguration().SaveSettings(globalDirectoryPath, null, logger);
+
+            logger.AssertEqual("");
+            Assert.IsFalse(File.Exists(Path.Combine(testDirectoryPath, TestFrameworkConfiguration.SettingsFileName)));
+            Assert.IsFalse(File.Exists(Path.Combine(testDirectoryPath, TestFrameworkConfiguration.UserSettingsFileName)));
+
+            // Read the project-specific settings
+            logger = new LogMessengerMock();
+            read = TestFrameworkConfiguration.Read(projectDirectoryPath, false, logger);
+            logger.AssertEqual("");
+
+            AssertConfiguration(new TestFrameworkConfiguration()
+            {
+                AllowRealHardware = true,
+                AllowSerialPorts = new List<string>() { "COM11", "COM42" },
+                ExcludeSerialPorts = new List<string>() { "COM32", "COM31" },
+                RealHardwareTimeout = 8000,
+                PathToLocalNanoCLR = Path.Combine(projectDirectoryPath, "nanoclr.exe"),
+                CLRVersion = "v1.1",
+                PathToLocalCLRInstance = Path.Combine(projectDirectoryPath, "nanoclr.bin"),
+                MaxVirtualDevices = 0,
+                VirtualDeviceTimeout = 7000,
+                Logging = LoggingLevel.Verbose
+            }.SetDeploymentConfigurationFilePath("COM42", Path.Combine(projectDirectoryPath, "dc_com42.json"))
+            .SetDeploymentConfigurationFilePath("COM9", Path.Combine(projectDirectoryPath, "dc_com9.json")),
+            read);
+            #endregion
+        }
+
         #region Helpers
         private static void AssertConfiguration(TestFrameworkConfiguration expected, TestFrameworkConfiguration actual, params string[] expectedHierarchyDirectoryPaths)
         {
             Assert.IsNotNull(actual);
             Assert.AreEqual(expected.AllowRealHardware, actual.AllowRealHardware);
-            Assert.AreEqual(string.Join(",", expected.AllowSerialPorts), string.Join(",", actual.AllowSerialPorts));
+            Assert.AreEqual(
+                string.Join(",", from sp in expected.AllowSerialPorts
+                                 orderby sp
+                                 select sp),
+                string.Join(",", from sp in actual.AllowSerialPorts
+                                 orderby sp
+                                 select sp)
+            );
+            Assert.AreEqual(
+                string.Join(",", from sp in expected.ExcludeSerialPorts
+                                 orderby sp
+                                 select sp),
+                string.Join(",", from sp in actual.ExcludeSerialPorts
+                                 orderby sp
+                                 select sp)
+            );
             Assert.AreEqual(expected.RealHardwareTimeout, actual.RealHardwareTimeout);
             Assert.AreEqual(expected.PathToLocalNanoCLR, actual.PathToLocalNanoCLR);
             Assert.AreEqual(expected.CLRVersion, actual.CLRVersion);

@@ -18,6 +18,7 @@ namespace nanoFramework.TestFramework
     {
         #region Fields
         private readonly string _platform;
+        private readonly bool _differentTargetIsDifferentDevice;
         #endregion
 
         #region Construction
@@ -25,9 +26,13 @@ namespace nanoFramework.TestFramework
         /// Inform the test runner that the test should be executed on real hardware based on the specified platform.
         /// </summary>
         /// <param name="platform">Platform the test should be executed on.</param>
-        public TestOnPlatformAttribute(string platform)
+        /// <param name="differentTargetIsDifferentDevice">Indicates whether two devices with different target/firmware
+        /// are considered different devices. If <c>true</c> and if two devices with different firmware are simultaneously
+        /// available to run unit tests on, the test will be executed on both devices.</param>
+        public TestOnPlatformAttribute(string platform, bool differentTargetIsDifferentDevice = false)
         {
-            _platform = platform;
+            _platform = platform?.ToUpper();
+            _differentTargetIsDifferentDevice = differentTargetIsDifferentDevice;
         }
         #endregion
 
@@ -36,10 +41,11 @@ namespace nanoFramework.TestFramework
             => _platform;
 
         bool ITestOnRealHardware.ShouldTestOnDevice(ITestDevice testDevice)
-            => testDevice.Platform() == _platform;
+            => testDevice.Platform().ToUpper() == _platform;
 
         bool ITestOnRealHardware.AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2)
-            => testDevice1.TargetName() == testDevice2.TargetName();
+            => !_differentTargetIsDifferentDevice
+                || testDevice1.TargetName().ToUpper() == testDevice2.TargetName().ToUpper();
         #endregion
     }
 }

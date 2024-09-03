@@ -860,6 +860,7 @@ Some information about the assemblies
             cancellationTokenSource.Cancel();
             actual.AddOutput(output2);
             actual.Flush();
+            cancellationTokenSource.Dispose();
             #endregion
 
             #region Assert

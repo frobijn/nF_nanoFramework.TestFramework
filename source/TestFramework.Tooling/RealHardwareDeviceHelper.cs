@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using nanoFramework.Tools.Debugger;
@@ -16,7 +18,7 @@ namespace nanoFramework.TestFramework.Tooling
     /// Helper to het information on the available real hardware devices
     /// and to run unit tests on the devices.
     /// </summary>
-    public sealed class RealHardwareDeviceHelper : TestsRunner.IRealHardwareDevice
+    public sealed class RealHardwareDeviceHelper : TestsRunner.IRealHardwareDevice, IDisposable
     {
         #region Fields
         private readonly NanoDeviceBase _device;
@@ -31,7 +33,7 @@ namespace nanoFramework.TestFramework.Tooling
         private const int TimeoutMilliseconds = 1000;
         #endregion
 
-        #region Construction
+        #region Construction / destruction
         /// <summary>
         /// Get all available real hardware devices.
         /// The devices are passed to a method so that the caller can start running code on that device.
@@ -43,7 +45,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="deviceFound">Method to receive a real hardware device that is found.
         /// The method may be called simultaneously from different threads.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        public static async Task GetAllAvailable(IEnumerable<string> excludeSerialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger)
+        /// <param name="cancellationToken">If the cancellation token is cancelled, the discovery of devices is aborted.</param>
+        public static async Task GetAllAvailable(IEnumerable<string> excludeSerialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger, CancellationToken? cancellationToken = null)
         {
             if (deviceFound is null)
             {
@@ -69,15 +72,16 @@ namespace nanoFramework.TestFramework.Tooling
         /// It may take quite some time for this method to finish, e.g., because it is waiting for timeouts
         /// for serial ports that are not responding.
         /// </summary>
-        /// <param name="logger">Method to pass process information to the caller.</param>
-        /// <param name="deviceFound">Method to receive a real hardware device that is found.
-        /// The method may be called simultaneously from different threads.</param>
         /// <param name="serialPorts">The serial ports that are expected to be connected to a real hardware device,
         /// or not connected at all.</param>
+        /// <param name="deviceFound">Method to receive a real hardware device that is found.
+        /// The method may be called simultaneously from different threads.</param>
+        /// <param name="logger">Method to pass process information to the caller.</param>
+        /// <param name="cancellationToken">If the cancellation token is cancelled, the discovery of devices is aborted.</param>
         /// <remarks>
         /// If a serial port is connected to something that is not a nanodevice, an error will be logged.
         /// </remarks>
-        public static async Task GetForSelectedPorts(IEnumerable<string> serialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger)
+        public static async Task GetForSelectedPorts(IEnumerable<string> serialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger, CancellationToken? cancellationToken = null)
         {
             if (deviceFound is null)
             {
@@ -102,18 +106,27 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="serialPort">The serial port to look for a connected device.</param>
         /// <param name="expectNanoDevice">Indicates whether it is expected that a Nanodevice is connected to the serial port</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        private static void AddSelectedPort(Action<RealHardwareDeviceHelper> deviceFound, string serialPort, bool expectNanoDevice, LogMessenger logger)
+        /// <param name="cancellationToken">If the cancellation token is cancelled, the discovery of devices is aborted.</param>
+        private static void AddSelectedPort(Action<RealHardwareDeviceHelper> deviceFound, string serialPort, bool expectNanoDevice, LogMessenger logger, CancellationToken? cancellationToken = null)
         {
+            if (cancellationToken?.IsCancellationRequested ?? false)
+            {
+                return;
+            }
             if (!(logger is null))
             {
                 lock (logger)
                 {
-                    logger(LoggingLevel.Verbose, $"Checking for real hardware device on port {serialPort}.");
+                    logger(LoggingLevel.Detailed, $"Checking for real hardware device on port {serialPort}.");
                 }
             }
             var serialDebugClient = PortBase.CreateInstanceForSerial(false);
             try
             {
+                if (cancellationToken?.IsCancellationRequested ?? false)
+                {
+                    return;
+                }
                 serialDebugClient.AddDevice(serialPort);
 
                 // The NanoFrameworkDevices collection is a static collection and there is no way to gain exclusive access.
@@ -121,6 +134,10 @@ namespace nanoFramework.TestFramework.Tooling
                 List<NanoDeviceBase> discoveredDevices;
                 while (true)
                 {
+                    if (cancellationToken?.IsCancellationRequested ?? false)
+                    {
+                        return;
+                    }
                     try
                     {
                         discoveredDevices = serialDebugClient.NanoFrameworkDevices.ToList();
@@ -172,8 +189,12 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (!(logger is null))
                         {
-                            logger(LoggingLevel.Verbose, $"Real hardware device with target '{device.TargetName}' connected to {serialPort}.");
+                            logger(LoggingLevel.Verbose, $"Real hardware device with target '{device.TargetName}' / platform '{device.Platform}' connected to {serialPort}.");
                         }
+                    }
+                    if (cancellationToken?.IsCancellationRequested ?? false)
+                    {
+                        return;
                     }
                     deviceFound(new RealHardwareDeviceHelper(serialPort, device));
                 }
@@ -207,6 +228,12 @@ namespace nanoFramework.TestFramework.Tooling
             SerialPort = serialPort;
             _device = device;
         }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            _device.DebugEngine?.Dispose();
+        }
         #endregion
 
         #region Properties
@@ -238,13 +265,16 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="assemblies">The assemblies to execute.</param>
         /// <param name="processOutput">Action to process the output that is provided in chunks.</param>
         /// <param name="logger">Logger to pass process information to the caller.</param>
-        /// <param name="cancellationToken">Cancellation token that should be cancelled to stop running the <paramref name="communication"/>,
-        /// e.g., if all required output has been received or if running tests should be aborted.</param>
+        /// <param name="createRunCancellationToken">Cancellation token that should be created to end running the unit tests.
+        /// It is called just before the execution of the unit tests is started.</param>
+        /// <param name="cancellationToken">Cancellation token that should be cancelled to stop/abort the initialization of the device
+        /// and running of the unit tests, e.g., if the processing of the output is complete or if running tests is cancelled.</param>
         /// <returns>Indicates whether the execution on the device was successful and did not result in an error.</returns>
         public Task<bool> RunAssembliesAsync(
             IEnumerable<AssemblyMetadata> assemblies,
             Action<string> processOutput,
             LogMessenger logger,
+            Func<CancellationToken?> createRunCancellationToken,
             CancellationToken cancellationToken)
         {
             return Task.Run(() =>
@@ -253,7 +283,7 @@ namespace nanoFramework.TestFramework.Tooling
                 CommunicateWithDevice(
                     () =>
                     {
-                        result = DoRunAssembliesAsync(assemblies, processOutput, logger, cancellationToken).GetAwaiter().GetResult();
+                        result = DoRunAssembliesAsync(assemblies, processOutput, logger, createRunCancellationToken, cancellationToken).GetAwaiter().GetResult();
                     },
                     Timeout.Infinite,
                     cancellationToken
@@ -263,12 +293,14 @@ namespace nanoFramework.TestFramework.Tooling
         }
         Task<bool> TestsRunner.IRealHardwareDevice.RunAssembliesAsync(
             IEnumerable<AssemblyMetadata> assemblies,
+            LoggingLevel logging,
             string reportPrefix,
             Action<string> processOutput,
             LogMessenger logger,
+            Func<CancellationToken?> createRunCancellationToken,
             CancellationToken cancellationToken)
         {
-            return RunAssembliesAsync(assemblies, processOutput, logger, cancellationToken);
+            return RunAssembliesAsync(assemblies, processOutput, logger, createRunCancellationToken, cancellationToken);
         }
 
         /// <summary>
@@ -304,9 +336,12 @@ namespace nanoFramework.TestFramework.Tooling
             var waitHandles = new List<WaitHandle>();
             var mutex = new Mutex(false, $"{MutexBaseName}_{serialPort}");
             waitHandles.Add(mutex);
+
+            CancellationTokenSource timeOutToken = null;
             if (millisecondsTimeout > 0 && millisecondsTimeout != Timeout.Infinite)
             {
-                waitHandles.Add(new CancellationTokenSource(millisecondsTimeout).Token.WaitHandle);
+                timeOutToken = new CancellationTokenSource(millisecondsTimeout);
+                waitHandles.Add(timeOutToken.Token.WaitHandle);
             }
             if (cancellationToken.HasValue)
             {
@@ -323,6 +358,7 @@ namespace nanoFramework.TestFramework.Tooling
             finally
             {
                 mutex.ReleaseMutex();
+                timeOutToken?.Dispose();
             }
             return false;
         }
@@ -335,200 +371,240 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="assemblies">The assemblies to execute. One of the assemblies must be a program.</param>
         /// <param name="processOutput">Action to process the output that is provided in chunks.</param>
         /// <param name="logger">Logger to pass process information to the caller.</param>
-        /// <param name="cancellationToken">Cancellation token that should be cancelled to stop running the <paramref name="communication"/>,
-        /// e.g., if all required output has been received or if running tests should be aborted.</param>
+        /// <param name="createRunCancellationToken">Cancellation token that should be created to end running the unit tests.
+        /// It is called just before the execution of the unit tests is started.</param>
+        /// <param name="cancellationToken">Cancellation token that should be cancelled to stop/abort the initialization of the device
+        /// and running of the unit tests, e.g., if the processing of the output is complete or if running tests is cancelled.</param>
         /// <returns>Indicates whether the execution on the device was successful and did not result in an error.</returns>
         private async Task<bool> DoRunAssembliesAsync(
             IEnumerable<AssemblyMetadata> assemblies,
             Action<string> processOutput,
             LogMessenger logger,
+            Func<CancellationToken?> createRunCancellationToken,
             CancellationToken cancellationToken)
         {
-            logger?.Invoke(LoggingLevel.Verbose, $"Preparing device {_device.Description}");
+            logger?.Invoke(LoggingLevel.Verbose, $"Start initialization of the device {_device.Description}");
 
-            // check if debugger engine exists
-            if (_device.DebugEngine == null)
+            bool IsCancellationRequested()
             {
-                _device.CreateDebugEngine();
-                logger?.Invoke(LoggingLevel.Detailed, $"Debug engine created for {_device.Description}.");
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    logger?.Invoke(LoggingLevel.Verbose, "Device initialization is requested to be cancelled.");
+                    return true;
+                }
+                return false;
             }
-
-            // Connect the debugger to the device
-            for (int retryCount = 0; retryCount < NumberOfRetries; retryCount++)
+            if (IsCancellationRequested())
             {
-                bool connectResult = _device.DebugEngine.Connect(5000, true, true);
-                logger?.Invoke(LoggingLevel.Detailed, $"Device connect result is {connectResult}. Attempt {retryCount}/{NumberOfRetries}");
-
-                if (connectResult)
-                {
-                    logger?.Invoke(LoggingLevel.Verbose, $"Connected to the devices.");
-                    break;
-                }
-                else if (retryCount < NumberOfRetries)
-                {
-                    // Give it a bit of time
-                    await Task.Delay(100);
-                }
-                else
-                {
-                    logger?.Invoke(LoggingLevel.Error, $"Couldn't connect to the device, please try to disable the device scanning in the Visual Studio Extension! If the situation persists reboot the device as well.");
-                    return false;
-                }
+                return false;
             }
-
-            // erase the device
-            for (int retryCount = 0; retryCount < NumberOfRetries; retryCount++)
+            var timeKeeper = Stopwatch.StartNew();
+            try
             {
-                logger?.Invoke(LoggingLevel.Detailed, $"Erase deployment block storage. Attempt {retryCount}/{NumberOfRetries}.");
-                bool eraseResult = _device.Erase(
-                    EraseOptions.Deployment,
-                    null,
-                    null);
 
-                logger?.Invoke(LoggingLevel.Detailed, $"Erase result is {eraseResult}.");
-
-                if (eraseResult)
+                // check if debugger engine exists
+                if (_device.DebugEngine == null)
                 {
-                    logger?.Invoke(LoggingLevel.Verbose, $"Deployment block storage has been erased.");
-                }
-                else if (retryCount < NumberOfRetries)
-                {
-                    // Give it a bit of time
-                    await Task.Delay(400);
-                }
-                else
-                {
-                    logger?.Invoke(LoggingLevel.Error, $"Couldn't erase the device, please try to disable the device scanning in the Visual Studio Extension! If the situation persists reboot the device as well.");
-                    return false;
-                }
-            }
-
-            // initial check 
-            bool deviceIsInInitializeState = false;
-            if (_device.DebugEngine.IsDeviceInInitializeState())
-            {
-                logger?.Invoke(LoggingLevel.Verbose, "Device status verified as being in initialized state. Requesting to resume execution.");
-                // set flag
-                deviceIsInInitializeState = true;
-
-                // device is still in initialization state, try resume execution
-                _device.DebugEngine.ResumeExecution();
-            }
-
-            // handle the workflow required to try resuming the execution on the device
-            // only required if device is not already there
-            // retry 5 times with a 500ms interval between retries
-            for (int retryCount = 0; retryCount++ < NumberOfRetries && deviceIsInInitializeState; retryCount++)
-            {
-                if (!_device.DebugEngine.IsDeviceInInitializeState())
-                {
-                    // done here
-                    deviceIsInInitializeState = false;
-                    break;
+                    _device.CreateDebugEngine();
+                    logger?.Invoke(LoggingLevel.Detailed, $"Debug engine created for {_device.Description} [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start]");
                 }
 
-                // provide feedback to user on the 1st pass
-                if (retryCount == 0)
+                // Connect the debugger to the device
+                for (int retryCount = 0; retryCount < NumberOfRetries; retryCount++)
                 {
-                    logger?.Invoke(LoggingLevel.Verbose, $"Waiting for device to initialize.");
-                }
-                logger?.Invoke(LoggingLevel.Detailed, $"Waiting for device to report initialization completed ({retryCount}/{NumberOfRetries}).");
-
-                if (_device.DebugEngine.IsConnectedTonanoBooter)
-                {
-                    logger?.Invoke(LoggingLevel.Detailed, $"Device reported running nanoBooter. Requesting to load nanoCLR.");
-                    // request nanoBooter to load CLR
-                    _device.DebugEngine.ExecuteMemory(0);
-                }
-                else if (_device.DebugEngine.IsConnectedTonanoCLR)
-                {
-                    logger?.Invoke(LoggingLevel.Detailed, $"Device reported running nanoCLR. Requesting to reboot nanoCLR.");
-                    Task.Run(() =>
+                    if (IsCancellationRequested())
                     {
-                        // already running nanoCLR try rebooting the CLR
-                        _device.DebugEngine.RebootDevice(RebootOptions.ClrOnly);
-                    }).GetAwaiter().GetResult();
+                        return false;
+                    }
+
+                    bool connectResult = _device.DebugEngine.Connect(5000, true, true);
+                    logger?.Invoke(LoggingLevel.Detailed, $"Device connect result is {connectResult}. Attempt {retryCount}/{NumberOfRetries}");
+
+                    if (connectResult)
+                    {
+                        logger?.Invoke(LoggingLevel.Verbose, $"Connected to the device [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start].");
+                        break;
+                    }
+                    else if (retryCount < NumberOfRetries)
+                    {
+                        // Give it a bit of time
+                        await Task.Delay(100);
+                    }
+                    else
+                    {
+                        logger?.Invoke(LoggingLevel.Error, $"Couldn't connect to the device {_device.Description} [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start], please try to disable the device scanning in the Visual Studio Extension! If the situation persists reboot the device as well.");
+                        return false;
+                    }
                 }
 
-                // wait before next pass
-                // use a back-off strategy of increasing the wait time to accommodate slower or less responsive targets (such as networked ones)
-                await Task.Delay(TimeSpan.FromMilliseconds(TimeoutMilliseconds * (retryCount + 1)));
-
-                await Task.Yield();
-            }
-
-            // check if device is still in initialized state
-            if (deviceIsInInitializeState)
-            {
-                logger?.Invoke(LoggingLevel.Verbose, "Failed to initialize device.");
-                return false;
-            }
-
-            // device has left initialization state
-            logger?.Invoke(LoggingLevel.Verbose, $"Device is initialized and ready!");
-            await Task.Yield();
-
-            //////////////////////////////////////////////////////////
-            // sanity check for devices without native assemblies ?!?!
-            if (_device.DeviceInfo.NativeAssemblies.Count == 0)
-            {
-                // there are no assemblies deployed?!
-                logger?.Invoke(LoggingLevel.Verbose, $"Device reporting no assemblies loaded. This can not happen. Sanity check failed.");
-                return false;
-            }
-
-            logger?.Invoke(LoggingLevel.Detailed, $"Computing deployment blob.");
-
-            await Task.Yield();
-
-            // Keep track of total assembly size
-            long totalSizeOfAssemblies = 0;
-
-            // now we will re-deploy all system assemblies
-            List<byte[]> assemblyModules = new List<byte[]>();
-            foreach (AssemblyMetadata peItem in assemblies)
-            {
-                // append to the deploy blob the assembly
-                using (FileStream fs = File.Open(peItem.NanoFrameworkAssemblyFilePath, FileMode.Open, FileAccess.Read))
+                // erase the device
+                for (int retryCount = 0; retryCount < NumberOfRetries; retryCount++)
                 {
-                    long length = (fs.Length + 3) / 4 * 4;
-                    logger?.Invoke(LoggingLevel.Detailed, $"Adding {Path.GetFileNameWithoutExtension(peItem.NanoFrameworkAssemblyFilePath)} v{peItem.Version} ({length} bytes) to deployment bundle");
-                    byte[] buffer = new byte[length];
+                    if (IsCancellationRequested())
+                    {
+                        return false;
+                    }
+
+                    logger?.Invoke(LoggingLevel.Detailed, $"Erase deployment block storage. Attempt {retryCount}/{NumberOfRetries}.");
+                    bool eraseResult = _device.Erase(
+                        EraseOptions.Deployment,
+                        null,
+                        null);
+
+                    logger?.Invoke(LoggingLevel.Detailed, $"Erase result is {eraseResult}.");
+
+                    if (eraseResult)
+                    {
+                        logger?.Invoke(LoggingLevel.Verbose, $"Deployment block storage has been erased [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start].");
+                        break;
+                    }
+                    else if (retryCount < NumberOfRetries)
+                    {
+                        // Give it a bit of time
+                        await Task.Delay(400);
+                    }
+                    else
+                    {
+                        logger?.Invoke(LoggingLevel.Error, $"Couldn't erase the device [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start], please try to disable the device scanning in the Visual Studio Extension! If the situation persists reboot the device as well.");
+                        return false;
+                    }
+                }
+
+                if (IsCancellationRequested())
+                {
+                    return false;
+                }
+
+                // initial check 
+                bool deviceIsInInitializeState = false;
+                if (_device.DebugEngine.IsDeviceInInitializeState())
+                {
+                    logger?.Invoke(LoggingLevel.Detailed, "Device status verified as being in initialized state. Requesting to resume execution.");
+                    // set flag
+                    deviceIsInInitializeState = true;
+
+                    // device is still in initialization state, try resume execution
+                    _device.DebugEngine.ResumeExecution();
+                }
+
+                // handle the workflow required to try resuming the execution on the device
+                // only required if device is not already there
+                // retry 5 times with a 500ms interval between retries
+                for (int retryCount = 0; retryCount++ < NumberOfRetries && deviceIsInInitializeState; retryCount++)
+                {
+                    if (IsCancellationRequested())
+                    {
+                        return false;
+                    }
+
+                    if (!_device.DebugEngine.IsDeviceInInitializeState())
+                    {
+                        // done here
+                        deviceIsInInitializeState = false;
+                        break;
+                    }
+
+                    // provide feedback to user on the 1st pass
+                    if (retryCount == 0)
+                    {
+                        logger?.Invoke(LoggingLevel.Verbose, $"Waiting for device to initialize [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start].");
+                    }
+                    logger?.Invoke(LoggingLevel.Detailed, $"Waiting for device to report initialization completed ({retryCount}/{NumberOfRetries}).");
+
+                    if (_device.DebugEngine.IsConnectedTonanoBooter)
+                    {
+                        logger?.Invoke(LoggingLevel.Detailed, $"Device reported running nanoBooter. Requesting to load nanoCLR.");
+                        // request nanoBooter to load CLR
+                        _device.DebugEngine.ExecuteMemory(0);
+                    }
+                    else if (_device.DebugEngine.IsConnectedTonanoCLR)
+                    {
+                        logger?.Invoke(LoggingLevel.Detailed, $"Device reported running nanoCLR. Requesting to reboot nanoCLR.");
+                        Task.Run(() =>
+                        {
+                            // already running nanoCLR try rebooting the CLR
+                            _device.DebugEngine.RebootDevice(RebootOptions.ClrOnly);
+                        }).GetAwaiter().GetResult();
+                    }
+                    if (IsCancellationRequested())
+                    {
+                        return false;
+                    }
+
+                    // wait before next pass
+                    // use a back-off strategy of increasing the wait time to accommodate slower or less responsive targets (such as networked ones)
+                    await Task.Delay(TimeSpan.FromMilliseconds(TimeoutMilliseconds * (retryCount + 1)));
 
                     await Task.Yield();
-
-                    await fs.ReadAsync(buffer, 0, (int)fs.Length);
-                    assemblyModules.Add(buffer);
-
-                    // Increment totalizer
-                    totalSizeOfAssemblies += length;
                 }
-            }
 
-            logger?.Invoke(LoggingLevel.Verbose, $"Deploying {assemblies.Count():N0} assemblies to device... Total size in bytes is {totalSizeOfAssemblies}.");
+                // check if device is still in initialized state
+                if (deviceIsInInitializeState)
+                {
+                    logger?.Invoke(LoggingLevel.Error, $"Failed to initialize device [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start].");
+                    return false;
+                }
 
-            var deploymentLogger = new Progress<string>((m) => logger?.Invoke(LoggingLevel.Detailed, m));
+                // device has left initialization state
+                logger?.Invoke(LoggingLevel.Verbose, $"Device is initialized and ready [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start].");
+                await Task.Yield();
 
-            // OK to skip erase as we just did that
-            // no need to reboot device
-            if (!_device.DebugEngine.DeploymentExecute(
-                    new List<byte[]>(assemblyModules),
-                    false,
-                    false,
-                    null,
-                    deploymentLogger
-                ))
-            {
-                // if the first attempt fails, give it another try
+                //////////////////////////////////////////////////////////
+                // sanity check for devices without native assemblies ?!?!
+                if (_device.DeviceInfo.NativeAssemblies.Count == 0)
+                {
+                    // there are no assemblies deployed?!
+                    logger?.Invoke(LoggingLevel.Verbose, $"Device reporting no assemblies loaded [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start]. This can not happen. Sanity check failed.");
+                    return false;
+                }
 
-                // wait before next pass
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                logger?.Invoke(LoggingLevel.Detailed, $"Computing deployment blob.");
 
                 await Task.Yield();
 
-                logger?.Invoke(LoggingLevel.Verbose, "Deploying assemblies. Second attempt.");
+                // Keep track of total assembly size
+                long totalSizeOfAssemblies = 0;
 
-                // can't skip erase as we just did that
+                // now we will re-deploy all system assemblies
+                List<byte[]> assemblyModules = new List<byte[]>();
+                foreach (AssemblyMetadata peItem in assemblies)
+                {
+                    if (IsCancellationRequested())
+                    {
+                        return false;
+                    }
+
+                    // append to the deploy blob the assembly
+                    using (FileStream fs = File.Open(peItem.NanoFrameworkAssemblyFilePath, FileMode.Open, FileAccess.Read))
+                    {
+                        long length = (fs.Length + 3) / 4 * 4;
+                        logger?.Invoke(LoggingLevel.Detailed, $"Adding {Path.GetFileNameWithoutExtension(peItem.NanoFrameworkAssemblyFilePath)} v{peItem.Version} ({length} bytes) to deployment bundle");
+                        byte[] buffer = new byte[length];
+
+                        await Task.Yield();
+
+                        await fs.ReadAsync(buffer, 0, (int)fs.Length);
+                        assemblyModules.Add(buffer);
+
+                        // Increment totalizer
+                        totalSizeOfAssemblies += length;
+                    }
+                }
+
+                if (IsCancellationRequested())
+                {
+                    return false;
+                }
+                logger?.Invoke(LoggingLevel.Verbose, $"Deploying {assemblies.Count():N0} assemblies to device [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start]... Total size in bytes is {totalSizeOfAssemblies}.");
+
+                var deploymentLog = new StringBuilder();
+                var deploymentLogger = new Progress<string>((m) =>
+                {
+                    logger?.Invoke(LoggingLevel.Detailed, m);
+                    deploymentLog.Append(m);
+                });
+
+                // OK to skip erase as we just did that
                 // no need to reboot device
                 if (!_device.DebugEngine.DeploymentExecute(
                         new List<byte[]>(assemblyModules),
@@ -538,24 +614,80 @@ namespace nanoFramework.TestFramework.Tooling
                         deploymentLogger
                     ))
                 {
-                    logger?.Invoke(LoggingLevel.Error, "Deployment failed.");
-                    return false;
+                    if (IsCancellationRequested())
+                    {
+                        return false;
+                    }
+                    // if the first attempt fails, give it another try
+
+                    // wait before next pass
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+
+                    await Task.Yield();
+
+                    logger?.Invoke(LoggingLevel.Detailed, "Deploying assemblies. Second attempt.");
+                    deploymentLog.Clear();
+
+                    // can't skip erase as we just did that
+                    // no need to reboot device
+                    if (!_device.DebugEngine.DeploymentExecute(
+                            new List<byte[]>(assemblyModules),
+                            false,
+                            false,
+                            null,
+                            deploymentLogger
+                        ))
+                    {
+                        logger?.Invoke(LoggingLevel.Error, $"Deployment failed [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start]:\n{deploymentLog}");
+                        return false;
+                    }
                 }
             }
-            logger?.Invoke(LoggingLevel.Verbose, "Deployment completed.");
+            finally
+            {
+                timeKeeper.Stop();
+            }
+            logger?.Invoke(LoggingLevel.Verbose, $"Deployment completed [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start].");
+
+            // Also write this to the output, as verbose logging is not added to the tests result by default.
+            processOutput($"Device initialization and deployment completed in {(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms.\n");
 
             await Task.Yield();
 
+            if (IsCancellationRequested())
+            {
+                return false;
+            }
+
+#if DEBUG
+            var allOutput = new StringBuilder();
+#endif
             // attach listener for messages
             _device.DebugEngine.OnMessage += (message, text) =>
             {
-                processOutput(text);
+#if DEBUG
+                lock (allOutput)
+                {
+                    allOutput.Append(text);
+                }
+#endif
+                processOutput($"{text}");
             };
 
             _device.DebugEngine.RebootDevice(RebootOptions.ClrOnly);
 
             // Wait until completion
-            cancellationToken.WaitHandle.WaitOne();
+            var waitHandles = new List<WaitHandle>()
+            {
+                cancellationToken.WaitHandle
+            };
+            CancellationToken? cancelRun = createRunCancellationToken();
+            if (!(cancelRun is null))
+            {
+                waitHandles.Add(cancelRun.Value.WaitHandle);
+            }
+            WaitHandle.WaitAny(waitHandles.ToArray());
+
             return true;
         }
         #endregion

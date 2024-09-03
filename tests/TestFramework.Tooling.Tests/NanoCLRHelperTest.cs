@@ -29,8 +29,8 @@ namespace TestFramework.Tooling.Tests
             var actual = new NanoCLRHelper(nanoCLRFilePath, null, true, logger);
 
             Assert.AreEqual(
-$@"Verbose: Install/update nanoclr tool
-Verbose: Install/update successful. Running Vx
+$@"Detailed: Install/update nanoclr tool
+Detailed: Install/update successful. Running Vx
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                         from m in logger.Messages
@@ -73,10 +73,10 @@ $@"Error: *** Failed to locate nanoCLR instance '{nanoCLRFilePath}' ***
             var actual = new NanoCLRHelper(null, "1.0.0", false, logger);
 
             Assert.AreEqual(
-$@"Verbose: Install/update nanoclr tool
-Verbose: Running nanoclr Vx
-Verbose: Update nanoCLR instance
-Verbose: nanoCLR instance updated to Vx
+$@"Detailed: Install/update nanoclr tool
+Detailed: Running nanoclr Vx
+Detailed: Update nanoCLR instance
+Detailed: nanoCLR instance updated to Vx
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                         from m in logger.Messages
@@ -97,9 +97,9 @@ Verbose: nanoCLR instance updated to Vx
             var actual = new NanoCLRHelper(null, null, true, logger);
 
             Assert.AreEqual(
-$@"Verbose: Install/update nanoclr tool
-Verbose: Running nanoclr Vx
-Verbose: No need to update. Running Vx
+$@"Detailed: Install/update nanoclr tool
+Detailed: Running nanoclr Vx
+Detailed: No need to update. Running Vx
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                         from m in logger.Messages
@@ -119,8 +119,8 @@ Verbose: No need to update. Running Vx
             var actual = new NanoCLRHelper(null, null, false, logger);
 
             Assert.AreEqual(
-$@"Verbose: Install/update nanoclr tool
-Verbose: Running nanoclr Vx
+$@"Detailed: Install/update nanoclr tool
+Detailed: Running nanoclr Vx
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                         from m in logger.Messages

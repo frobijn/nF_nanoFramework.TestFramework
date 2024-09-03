@@ -26,7 +26,7 @@ namespace nanoFramework.TestFramework
         /// <param name="target">Target the test should be executed on.</param>
         public TestOnTargetAttribute(string target)
         {
-            _target = target;
+            _target = target?.ToUpper();
         }
         #endregion
 
@@ -35,7 +35,7 @@ namespace nanoFramework.TestFramework
             => _target;
 
         bool ITestOnRealHardware.ShouldTestOnDevice(ITestDevice testDevice)
-            => testDevice.TargetName() == _target;
+            => testDevice.TargetName().ToUpper() == _target;
 
         bool ITestOnRealHardware.AreDevicesEqual(ITestDevice testDevice1, ITestDevice testDevice2)
             => true;

@@ -31,6 +31,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestClassVariants.cs" />
     <Compile Include="TestClassWithMultipleSetupCleanup.cs" />
+    <Compile Include="TestFrameworkExtensions\TestOnDeviceWithProgrammingErrorAttribute.cs" />
     <Compile Include="TestFrameworkExtensions\TestOnDeviceWithSomeFileAttribute.cs" />
     <Compile Include="TestWithFrameworkExtensions.cs" />
     <Compile Include="TestWithMethods.cs" />

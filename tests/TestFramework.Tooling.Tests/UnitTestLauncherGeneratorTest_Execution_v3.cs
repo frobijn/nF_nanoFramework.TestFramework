@@ -72,6 +72,22 @@ ErrorMessage: ''
 
 
 ----------------------------------------
+Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_AreDevicesEqual
+DisplayName : 'TestOnDeviceWithProgrammingError_AreDevicesEqual - Passed'
+Outcome     : Passed
+ErrorMessage: ''
+----------------------------------------
+
+
+----------------------------------------
+Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_ShouldTestOnDevice
+DisplayName : 'TestOnDeviceWithProgrammingError_ShouldTestOnDevice - Passed'
+Outcome     : Passed
+ErrorMessage: ''
+----------------------------------------
+
+
+----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile
 DisplayName : 'TestDeviceWithSomeFile - Passed'
 Outcome     : Passed
@@ -319,6 +335,22 @@ Test        : TestFramework.Tooling.Execution.Tests.TestWithMethods.TestFramewor
 DisplayName : 'Test1(42) - Passed'
 Outcome     : Passed
 ErrorMessage: ''
+----------------------------------------
+
+
+----------------------------------------
+Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_AreDevicesEqual
+DisplayName : 'TestOnDeviceWithProgrammingError_AreDevicesEqual - Setup failed'
+Outcome     : Failed
+ErrorMessage: 'Setup failed'
+----------------------------------------
+
+
+----------------------------------------
+Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_ShouldTestOnDevice
+DisplayName : 'TestOnDeviceWithProgrammingError_ShouldTestOnDevice - Setup failed'
+Outcome     : Failed
+ErrorMessage: 'Setup failed'
 ----------------------------------------
 
 

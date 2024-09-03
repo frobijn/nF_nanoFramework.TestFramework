@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Threading;
 using nanoFramework.TestFramework;
 
 namespace TestFramework.Tooling.Execution.Tests
@@ -101,7 +102,7 @@ namespace TestFramework.Tooling.Execution.Tests
         public void Test()
         {
             OutputHelper.WriteLine($"Test method of {GetType().FullName}");
-            Assert.Fail();
+            Thread.Sleep(100); Assert.Fail();
         }
 
         [Cleanup]

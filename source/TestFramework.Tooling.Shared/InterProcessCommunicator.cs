@@ -114,6 +114,7 @@ namespace nanoFramework.TestFramework.Tooling
         public void Dispose()
         {
             DisposeOfPipes();
+            _cancellationTokenSource.Dispose();
         }
         #endregion
 

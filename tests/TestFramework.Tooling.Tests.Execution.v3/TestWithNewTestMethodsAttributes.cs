@@ -15,21 +15,21 @@ namespace TestFramework.Tooling.Execution.Tests
         {
         }
 
-        [TestOnPlatform("esp32")]
+        [TestOnPlatform("ESP32")]
         [DeploymentConfiguration("RGB LED pin")]
         public void MethodToRunOnRealHardware(int ledPin)
         {
-            OutputHelper.WriteLine("Test method runs on esp32 only");
+            OutputHelper.WriteLine($"Test method runs on ESP32 only; ledPin = {ledPin}");
             Assert.AreNotEqual(-1, ledPin);
         }
 
-        [TestOnPlatform("esp32")]
+        [TestOnPlatform("ESP32")]
         [DeploymentConfiguration("RGB LED pin")]
         [DataRow((int)123)]
         public void MethodToRunOnRealHardwareWithData(long ledPin, int data)
         {
-            OutputHelper.WriteLine("[DataRow] runs on esp32 only");
-            Assert.AreNotEqual(-1, ledPin);
+            OutputHelper.WriteLine($"[DataRow] runs on ESP32 only; ledPin = {ledPin}, data = {data}");
+            Assert.AreNotEqual(-1L, ledPin);
             Assert.AreEqual(123, data);
         }
     }
