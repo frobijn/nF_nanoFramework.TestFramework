@@ -27,17 +27,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         {
             _attribute = attribute;
             _framework = framework;
-
-            if (_framework._property_IDataRow_MethodParameters is null)
-            {
-                _framework._property_IDataRow_MethodParameters = interfaceType.GetProperty(nameof(IDataRow.MethodParameters));
-                if (_framework._property_IDataRow_MethodParameters is null
-                    || _framework._property_IDataRow_MethodParameters.PropertyType != typeof(object[]))
-                {
-                    _framework._property_IDataRow_MethodParameters = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(IDataRow)}.${nameof(IDataRow.MethodParameters)}");
-                }
-            }
+            _framework.AddProperty<object[]>(typeof(IDataRow).FullName, interfaceType, nameof(IDataRow.MethodParameters));
         }
         #endregion
 
@@ -46,7 +36,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Array containing all passed parameters
         /// </summary>
         public object[] MethodParameters
-            => (object[])_framework._property_IDataRow_MethodParameters.GetValue(_attribute, null);
+            => _framework.GetPropertyValue<object[]>(typeof(IDataRow).FullName, nameof(IDataRow.MethodParameters), _attribute);
 
         /// <summary>
         /// Presents the <see cref="MethodParameters"/> as a string "(..,..,..)"

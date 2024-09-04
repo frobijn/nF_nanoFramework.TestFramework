@@ -26,7 +26,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestOnRealHardwareProxy_CreatedForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { },
@@ -35,6 +35,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  select msg.level).ToList()
             );
             Assert.IsNotNull(actual);
+            Assert.AreEqual(0, custom?.Count);
 
             TestOnRealHardwareProxy proxy = actual.OfType<TestOnRealHardwareProxy>()
                               .FirstOrDefault();
@@ -46,11 +47,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestOnRealHardwareProxy_CreatedForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestOnRealHardwareProxy;
@@ -63,11 +64,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), source.Attributes, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestOnRealHardwareProxy;
@@ -84,11 +85,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestOnRealHardwareProxy;
@@ -120,11 +121,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(TestOnRealHardwareProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestOnRealHardwareProxy;

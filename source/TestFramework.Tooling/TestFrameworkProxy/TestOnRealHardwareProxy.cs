@@ -29,45 +29,11 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
             _attribute = attribute;
             _framework = framework;
 
-            TestDeviceProxy.FoundTestFrameworkInterface(_framework, interfaceType);
+            _framework.FoundTestFrameworkInterface(interfaceType);
 
-            if (_framework._property_ITestOnRealHardware_Description is null)
-            {
-                _framework._property_ITestOnRealHardware_Description = interfaceType.GetProperty(nameof(ITestOnRealHardware.Description));
-                if (_framework._property_ITestOnRealHardware_Description is null
-                    || _framework._property_ITestOnRealHardware_Description.PropertyType != typeof(string))
-                {
-                    _framework._property_ITestOnRealHardware_Description = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestOnRealHardware)}.${nameof(ITestOnRealHardware.Description)}");
-                }
-            }
-
-            if (_framework._method_ITestOnRealHardware_ShouldTestOnDevice is null)
-            {
-                _framework._method_ITestOnRealHardware_ShouldTestOnDevice = interfaceType.GetMethod(nameof(ITestOnRealHardware.ShouldTestOnDevice));
-                if (_framework._method_ITestOnRealHardware_ShouldTestOnDevice is null
-                    || _framework._method_ITestOnRealHardware_ShouldTestOnDevice.GetParameters().Length != 1
-                    || _framework._method_ITestOnRealHardware_ShouldTestOnDevice.GetParameters()[0].ParameterType.FullName != typeof(ITestDevice).FullName
-                    || _framework._method_ITestOnRealHardware_ShouldTestOnDevice.ReturnType != typeof(bool))
-                {
-                    _framework._method_ITestOnRealHardware_ShouldTestOnDevice = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestOnRealHardware)}.${nameof(ITestOnRealHardware.ShouldTestOnDevice)}");
-                }
-            }
-
-            if (_framework._method_ITestOnRealHardware_AreDevicesEqual is null)
-            {
-                _framework._method_ITestOnRealHardware_AreDevicesEqual = interfaceType.GetMethod(nameof(ITestOnRealHardware.AreDevicesEqual));
-                if (_framework._method_ITestOnRealHardware_AreDevicesEqual is null
-                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.GetParameters().Length != 2
-                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.GetParameters()[0].ParameterType.FullName != typeof(ITestDevice).FullName
-                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.GetParameters()[1].ParameterType.FullName != typeof(ITestDevice).FullName
-                    || _framework._method_ITestOnRealHardware_AreDevicesEqual.ReturnType != typeof(bool))
-                {
-                    _framework._method_ITestOnRealHardware_AreDevicesEqual = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestOnRealHardware)}.${nameof(ITestOnRealHardware.AreDevicesEqual)}");
-                }
-            }
+            _framework.AddProperty<string>(typeof(ITestOnRealHardware).FullName, interfaceType, nameof(ITestOnRealHardware.Description));
+            _framework.AddMethod<bool>(typeof(ITestOnRealHardware).FullName, interfaceType, nameof(ITestOnRealHardware.ShouldTestOnDevice), _framework.ITestDeviceType);
+            _framework.AddMethod<bool>(typeof(ITestOnRealHardware).FullName, interfaceType, nameof(ITestOnRealHardware.AreDevicesEqual), _framework.ITestDeviceType, _framework.ITestDeviceType);
         }
         #endregion
 
@@ -77,7 +43,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// This is added to the name of the test.
         /// </summary>
         public string Description
-            => (string)_framework._property_ITestOnRealHardware_Description.GetValue(_attribute, null);
+            => _framework.GetPropertyValue<string>(typeof(ITestOnRealHardware).FullName, nameof(ITestOnRealHardware.Description), _attribute);
 
         /// <summary>
         /// Indicates whether the test should be executed on the device.
@@ -85,10 +51,11 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <param name="testDevice">Device that is available to execute the test.</param>
         /// <returns>Returns <c>true</c> if the test should be run, <c>false</c> otherwise.</returns>
         public bool ShouldTestOnDevice(TestDeviceProxy testDevice)
-             => (bool)_framework._method_ITestOnRealHardware_ShouldTestOnDevice.Invoke(_attribute, new object[]
-                {
-                    (testDevice ?? throw new ArgumentNullException (nameof (testDevice))).ITestDeviceProxy (_framework)
-                });
+             => _framework.CallMethod<bool>(
+                    typeof(ITestOnRealHardware).FullName, nameof(ITestOnRealHardware.ShouldTestOnDevice),
+                    _attribute,
+                    (testDevice ?? throw new ArgumentNullException(nameof(testDevice))).ITestDeviceProxy(_framework)
+                 );
 
         /// <summary>
         /// Indicates whether two test devices are considered similar enough that the
@@ -104,11 +71,12 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// has returned <c>true</c>.
         /// </remarks>
         public bool AreDevicesEqual(TestDeviceProxy testDevice1, TestDeviceProxy testDevice2)
-            => (bool)_framework._method_ITestOnRealHardware_AreDevicesEqual.Invoke(_attribute, new object[]
-                {
-                    (testDevice1 ?? throw new ArgumentNullException (nameof (testDevice1))).ITestDeviceProxy (_framework),
-                    (testDevice2 ?? throw new ArgumentNullException (nameof (testDevice2))).ITestDeviceProxy (_framework)
-                });
+            => (bool)_framework.CallMethod(
+                    typeof(ITestOnRealHardware).FullName, nameof(ITestOnRealHardware.AreDevicesEqual),
+                    _attribute,
+                    (testDevice1 ?? throw new ArgumentNullException(nameof(testDevice1))).ITestDeviceProxy(_framework),
+                    (testDevice2 ?? throw new ArgumentNullException(nameof(testDevice2))).ITestDeviceProxy(_framework)
+                );
         #endregion
 
         #region Helpers
@@ -136,7 +104,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
                     result.Item1 ??= new HashSet<string>(),
                     result.Item2 ??= new List<TestOnRealHardwareProxy>()
                 );
-                result.Item1.Add(testOnRealHardware.Description);
+                result.Item1.Add(testOnRealHardware.Description ?? "");
                 result.Item2.Add(testOnRealHardware);
             }
             return result;

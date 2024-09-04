@@ -22,7 +22,7 @@ namespace TestFramework.Tooling.Execution.Tests
         public void TestDeviceWithSomeFile()
         {
             OutputHelper.WriteLine("Deployment configuration 'xyzzy' has a unique value");
-            Thread.Sleep(1000); // To test cancel/timeout
+            Thread.Sleep(1000); // To test cancel/timeout/duration
         }
 
         [TestOnDeviceWithProgrammingError(false)]

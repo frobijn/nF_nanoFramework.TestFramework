@@ -28,11 +28,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(SetupProxy), actual[0].GetType());
         }
 
@@ -44,11 +44,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(SetupProxy), actual[0].GetType());
 
             Assert.IsNotNull(actual[0].Source);
@@ -59,7 +59,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void SetupProxy_ErrorForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { LoggingLevel.Error },
@@ -67,17 +67,19 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  where msg.message.Contains(nameof(nfTest.ISetup))
                  select msg.level).ToList()
             );
-            Assert.AreEqual(0, actual?.OfType<SetupProxy>().Count() ?? -1);
+            Assert.AreEqual(0, actual?.OfType<SetupProxy>().Count());
+            Assert.AreEqual(0, custom?.Count);
         }
 
         [TestMethod]
         public void SetupProxy_ErrorForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            logger.AssertEqual(@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.SetupProxyTest: Error: Attribute implementing 'ISetup' can only be applied to a method. Attribute is ignored.");
-            Assert.AreEqual(0, actual?.Count ?? -1);
+            logger.AssertEqual(@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.SetupProxyTest: Error: Attribute implementing 'nanoFramework.TestFramework.ISetup' cannot be applied to a test class. Attribute is ignored.");
+            Assert.AreEqual(0, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
         }
 
         internal sealed class SetupMockAttribute : Attribute, nfTest.ISetup

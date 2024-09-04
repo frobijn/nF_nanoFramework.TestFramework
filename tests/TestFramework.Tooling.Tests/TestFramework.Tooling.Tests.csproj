@@ -106,6 +106,7 @@
     <Compile Include="ProjectSourceInventoryTest.cs" />
     <Compile Include="TestFrameworkConfigurationTest.cs" />
     <Compile Include="TestFrameworkProxy\CleanupProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\CustomProxyTest.cs" />
     <Compile Include="TestFrameworkProxy\DataRowProxyTest.cs" />
     <Compile Include="Helpers\LogMessengerMock.cs" />
     <Compile Include="Helpers\TestDeviceMock.cs" />

@@ -62,6 +62,10 @@ namespace nanoFramework.TestFramework.Tooling
                                                 orderby a
                                                 select a)
             {
+                if (string.IsNullOrWhiteSpace(assemblyFilePath))
+                {
+                    logger?.Invoke(LoggingLevel.Error, $"Assembly path '{assemblyFilePath ?? "(null)"}' is invalid.");
+                }
                 string projectFilePath = getProjectFilePath?.Invoke(assemblyFilePath);
                 if (projectFilePath is null)
                 {
@@ -113,6 +117,15 @@ namespace nanoFramework.TestFramework.Tooling
                   allowTestOnRealHardware,
                   logger)
         {
+            if (TestOnRealHardware.Count == 0 && TestOnVirtualDevice.Count == 0)
+            {
+                foreach ((string testAssemblyPath, string testCaseDisplayName, string testCaseFullyQualifiedName) in testCaseSelection)
+                {
+                    logger?.Invoke(LoggingLevel.Verbose, $"Test case '{testCaseDisplayName}' ({testCaseFullyQualifiedName}) from '{testAssemblyPath}' is no longer available");
+                }
+                return;
+            }
+
             int selectionIndex = 0;
             string currentAssemblyPath = null;
             TestCaseSelection testsOnVirtualDevice = null;
@@ -314,9 +327,14 @@ namespace nanoFramework.TestFramework.Tooling
                 : null;
 
             // Defaults for the assembly
-            List<AttributeProxy> assemblyAttributes = AttributeProxy.GetAssemblyAttributeProxies(assembly, framework, logger);
+            (List<AttributeProxy> assemblyAttributes, List<AttributeProxy> customAssemblyAttributes) = AttributeProxy.GetAssemblyAttributeProxies(assembly, framework, logger);
+            testsOnRealHardware.CustomAttributeProxies = customAssemblyAttributes;
+            testsOnVirtualDevice.CustomAttributeProxies = customAssemblyAttributes;
+
             HashSet<string> allTestsTraits = TraitsProxy.Collect(null, assemblyAttributes.OfType<TraitsProxy>());
+
             bool testAllOnVirtualDevice = assemblyAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
+
             (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testAllOnRealHardware = allowTestOnRealHardware
                 ? TestOnRealHardwareProxy.Collect((null, null), assemblyAttributes.OfType<TestOnRealHardwareProxy>())
                 : (null, null);
@@ -332,7 +350,7 @@ namespace nanoFramework.TestFramework.Tooling
                 in ProjectSourceInventory.EnumerateNonAbstractClasses(assembly, sourceCode))
             {
                 #region A class is modelled as a group
-                List<AttributeProxy> classAttributes = AttributeProxy.GetClassAttributeProxies(classType, framework, classSourceLocation?.Attributes, logger);
+                (List<AttributeProxy> classAttributes, List<AttributeProxy> customClassAttributes) = AttributeProxy.GetClassAttributeProxies(classType, framework, classSourceLocation?.Attributes, logger);
                 TestClassProxy testClassAttribute = classAttributes.OfType<TestClassProxy>().FirstOrDefault();
                 if (testClassAttribute is null)
                 {
@@ -359,14 +377,17 @@ namespace nanoFramework.TestFramework.Tooling
                         : testClassAttribute.CreateInstancePerTestMethod
                             ? TestCaseGroup.InstantiationType.InstantiatePerTestMethod
                             : TestCaseGroup.InstantiationType.InstantiateForAllMethods,
-                    testClassAttribute.SetupCleanupPerTestMethod);
+                    testClassAttribute.SetupCleanupPerTestMethod)
+                {
+                    CustomAttributeProxies = customClassAttributes
+                };
                 #endregion
 
                 #region A method is turned into zero or more test cases
                 var previousDisplayNames = new HashSet<string>();
                 foreach ((int methodIndex, MethodInfo method, ProjectSourceInventory.MethodDeclaration sourceLocation) in enumerateMethods())
                 {
-                    List<AttributeProxy> methodAttributes = AttributeProxy.GetMethodAttributeProxies(method, framework, sourceLocation?.Attributes, logger);
+                    (List<AttributeProxy> methodAttributes, List<AttributeProxy> customMethodAttributes) = AttributeProxy.GetMethodAttributeProxies(method, framework, sourceLocation?.Attributes, logger);
                     if (methodAttributes.Count == 0)
                     {
                         continue;
@@ -435,13 +456,20 @@ namespace nanoFramework.TestFramework.Tooling
                             deviceTypeCount = (testOnRealHardware.descriptions is null ? 0 : 1) + (testOnVirtualDevice ? 1 : 0);
                         }
 
-                        var dataRowParameters = (from dataRow in methodAttributes.OfType<DataRowProxy>()
-                                                 select (dataRow.Source, dataRow.MethodParametersAsString)).ToList();
+                        int dataRowAttributeCount = methodAttributes.OfType<DataRowProxy>().Count();
+                        var dataRowParameters = new List<(ProjectSourceInventory.ElementDeclaration, string)>();
                         int dataRowIndex = 0;
-                        if (dataRowParameters.Count == 0)
+                        if (dataRowAttributeCount == 0)
                         {
                             dataRowParameters.Add((sourceLocation, ""));
                             dataRowIndex = -1;
+                        }
+                        else
+                        {
+                            dataRowParameters.AddRange(from dataRow in methodAttributes.OfType<DataRowProxy>()
+                                                       select (dataRow.Source, dataRowAttributeCount == 1
+                                                                                    ? "" // Suppress the method parameters if there is only 1 data row
+                                                                                    : dataRow.MethodParametersAsString));
                         }
 
                         foreach ((ProjectSourceInventory.ElementDeclaration testCaseSource, string methodParametersAsString) in dataRowParameters)

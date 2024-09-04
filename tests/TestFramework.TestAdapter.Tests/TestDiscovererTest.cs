@@ -80,12 +80,6 @@ TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWi
         }
 
         #region Helpers
-        private sealed class DiscoveryContextMock : IDiscoveryContext
-        {
-            public IRunSettings RunSettings
-                => throw new System.NotImplementedException();
-        }
-
         private sealed class TestCaseDiscoverySinkMock : ITestCaseDiscoverySink
         {
             public List<TestCase> TestCases

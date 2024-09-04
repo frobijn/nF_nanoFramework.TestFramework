@@ -141,6 +141,14 @@ namespace nanoFramework.TestFramework.Tooling
         }
 
         /// <summary>
+        /// Get the proxies for custom nanoFramework attributes of the test method.
+        /// </summary>
+        public IReadOnlyList<AttributeProxy> CustomAttributeProxies
+        {
+            get; internal set;
+        } = new AttributeProxy[0];
+
+        /// <summary>
         /// Get the group of test cases this case is part of
         /// </summary>
         public TestCaseGroup Group

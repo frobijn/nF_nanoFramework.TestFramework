@@ -26,27 +26,8 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         {
             _attribute = attribute;
             _framework = framework;
-
-            if (_framework._property_ITestClass_CreateInstancePerTestMethod is null)
-            {
-                _framework._property_ITestClass_CreateInstancePerTestMethod = interfaceType.GetProperty(nameof(ITestClass.CreateInstancePerTestMethod));
-                if (_framework._property_ITestClass_CreateInstancePerTestMethod is null
-                    || _framework._property_ITestClass_CreateInstancePerTestMethod.PropertyType != typeof(bool))
-                {
-                    _framework._property_ITestClass_CreateInstancePerTestMethod = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestClass)}.${nameof(ITestClass.CreateInstancePerTestMethod)}");
-                }
-            }
-            if (_framework._property_ITestClass_SetupCleanupPerTestMethod is null)
-            {
-                _framework._property_ITestClass_SetupCleanupPerTestMethod = interfaceType.GetProperty(nameof(ITestClass.SetupCleanupPerTestMethod));
-                if (_framework._property_ITestClass_SetupCleanupPerTestMethod is null
-                    || _framework._property_ITestClass_SetupCleanupPerTestMethod.PropertyType != typeof(bool))
-                {
-                    _framework._property_ITestClass_SetupCleanupPerTestMethod = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestClass)}.${nameof(ITestClass.SetupCleanupPerTestMethod)}");
-                }
-            }
+            _framework.AddProperty<bool>(typeof(ITestClass).FullName, interfaceType, nameof(ITestClass.CreateInstancePerTestMethod));
+            _framework.AddProperty<bool>(typeof(ITestClass).FullName, interfaceType, nameof(ITestClass.SetupCleanupPerTestMethod));
         }
         #endregion
 
@@ -57,7 +38,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// test class is a static class.
         /// </summary>
         public bool CreateInstancePerTestMethod
-            => (bool)_framework._property_ITestClass_CreateInstancePerTestMethod.GetValue(_attribute, null);
+            => _framework.GetPropertyValue<bool>(typeof(ITestClass).FullName, nameof(ITestClass.CreateInstancePerTestMethod), _attribute);
 
         /// <summary>
         /// Indicates whether the setup and cleanup methods of the test class should be
@@ -66,7 +47,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// a value of <c>true</c> is implied for this property.
         /// </summary>
         public bool SetupCleanupPerTestMethod
-            => (bool)_framework._property_ITestClass_SetupCleanupPerTestMethod.GetValue(_attribute, null);
+            => _framework.GetPropertyValue<bool>(typeof(ITestClass).FullName, nameof(ITestClass.SetupCleanupPerTestMethod), _attribute);
         #endregion
     }
 }

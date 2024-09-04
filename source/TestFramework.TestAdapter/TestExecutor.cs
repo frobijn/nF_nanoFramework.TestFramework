@@ -57,7 +57,12 @@ namespace nanoFramework.TestFramework.TestAdapter
                 new TestExecutor_TestCases_Parameters()
                 {
                     TestCases = new List<TestExecutor_TestCases_Parameters.TestCase>(from tc in testSelection
-                                                                                     select new TestExecutor_TestCases_Parameters.TestCase()),
+                                                                                     select new TestExecutor_TestCases_Parameters.TestCase()
+                                                                                     {
+                                                                                         AssemblyFilePath = tc.Source,
+                                                                                         DisplayName = tc.DisplayName,
+                                                                                         FullyQualifiedName = tc.FullyQualifiedName
+                                                                                     }),
                 },
                 (m, l, c) => ProcessTestCaseResults(m, testSelection, frameworkHandle),
                 new TestAdapterLogger(frameworkHandle).LogMessage
@@ -106,9 +111,23 @@ namespace nanoFramework.TestFramework.TestAdapter
         #endregion
 
         #region Cancel running the tests
+        /// <summary>
+        /// Indicates whether the test execution has been cancelled.
+        /// For test purposes.
+        /// </summary>
+        public bool IsCancelled
+        {
+            get;
+            private set;
+        }
+
         public void Cancel()
         {
-            _testHost?.Cancel();
+            if (!(_testHost is null) && !IsCancelled)
+            {
+                IsCancelled = true;
+                _testHost.Cancel();
+            }
         }
         #endregion
     }

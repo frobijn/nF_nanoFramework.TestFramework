@@ -26,17 +26,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         {
             _attribute = attribute;
             _framework = framework;
-
-            if (_framework._property_ITestMethod_CanBeRun is null)
-            {
-                _framework._property_ITestMethod_CanBeRun = interfaceType.GetProperty(nameof(ITestMethod.CanBeRun));
-                if (_framework._property_ITestMethod_CanBeRun is null
-                    || _framework._property_ITestMethod_CanBeRun.PropertyType != typeof(bool))
-                {
-                    _framework._property_ITestMethod_CanBeRun = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITestMethod)}.${nameof(ITestMethod.CanBeRun)}");
-                }
-            }
+            _framework.AddProperty<bool>(typeof(ITestMethod).FullName, interfaceType, nameof(ITestMethod.CanBeRun));
         }
         #endregion
 
@@ -48,7 +38,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// <c>false</c> for any of the attributes.
         /// </summary>
         public bool CanBeRun
-            => (bool)_framework._property_ITestMethod_CanBeRun.GetValue(_attribute, null);
+            => _framework.GetPropertyValue<bool>(typeof(ITestMethod).FullName, nameof(ITestMethod.CanBeRun), _attribute);
         #endregion
     }
 }

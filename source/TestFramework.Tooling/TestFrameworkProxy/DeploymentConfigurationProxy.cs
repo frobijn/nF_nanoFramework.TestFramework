@@ -29,17 +29,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         {
             _attribute = attribute;
             _framework = framework;
-
-            if (_framework._property_IDeploymentConfiguration_ConfigurationKeys is null)
-            {
-                _framework._property_IDeploymentConfiguration_ConfigurationKeys = interfaceType.GetProperty(nameof(IDeploymentConfiguration.ConfigurationKeys));
-                if (_framework._property_IDeploymentConfiguration_ConfigurationKeys is null
-                    || _framework._property_IDeploymentConfiguration_ConfigurationKeys.PropertyType != typeof(string[]))
-                {
-                    _framework._property_IDeploymentConfiguration_ConfigurationKeys = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(IDeploymentConfiguration)}.${nameof(IDeploymentConfiguration.ConfigurationKeys)}");
-                }
-            }
+            _framework.AddProperty<string[]>(typeof(IDeploymentConfiguration).FullName, interfaceType, nameof(IDeploymentConfiguration.ConfigurationKeys));
         }
         #endregion
 
@@ -50,7 +40,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// argument of the setup method that is of type <c>byte[]</c> or <c>string</c>.
         /// </summary>
         public string[] ConfigurationKeys
-            => (string[])_framework._property_IDeploymentConfiguration_ConfigurationKeys.GetValue(_attribute, null);
+            => _framework.GetPropertyValue<string[]>(typeof(IDeploymentConfiguration).FullName, nameof(IDeploymentConfiguration.ConfigurationKeys), _attribute);
         #endregion
 
         #region Helpers

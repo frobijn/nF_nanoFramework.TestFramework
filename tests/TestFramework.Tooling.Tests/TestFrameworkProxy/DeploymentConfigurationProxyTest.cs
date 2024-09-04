@@ -31,11 +31,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(DeploymentConfigurationProxy), actual[0].GetType());
 
             var proxy = actual[0] as DeploymentConfigurationProxy;
@@ -53,11 +53,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var thisMethod = MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(DeploymentConfigurationProxy), actual[0].GetType());
 
             Assert.IsNotNull(actual[0].Source);
@@ -74,7 +74,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void DeploymentConfigurationProxy_ErrorForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { LoggingLevel.Error },
@@ -82,18 +82,20 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  where msg.message.Contains(nameof(nfTest.IDeploymentConfiguration))
                  select msg.level).ToList()
             );
-            Assert.AreEqual(0, actual?.OfType<DeploymentConfigurationProxy>().Count() ?? -1);
+            Assert.AreEqual(0, actual?.OfType<DeploymentConfigurationProxy>().Count());
+            Assert.AreEqual(0, custom?.Count);
         }
 
         [TestMethod]
         public void DeploymentConfigurationProxy_ErrorForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual(
-@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest: Error: Attribute implementing 'IDeploymentConfiguration' can only be applied to a method. Attribute is ignored.");
-            Assert.AreEqual(0, actual?.Count ?? -1);
+@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.DeploymentConfigurationProxyTest: Error: Attribute implementing 'nanoFramework.TestFramework.IDeploymentConfiguration' cannot be applied to a test class. Attribute is ignored.");
+            Assert.AreEqual(0, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
         }
 
 
@@ -104,7 +106,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             #region OK
             MethodInfo method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.OK));
-            var deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            var deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null).framework[0] as DeploymentConfigurationProxy;
             var logger = new LogMessengerMock();
 
             IReadOnlyList<(string key, Type valueType)> actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
@@ -118,7 +120,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             #region MoreArguments - test method
             method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.MoreArguments));
-            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null).framework[0] as DeploymentConfigurationProxy;
             logger = new LogMessengerMock();
 
             actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
@@ -133,7 +135,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             #region MoreArguments - data row method
             method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.MoreArguments));
-            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null).framework[0] as DeploymentConfigurationProxy;
             logger = new LogMessengerMock();
 
             actual = deploymentProxy.GetDeploymentConfigurationArguments(method, true, logger);
@@ -147,7 +149,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             #region TooManyKeys
             method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.TooManyKeys));
-            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null).framework[0] as DeploymentConfigurationProxy;
             logger = new LogMessengerMock();
 
             actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);
@@ -162,7 +164,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 
             #region IncorrectType
             method = classType.GetMethod(nameof(TestDeploymentConfigurationArguments.IncorrectType));
-            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null)[0] as DeploymentConfigurationProxy;
+            deploymentProxy = AttributeProxy.GetMethodAttributeProxies(method, new TestFrameworkImplementation(), null, null).framework[0] as DeploymentConfigurationProxy;
             logger = new LogMessengerMock();
 
             actual = deploymentProxy.GetDeploymentConfigurationArguments(method, false, logger);

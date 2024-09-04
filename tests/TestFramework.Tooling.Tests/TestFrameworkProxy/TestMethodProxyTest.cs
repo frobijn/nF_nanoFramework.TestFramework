@@ -28,11 +28,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), null, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(TestMethodProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestMethodProxy;
@@ -47,11 +47,11 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetMethodAttributeProxies(thisMethod, new TestFrameworkImplementation(), source.Attributes, logger);
 
             logger.AssertEqual("");
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(1, actual.Count);
+            Assert.AreEqual(1, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
             Assert.AreEqual(typeof(TestMethodProxy), actual[0].GetType());
 
             var proxy = actual[0] as TestMethodProxy;
@@ -64,7 +64,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         public void TestMethodProxy_ErrorForAssembly()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
 
             CollectionAssert.AreEqual(
                 new object[] { LoggingLevel.Error },
@@ -72,17 +72,19 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  where msg.message.Contains(nameof(nfTest.ITestMethod))
                  select msg.level).ToList()
             );
-            Assert.AreEqual(0, actual?.OfType<TestMethodProxy>().Count() ?? -1);
+            Assert.AreEqual(0, actual?.OfType<TestMethodProxy>().Count());
+            Assert.AreEqual(0, custom?.Count);
         }
 
         [TestMethod]
         public void TestMethodProxy_ErrorForClass()
         {
             var logger = new LogMessengerMock();
-            List<AttributeProxy> actual = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
+            (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
 
-            logger.AssertEqual(@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.TestMethodProxyTest: Error: Attribute implementing 'ITestMethod' can only be applied to a method. Attribute is ignored.");
-            Assert.AreEqual(0, actual?.Count ?? -1);
+            logger.AssertEqual(@"Error: TestFramework.Tooling.Tests:TestFramework.Tooling.Tests.TestFrameworkProxy.TestMethodProxyTest: Error: Attribute implementing 'nanoFramework.TestFramework.ITestMethod' cannot be applied to a test class. Attribute is ignored.");
+            Assert.AreEqual(0, actual?.Count);
+            Assert.AreEqual(0, custom?.Count);
         }
 
         #region TestMethodMockAttribute

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 
 namespace nanoFramework.TestFramework.Tooling
 {
@@ -34,6 +35,14 @@ namespace nanoFramework.TestFramework.Tooling
         {
             get;
         }
+
+        /// <summary>
+        /// Get the proxies for custom nanoFramework attributes of the assembly.
+        /// </summary>
+        public IReadOnlyList<AttributeProxy> CustomAttributeProxies
+        {
+            get; internal set;
+        } = new AttributeProxy[0];
 
         /// <summary>
         /// The selected test cases. For each test case the index of the matching

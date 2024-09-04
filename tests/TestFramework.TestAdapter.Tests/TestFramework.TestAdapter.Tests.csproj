@@ -69,11 +69,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\AssemblyHelper.cs" />
+    <Compile Include="Helpers\DiscoveryContextMock.cs" />
     <Compile Include="Helpers\MessageLoggerMock.cs" />
+    <Compile Include="Helpers\TestDirectoryHelper.cs" />
     <Compile Include="Helpers\TestProjectHelper.cs" />
     <Compile Include="MSTest.cs" />
     <Compile Include="TestDiscovererTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestExecutorTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -83,6 +87,10 @@
     <ProjectReference Include="..\..\source\TestFramework.TestAdapter\nanoFramework.TestFramework.TestAdapter.csproj">
       <Project>{c0267ce6-79c1-485b-a8d4-2601b347fd43}</Project>
       <Name>nanoFramework.TestFramework.TestAdapter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\source\TestFramework.Tooling.Shared\nanoFramework.TestFramework.Tooling.Shared.csproj">
+      <Project>{22aec17a-1744-4b28-9612-6b09aa5e92b8}</Project>
+      <Name>nanoFramework.TestFramework.Tooling.Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

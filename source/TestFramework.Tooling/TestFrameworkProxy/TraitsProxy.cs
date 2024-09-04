@@ -28,16 +28,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         {
             _attribute = attribute;
             _framework = framework;
-            if (_framework._property_ITraits_Traits is null)
-            {
-                _framework._property_ITraits_Traits = interfaceType.GetProperty(nameof(ITraits.Traits));
-                if (_framework._property_ITraits_Traits is null
-                    || _framework._property_ITraits_Traits.PropertyType != typeof(string[]))
-                {
-                    _framework._property_ITraits_Traits = null;
-                    throw new FrameworkMismatchException($"Mismatch in definition of ${nameof(ITraits)}.${nameof(ITraits.Traits)}");
-                }
-            }
+            _framework.AddProperty<string[]>(typeof(ITraits).FullName, interfaceType, nameof(ITraits.Traits));
         }
         #endregion
 
@@ -46,7 +37,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         /// Get the traits or categories that are assigned to the test
         /// </summary>
         public string[] Traits
-            => (string[])_framework._property_ITraits_Traits.GetValue(_attribute, null);
+            => _framework.GetPropertyValue<string[]>(typeof(ITraits).FullName, nameof(ITraits.Traits), _attribute);
         #endregion
 
         #region Helpers

@@ -57,7 +57,10 @@ namespace nanoFramework.TestFramework.TestAdapter
                 testHost._testHostProcess = Process.Start(
                     new ProcessStartInfo(testHostApplication)
                     {
-                        Arguments = $"{a1} {a2} {a3}",
+                        // Use an extra "debug" argument to debug the TestHost in a separate Visual Studio instance
+                        // (that has opened the same solution)
+                        Arguments = $"{a1} {a2} {a3} debug",
+                        // Arguments = $"{a1} {a2} {a3}",
                         CreateNoWindow = true,
                         UseShellExecute = false
                     }

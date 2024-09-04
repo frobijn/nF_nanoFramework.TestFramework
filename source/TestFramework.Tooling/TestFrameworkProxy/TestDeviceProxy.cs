@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
 {
@@ -20,20 +19,6 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         #endregion
 
         #region Construction / initialisation
-        /// <summary>
-        /// This method has to be called by code that discovers an interface from the test framework.
-        /// It is used to find the <see cref="nanoFramework.TestFramework.Tools.TestDeviceProxy"/> type
-        /// in the assembly that implements the test framework.
-        /// </summary>
-        /// <param name="framework">Information about the implementation of the test framework</param>
-        /// <param name="interfaceType">One of the interface types defined in the test framework</param>
-        internal static void FoundTestFrameworkInterface(TestFrameworkImplementation framework, Type interfaceType)
-        {
-            framework._type_TestDeviceProxy ??= (from type in interfaceType.Assembly.GetTypes()
-                                                 where type.FullName == typeof(nanoFramework.TestFramework.Tools.TestDeviceProxy).FullName
-                                                 select type).FirstOrDefault();
-        }
-
         /// <summary>
         /// Create a proxy on the nanoCLR-platform that obtains its data from a device defined for the .NET platform,
         /// </summary>
@@ -76,13 +61,13 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
         {
             if (!_proxies.TryGetValue(framework, out object proxy))
             {
-                if (framework._type_TestDeviceProxy is null)
+                if (framework.TestDeviceProxyType is null)
                 {
                     throw new FrameworkMismatchException($"{nameof(TestDeviceProxy)} is not found in the nanoFramework assembly");
                 }
                 try
                 {
-                    proxy = Activator.CreateInstance(framework._type_TestDeviceProxy, _device, typeof(ITestDevice));
+                    proxy = Activator.CreateInstance(framework.TestDeviceProxyType, _device, typeof(ITestDevice));
                 }
                 catch (Exception ex)
                 {
