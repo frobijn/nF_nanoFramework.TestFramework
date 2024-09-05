@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace nanoFramework.TestFramework.Tooling
     }
 
     /// <summary>
-    /// Message from the test host about the execution of its tasks
+    /// Message from the child to the parent about the execution of its tasks
     /// </summary>
     internal sealed class ChildProcess_Message : InterProcessCommunicator.IMessage
     {
@@ -54,12 +55,21 @@ namespace nanoFramework.TestFramework.Tooling
     }
 
     /// <summary>
-    /// Message to instruct the test host to stop what it is doing
+    /// Message sent by the parent to let the child know that the next message will
+    /// be a <see cref="ChildProcess_Stop"/>.
+    /// </summary>
+    internal sealed class ChildProcess_AboutToStop : InterProcessCommunicator.IMessage
+    {
+    }
+
+    /// <summary>
+    /// Message from the parent to instruct the child to stop what it is doing,
+    /// and from the child to inform the parent it has completed all its tasks.
     /// </summary>
     internal sealed class ChildProcess_Stop : InterProcessCommunicator.IMessage
     {
         /// <summary>
-        /// Indicates whether the test host should stop immediately what it is doing.
+        /// Indicates whether the child should stop immediately what it is doing.
         /// </summary>
 
         [JsonProperty("A")]
@@ -85,14 +95,20 @@ namespace nanoFramework.TestFramework.Tooling
     public abstract class InterProcessCommunicator : IDisposable
     {
         #region Fields
+        private readonly bool _isChild;
+        private PipeStream _input;
+        private PipeStream _output;
         private readonly Action<InterProcessCommunicator, IMessage, CancellationToken> _messageProcessor;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private LoggingLevel _loggingLevel = LoggingLevel.None;
+        private bool _otherProcessHasStoppedListening;
         private string _messageJson;
         private StreamWriter _outStream;
         private Task _inputReadingTask;
         private readonly List<Type> _messageTypes = new List<Type>
         {
             typeof(ChildProcess_Message),
+            typeof(ChildProcess_AboutToStop),
             typeof(ChildProcess_Stop)
         };
         #endregion
@@ -101,24 +117,31 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Create the communicator.
         /// </summary>
+        /// <param name="input">The pipe to read inputs from.</param>
+        /// <param name="output">The pipe to send outputs to.</param>
+        /// <param name="isChild">Indicates that this instance is the child rather than the parent.</param>
         /// <param name="messageTypes">Message types that should be supported in the communication.</param>
         /// <param name="messageSeparator">Separator that is used between messages.</param>
         /// <param name="messageProcessor">Method to process the received messages.</param>
-        protected InterProcessCommunicator(IEnumerable<Type> messageTypes, string messageSeparator, Action<InterProcessCommunicator, IMessage, CancellationToken> messageProcessor)
+        /// <exception cref="ArgumentNullException">Thrown if any of the arguments is <c>null</c>.</exception>
+        protected InterProcessCommunicator(PipeStream input, PipeStream output, bool isChild, IEnumerable<Type> messageTypes, string messageSeparator, Action<InterProcessCommunicator, IMessage, CancellationToken> messageProcessor)
         {
-            _messageProcessor = messageProcessor;
-            MessageSeparator = messageSeparator;
-            _messageTypes.AddRange(messageTypes);
+            _input = input ?? throw new ArgumentNullException(nameof(input));
+            _output = output ?? throw new ArgumentNullException(nameof(output));
+            _isChild = isChild;
+            _messageProcessor = messageProcessor ?? throw new ArgumentNullException(nameof(messageProcessor));
+            MessageSeparator = messageSeparator ?? throw new ArgumentNullException(nameof(messageSeparator));
+            _messageTypes.AddRange(messageTypes ?? throw new ArgumentNullException(nameof(messageTypes)));
         }
 
         public void Dispose()
         {
-            DisposeOfPipes();
+            SendStopAndDisposeOfPipes();
             _cancellationTokenSource.Dispose();
         }
         #endregion
 
-        #region Methods
+        #region Public interface
         /// <summary>
         /// Marker interface to recognize messages
         /// </summary>
@@ -129,46 +152,75 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Send a message
         /// </summary>
-        /// <typeparam name="T">Type of the message to send</typeparam>
         /// <param name="message">Message to send</param>
-        public void SendMessage<T>(T message)
-            where T : IMessage
+        /// <exception cref="ArgumentException">Message is not one of the registered types.</exception>
+        public void SendMessage(IMessage message)
         {
-            int messageId = _messageTypes.IndexOf(message.GetType());
-            if (messageId < 0)
-            {
-                throw new ArgumentException($"Messages of type {typeof(T)} cannot be sent", nameof(message));
-            }
-
-            string data = JsonConvert.SerializeObject(message, new JsonSerializerSettings()
-            {
-                DefaultValueHandling = DefaultValueHandling.Ignore,
-                NullValueHandling = NullValueHandling.Ignore,
-                Formatting = Formatting.None
-            });
-
-            if (message is ChildProcess_Stop stop)
-            {
-                if (stop.Abort)
-                {
-                    _cancellationTokenSource.Cancel();
-                }
-            }
-
             lock (this)
             {
-                _outStream.WriteLine(data);
-                _outStream.WriteLine($"{MessageSeparator}{messageId}");
+                if (_input is null)
+                {
+                    // Processing has already been stopped
+                    return;
+                }
             }
+            if (message is ChildProcess_AboutToStop
+                || message is ChildProcess_Message
+                || message is ChildProcess_Stop)
+            {
+                throw new ArgumentException($"Messages of type '{message.GetType().FullName}' cannot be sent", nameof(message));
+            }
+            DoSendMessage(message);
         }
 
         /// <summary>
         /// Wait until the processing of all messages is completed
         /// </summary>
-        public abstract void WaitUntilProcessingIsCompleted();
-        protected void WaitUntilInputProcessingIsCompleted()
+        public void WaitUntilProcessingIsCompleted()
         {
+            lock (this)
+            {
+                if (_input is null)
+                {
+                    // Processing has already been stopped
+                    return;
+                }
+            }
+
+            if (!_isChild)
+            {
+                bool sendMessage;
+                lock (this)
+                {
+                    sendMessage = !_otherProcessHasStoppedListening;
+                }
+                if (sendMessage)
+                {
+                    // The parent should notify the child it is about to stop.
+                    // It cannot send the ChildProcess_Stop message, as it may
+                    // still cancel whatever the child is doing.
+                    try
+                    {
+                        DoSendMessage(new ChildProcess_AboutToStop());
+                        _output.WaitForPipeDrain();
+                    }
+                    catch (IOException)
+                    {
+                        // Child may no longer be running
+                        lock (this)
+                        {
+                            _otherProcessHasStoppedListening = true;
+                            sendMessage = false;
+                        }
+                    }
+                }
+            }
+
+            // Wait until all inputs have been processed.
             _inputReadingTask.Wait();
+
+            // All done.
+            SendStopAndDisposeOfPipes();
         }
         #endregion
 
@@ -184,23 +236,66 @@ namespace nanoFramework.TestFramework.Tooling
         /// <summary>
         /// Start listening/sending data
         /// </summary>
-        /// <param name="inStream">Stream for the input</param>
-        /// <param name="outStream">Stream for the output</param>
-        protected void StartCommunication(Stream inStream, Stream outStream)
+        protected void StartCommunication()
         {
-            _outStream = new StreamWriter(outStream)
+            _outStream = new StreamWriter(_output)
             {
                 AutoFlush = true
             };
-            _inputReadingTask = Task.Run(() => ReadInput(inStream));
+            _inputReadingTask = Task.Run(() => ReadInput());
         }
 
+
         /// <summary>
-        /// Called if a message passes the level of required logging.
+        /// Send a message. This is different from <see cref="SendMessage"/> as it does not check
+        /// if processing has been stopped, and can send the <c>ChildProcess_*</c> messages.
         /// </summary>
-        /// <param name="level"></param>
-        protected virtual void SetLogLevel(int level)
+        /// <param name="message">Message to send</param>
+        /// <exception cref="ArgumentException">Message is not one of the registered types.</exception>
+        protected void DoSendMessage(IMessage message)
         {
+            if (message is ChildProcess_Message logMessage)
+            {
+                if (!_isChild || logMessage.Level < (int)_loggingLevel)
+                {
+                    // The parent does not send messages to the child
+                    // The child only sends messages of the requested level.
+                    return;
+                }
+            }
+            else if (!_isChild && message is ChildProcess_Stop stop)
+            {
+                if (stop.Abort)
+                {
+                    // An abort message can only be sent by the parent to the child.
+                    // Inform the parent's input processors that the child is requested to abort.
+                    _cancellationTokenSource.Cancel();
+                }
+                lock (this)
+                {
+                    // This is the last message expected by the child
+                    _otherProcessHasStoppedListening = true;
+                }
+            }
+
+            int messageId = _messageTypes.IndexOf(message.GetType());
+            if (messageId < 0)
+            {
+                throw new ArgumentException($"Messages of type '{message.GetType().FullName}' cannot be sent", nameof(message));
+            }
+
+            string data = JsonConvert.SerializeObject(message, new JsonSerializerSettings()
+            {
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore,
+                Formatting = Formatting.None
+            });
+
+            lock (this)
+            {
+                _outStream.WriteLine(data);
+                _outStream.WriteLine($"{MessageSeparator}{messageId}");
+            }
         }
 
         /// <summary>
@@ -213,23 +308,17 @@ namespace nanoFramework.TestFramework.Tooling
         }
 
         /// <summary>
-        /// React to the reception of a <see cref="ChildProcess_Stop"/> message.
-        /// </summary>
-        /// <param name="abort"></param>
-        protected abstract void Stop(bool abort);
-
-        /// <summary>
         /// Process  a single received line of text
         /// </summary>
-        /// <param name="data">Data received</param>
-        private void ReadInput(Stream inputStream)
+        private void ReadInput()
         {
             var processingTasks = new Dictionary<int, Task>();
             int nextMessageIndex = 0;
+            bool sendStopIfAllTasksAreCompleted = false;
 
             try
             {
-                using (var reader = new StreamReader(inputStream))
+                using (var reader = new StreamReader(_input))
                 {
                     while (true)
                     {
@@ -242,75 +331,131 @@ namespace nanoFramework.TestFramework.Tooling
                         if (line.StartsWith(MessageSeparator))
                         {
                             #region Message separator found - get the type
-                            Type messageType = null;
                             // Does the line contain a message ID?
-                            if (line.Length > MessageSeparator.Length)
+                            if (line.Length <= MessageSeparator.Length || string.IsNullOrWhiteSpace(_messageJson))
                             {
-                                if (int.TryParse(line.Substring(MessageSeparator.Length), out int messageId)
-                                    && messageId >= 0
-                                    && messageId < _messageTypes.Count)
+                                // Separator preceding a message.
+                                continue;
+                            }
+
+                            Type messageType = null;
+                            string idString = line.Substring(MessageSeparator.Length);
+                            if (int.TryParse(idString, out int messageId))
+                            {
+                                if (messageId >= 0 && messageId < _messageTypes.Count)
                                 {
                                     messageType = _messageTypes[messageId];
                                 }
                             }
-                            #endregion
-
-                            #region Process the message
-                            IMessage message = null;
-                            if (!(messageType is null) && !(_messageJson is null))
+                            if (messageType is null)
                             {
-                                try
+                                // Should not happen - mismatch between parent and child???
+                                if (_isChild)
                                 {
-                                    message = JsonConvert.DeserializeObject(_messageJson, messageType) as IMessage;
-                                }
-                                catch
-                                {
-                                    // Should not happen - mismatch between test host and test adapter???
-                                }
-                            }
-                            _messageJson = null;
-                            if (!(message is null))
-                            {
-                                if (message is ChildProcess_Stop stop)
-                                {
-                                    if (stop.Abort)
+                                    DoSendMessage(new ChildProcess_Message()
                                     {
-                                        _cancellationTokenSource.Cancel();
-                                    }
-                                    Stop(stop.Abort);
-                                    // Stop processing the inputs
-                                    break;
-                                }
-                                if (message is ChildProcess_Parameters parameters)
-                                {
-                                    SetLogLevel(parameters.LogLevel);
-                                }
-                                if (message is ChildProcess_Message logMessage)
-                                {
-                                    LogMessage((LoggingLevel)logMessage.Level, logMessage.Text);
+                                        Level = (int)LoggingLevel.Error,
+                                        Text = $"The child process received a message with ID = {idString} that is not registered for the child process."
+                                    });
                                 }
                                 else
                                 {
-                                    // Process message but do not wait for that to finish
+                                    LogMessage(LoggingLevel.Error, $"Message received from the child process of an unregistered type (ID = {idString})");
+                                }
+                                continue;
+                            }
+                            #endregion
+
+                            #region Deserialize the message
+                            IMessage message = null;
+                            try
+                            {
+                                message = JsonConvert.DeserializeObject(_messageJson, messageType) as IMessage;
+                            }
+                            catch (Exception ex)
+                            {
+                                // Should not happen - mismatch between parent and child???
+                                if (_isChild)
+                                {
+                                    DoSendMessage(new ChildProcess_Message()
+                                    {
+                                        Level = (int)LoggingLevel.Error,
+                                        Text = $"Message (received by the child process) of type '{messageType.FullName}' cannot be deserialized: {ex.Message}"
+                                    });
+                                }
+                                else
+                                {
+                                    LogMessage(LoggingLevel.Error, $"Message (received from child process) of type '{messageType.FullName}' cannot be deserialized: {ex.Message}");
+                                }
+                                continue;
+                            }
+                            _messageJson = null;
+                            #endregion
+
+                            #region Process the message
+                            if (message is ChildProcess_Stop stop)
+                            {
+                                if (_isChild && stop.Abort)
+                                {
+                                    _cancellationTokenSource.Cancel();
+                                }
+                                // Stop processing the inputs
+                                break;
+                            }
+                            if (_isChild && message is ChildProcess_Parameters parameters)
+                            {
+                                _loggingLevel = (LoggingLevel)parameters.LogLevel;
+                            }
+
+                            if (message is ChildProcess_AboutToStop)
+                            {
+                                if (_isChild)
+                                {
+                                    // Parent informs child not to expect additional inputs
                                     lock (processingTasks)
                                     {
-                                        int messageIndex = nextMessageIndex++;
-                                        var task = Task.Run(() =>
+                                        if (processingTasks.Count == 0)
                                         {
-                                            try
+                                            DoSendMessage(new ChildProcess_Stop());
+                                        }
+                                        else
+                                        {
+                                            sendStopIfAllTasksAreCompleted = true;
+                                        }
+                                    }
+                                }
+                                // else: should not happen; ignore.
+                            }
+                            else if (message is ChildProcess_Message logMessage)
+                            {
+                                // Process log messages synchronously, to preserve the order the messages are received.
+                                LogMessage((LoggingLevel)logMessage.Level, logMessage.Text);
+                            }
+                            else
+                            {
+                                // Process message but do not wait for that to finish
+                                lock (processingTasks)
+                                {
+                                    int messageIndex = nextMessageIndex++;
+                                    var task = Task.Run(() =>
+                                    {
+                                        try
+                                        {
+                                            _messageProcessor(this, message, _cancellationTokenSource.Token);
+                                        }
+                                        finally
+                                        {
+                                            lock (processingTasks)
                                             {
-                                                _messageProcessor(this, message, _cancellationTokenSource.Token);
-                                            }
-                                            finally
-                                            {
-                                                lock (this)
+                                                processingTasks.Remove(messageIndex);
+                                                if (sendStopIfAllTasksAreCompleted && processingTasks.Count == 0)
                                                 {
-                                                    processingTasks.Remove(messageIndex);
+                                                    DoSendMessage(new ChildProcess_Stop());
                                                 }
                                             }
-                                        });
-                                        processingTasks[messageIndex] = task;
-                                    }
+                                        }
+                                    });
+                                    processingTasks[messageIndex] = task;
                                 }
                             }
                             #endregion
@@ -338,7 +483,44 @@ namespace nanoFramework.TestFramework.Tooling
             }
         }
 
-        protected abstract void DisposeOfPipes();
+        /// <summary>
+        /// Inform the other party that this one is stopping, and dispose of the
+        /// pipes / streams.
+        /// </summary>
+        private void SendStopAndDisposeOfPipes()
+        {
+            bool sendMessage;
+            lock (this)
+            {
+                if (_input is null)
+                {
+                    return;
+                }
+                _input.Dispose();
+                _input = null;
+
+                sendMessage = !_otherProcessHasStoppedListening;
+            }
+            if (sendMessage)
+            {
+                try
+                {
+                    DoSendMessage(new ChildProcess_Stop());
+                    _output.WaitForPipeDrain();
+                    _outStream.Dispose();
+                }
+                catch (IOException)
+                {
+                    // Listener may no longer be running
+                }
+            }
+            lock (this)
+            {
+                _outStream = null;
+                _output.Dispose();
+                _output = null;
+            }
+        }
         #endregion
     }
 }

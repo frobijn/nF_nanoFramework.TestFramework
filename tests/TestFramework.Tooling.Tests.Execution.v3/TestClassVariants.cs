@@ -10,14 +10,14 @@ namespace TestFramework.Tooling.Execution.Tests
     public static class StaticTestClass
     {
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public static void Method1()
         {
             OutputHelper.WriteLine("Method1");
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public static void Method2()
         {
             OutputHelper.WriteLine("Method2");
@@ -40,14 +40,14 @@ namespace TestFramework.Tooling.Execution.Tests
     public static class StaticTestClassSetupCleanupPerMethod
     {
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public static void Method1()
         {
             OutputHelper.WriteLine("Method1");
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public static void Method2()
         {
             OutputHelper.WriteLine("Method2");
@@ -80,7 +80,7 @@ namespace TestFramework.Tooling.Execution.Tests
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method1()
         {
             OutputHelper.WriteLine("Method1");
@@ -88,7 +88,7 @@ namespace TestFramework.Tooling.Execution.Tests
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method2()
         {
             OutputHelper.WriteLine("Method2");
@@ -124,7 +124,7 @@ namespace TestFramework.Tooling.Execution.Tests
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method1()
         {
             OutputHelper.WriteLine("Method1");
@@ -132,7 +132,7 @@ namespace TestFramework.Tooling.Execution.Tests
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method2()
         {
             OutputHelper.WriteLine("Method2");
@@ -168,7 +168,7 @@ namespace TestFramework.Tooling.Execution.Tests
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method1()
         {
             OutputHelper.WriteLine("Method1");
@@ -176,7 +176,7 @@ namespace TestFramework.Tooling.Execution.Tests
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method2()
         {
             OutputHelper.WriteLine("Method2");

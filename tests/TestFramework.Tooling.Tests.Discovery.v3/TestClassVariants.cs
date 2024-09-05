@@ -9,7 +9,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     public static class StaticTestClass
     {
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public static void Method()
         {
         }
@@ -29,14 +29,14 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
     public class NonStaticTestClass
     {
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method1()
         {
             Assert.IsNotNull(this);
         }
 
         [TestMethod]
-        [Trait("TestClass demonstration")]
+        [TestCategory("TestClass demonstration")]
         public void Method2()
         {
             Assert.IsNotNull(this);

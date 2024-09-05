@@ -25,7 +25,7 @@ namespace TestFramework.Tooling.Tests
             UnitTestLauncher_GenerateApplication_RunWithNanoCLRHelper(communicateByNames, true,
 @"----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData#0
-DisplayName : 'MethodToRunOnRealHardwareWithData(123) - Passed'
+DisplayName : 'MethodToRunOnRealHardwareWithData - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -40,8 +40,8 @@ ErrorMessage: ''
 
 
 ----------------------------------------
-Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithTraits
-DisplayName : 'MethodWithTraits - Passed'
+Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithCategories
+DisplayName : 'MethodWithCategories - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -292,7 +292,7 @@ ErrorMessage: 'Setup failed'
             UnitTestLauncher_GenerateApplication_RunWithNanoCLRHelper(communicateByNames, false,
 @"----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData#0
-DisplayName : 'MethodToRunOnRealHardwareWithData(123) - Test failed'
+DisplayName : 'MethodToRunOnRealHardwareWithData - Test failed'
 Outcome     : Failed
 ErrorMessage: 'Test failed'
 ----------------------------------------
@@ -307,8 +307,8 @@ ErrorMessage: 'Test failed'
 
 
 ----------------------------------------
-Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithTraits
-DisplayName : 'MethodWithTraits - Passed'
+Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithCategories
+DisplayName : 'MethodWithCategories - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------

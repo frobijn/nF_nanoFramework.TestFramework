@@ -14,7 +14,7 @@ namespace TestFramework.Tooling.Hardware_esp32.Tests
     public class HardwareSpecificTest
     {
         [TestMethod]
-        [Trait("Hardware required")]
+        [TestCategory("Hardware required")]
         public void UseEsp32NativeAssembly()
         {
             OutputHelper.WriteLine($"Use ESP32 native assembly");

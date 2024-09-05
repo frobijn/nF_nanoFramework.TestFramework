@@ -1117,8 +1117,8 @@ $@"@@@:C:TestFramework.Tooling.Execution.Tests.FailInConstructor:0:{UnitTestLaun
 @@@:M:TestFramework.Tooling.Execution.Tests.TestWithMethods.Test2:0:{UnitTestLauncher.Communication.Start}
 @@@:M:TestFramework.Tooling.Execution.Tests.TestWithMethods.Test2:0:{UnitTestLauncher.Communication.Pass}
 @@@:C:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes:0:{UnitTestLauncher.Communication.Start}
-@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithTraits:0:{UnitTestLauncher.Communication.Start}
-@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithTraits:0:{UnitTestLauncher.Communication.Pass}
+@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithCategories:0:{UnitTestLauncher.Communication.Start}
+@@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodWithCategories:0:{UnitTestLauncher.Communication.Pass}
 @@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware:0:{UnitTestLauncher.Communication.Start}
 @@@:M:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware:0:{UnitTestLauncher.Communication.Fail}:Exception
 @@@:D:TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData#0:0:{UnitTestLauncher.Communication.Start}

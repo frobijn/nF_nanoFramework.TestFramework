@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipes;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace nanoFramework.TestFramework.Tooling
 {
@@ -16,13 +14,7 @@ namespace nanoFramework.TestFramework.Tooling
     /// </summary>
     public sealed class InterProcessChild : InterProcessCommunicator
     {
-        #region Fields
-        private AnonymousPipeClientStream _parentToChild;
-        private AnonymousPipeClientStream _childToParent;
-        private LoggingLevel _loggingLevel = LoggingLevel.None;
-        #endregion
-
-        #region Construction
+        #region Public interface
         /// <summary>
         /// Method that is called to processes the messages sent by the parent.
         /// </summary>
@@ -44,81 +36,40 @@ namespace nanoFramework.TestFramework.Tooling
         /// <returns></returns>
         public static InterProcessChild Start(string argument1, string argument2, string argument3, IEnumerable<Type> messageTypes, ProcessMessage messageProcessor)
         {
-            void LogMessenger(InterProcessCommunicator child, LoggingLevel level, string message)
+            void LogMessenger(InterProcessChild child, LoggingLevel level, string message)
             {
-                if (level >= (child as InterProcessChild)._loggingLevel)
+                child.DoSendMessage(new ChildProcess_Message()
                 {
-                    child.SendMessage(new ChildProcess_Message()
-                    {
-                        Level = (int)level,
-                        Text = message
-                    });
-                }
+                    Level = (int)level,
+                    Text = message
+                });
             }
 
             var childProcess = new InterProcessChild(
+                    new AnonymousPipeClientStream(PipeDirection.In, argument2),
+                    new AnonymousPipeClientStream(PipeDirection.Out, argument3),
                     messageTypes,
                     argument1,
                     (t, m, c) => messageProcessor(
                                     m,
                                     (rm) => t.SendMessage(rm),
-                                    (ll, lm) => LogMessenger(t, ll, lm),
+                                    (ll, lm) => LogMessenger(t as InterProcessChild, ll, lm),
                                     c
                                 )
-                )
-            {
-                _parentToChild = new AnonymousPipeClientStream(PipeDirection.In, argument2),
-                _childToParent = new AnonymousPipeClientStream(PipeDirection.Out, argument3)
-            };
-            childProcess.StartCommunication(childProcess._parentToChild, childProcess._childToParent);
+                );
+            childProcess.StartCommunication();
 
             return childProcess;
         }
         #endregion
 
         #region Internal implementation
-        private InterProcessChild(IEnumerable<Type> messageTypes, string messageSeparator, Action<InterProcessCommunicator, IMessage, CancellationToken> messageProcessor)
-            : base(messageTypes, messageSeparator, messageProcessor)
+        private InterProcessChild(
+            AnonymousPipeClientStream input, AnonymousPipeClientStream output,
+            IEnumerable<Type> messageTypes, string messageSeparator,
+            Action<InterProcessCommunicator, IMessage, CancellationToken> messageProcessor)
+            : base(input, output, true, messageTypes, messageSeparator, messageProcessor)
         {
-        }
-
-        /// <inheritdoc/>
-        protected override void SetLogLevel(int level)
-            => _loggingLevel = (LoggingLevel)level;
-
-        /// <inheritdoc/>
-        public override void WaitUntilProcessingIsCompleted()
-        {
-            WaitUntilInputProcessingIsCompleted();
-            if (!(_childToParent is null))
-            {
-                SendMessage(new ChildProcess_Stop() { Abort = false });
-                try
-                {
-                    _childToParent.WaitForPipeDrain();
-                }
-                catch (IOException)
-                {
-                    // Parent may no longer be available
-                }
-            }
-            DisposeOfPipes();
-        }
-
-        /// <inheritdoc/>
-        protected override void Stop(bool abort)
-        {
-            // Send the stop message after the child is done
-            Task.Run(WaitUntilProcessingIsCompleted);
-        }
-
-        /// <inheritdoc/>
-        protected override void DisposeOfPipes()
-        {
-            _parentToChild?.Dispose();
-            _parentToChild = null;
-            _childToParent?.Dispose();
-            _childToParent = null;
         }
         #endregion
     }

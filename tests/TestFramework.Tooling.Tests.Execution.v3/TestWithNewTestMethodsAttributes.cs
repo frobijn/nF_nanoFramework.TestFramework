@@ -9,9 +9,9 @@ namespace TestFramework.Tooling.Execution.Tests
     public class TestWithNewTestMethodsAttributes
     {
         [TestMethod]
-        [Trait("Example trait")]
-        [Trait("Other trait")]
-        public void MethodWithTraits()
+        [TestCategory("Example category")]
+        [TestCategory("Other category")]
+        public void MethodWithCategories()
         {
         }
 

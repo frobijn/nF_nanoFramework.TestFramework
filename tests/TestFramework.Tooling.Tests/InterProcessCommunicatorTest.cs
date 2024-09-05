@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.Tools;
@@ -20,31 +21,36 @@ namespace TestFramework.Tooling.Tests.Tools
         public void InterProcessCommunicator_Test_MessageExchange()
         {
             #region Setup
-            string id = Guid.NewGuid().ToString();
-            var message = new TestDiscoverer_Parameters()
+            string idParent = Guid.NewGuid().ToString();
+            var messageFromParent = new TestDiscoverer_Parameters()
             {
-                Sources = new List<string>() { id }
+                Sources = new List<string>() { idParent }
+            };
+            string idChild = Guid.NewGuid().ToString();
+            var messageFromChild = new TestDiscoverer_Parameters()
+            {
+                Sources = new List<string>() { idChild }
             };
             #endregion
 
-            var actual = new InterProcessParentChildMock(null, null, null);
+            #region Send from parent to child
+            var actual = new InterProcessParentChildMock(
+                (_, sendMessageFromChildToParent, ___, ____) =>
+                {
+                    sendMessageFromChildToParent(messageFromChild);
+                },
+                null,
+                null);
 
-            #region Send from test adapter to test host
-            actual.Parent.SendMessage(message);
-
-            actual.WaitUntilProcessingIsCompleted();
-            Assert.AreEqual(message.GetType(), actual.ReceivedByTestHost.FirstOrDefault()?.GetType());
-            Assert.AreEqual(id, (actual.ReceivedByTestHost[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
+            actual.Parent.SendMessage(messageFromParent);
             #endregion
 
-            #region Send from test host to test adapter
-            actual = new InterProcessParentChildMock(null, null, null);
-            actual.Child.SendMessage(message);
-
             actual.WaitUntilProcessingIsCompleted();
-            Assert.AreEqual(message.GetType(), actual.ReceivedByTestAdapter.FirstOrDefault()?.GetType());
-            Assert.AreEqual(id, (actual.ReceivedByTestAdapter[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
-            #endregion
+            Assert.AreEqual(messageFromParent.GetType(), actual.ReceivedByChild.FirstOrDefault()?.GetType());
+            Assert.AreEqual(idParent, (actual.ReceivedByChild[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
+
+            Assert.AreEqual(messageFromChild.GetType(), actual.ReceivedByParent.FirstOrDefault()?.GetType());
+            Assert.AreEqual(idChild, (actual.ReceivedByParent[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
         }
 
         [TestMethod]
@@ -57,16 +63,16 @@ namespace TestFramework.Tooling.Tests.Tools
             #region Exchange all log messages
             var logger = new LogMessengerMock();
 
-            var actual = new InterProcessParentChildMock((_, testHostLogger, __) =>
+            var actual = new InterProcessParentChildMock((_, __, childLogger, ____) =>
             {
-                testHostLogger(LoggingLevel.Detailed, id); // Send a log message from host to adapter
-                testHostLogger(LoggingLevel.Verbose, id);
-                testHostLogger(LoggingLevel.Error, id);
+                childLogger(LoggingLevel.Detailed, id); // Send a log message from child to parent
+                childLogger(LoggingLevel.Verbose, id);
+                childLogger(LoggingLevel.Error, id);
             }, null, logger);
 
             actual.Parent.SendMessage(new TestDiscoverer_Parameters()
             {
-                LogLevel = (int)LoggingLevel.Detailed // instruct test host to use detailed logging
+                LogLevel = (int)LoggingLevel.Detailed // instruct child to use detailed logging
             });
 
             actual.WaitUntilProcessingIsCompleted();
@@ -79,11 +85,11 @@ Error: {id}");
             #region Exchange only error messages
             logger = new LogMessengerMock();
 
-            actual = new InterProcessParentChildMock((_, testHostLogger, __) =>
+            actual = new InterProcessParentChildMock((_, __, childLogger, ____) =>
             {
-                testHostLogger(LoggingLevel.Detailed, id);
-                testHostLogger(LoggingLevel.Verbose, id);
-                testHostLogger(LoggingLevel.Error, id);
+                childLogger(LoggingLevel.Detailed, id);
+                childLogger(LoggingLevel.Verbose, id);
+                childLogger(LoggingLevel.Error, id);
             }, null, logger);
 
             actual.Parent.SendMessage(new TestDiscoverer_Parameters()
@@ -97,7 +103,9 @@ Error: {id}");
         }
 
         [TestMethod]
-        public void InterProcessCommunicator_Cancel()
+        [DataRow(true)]
+        [DataRow(false)]
+        public void InterProcessCommunicator_Cancel(bool cancelBeforeWait)
         {
             #region Setup
             string id = Guid.NewGuid().ToString();
@@ -107,43 +115,53 @@ Error: {id}");
             };
             #endregion
 
-            #region Start test host and cancellation
-            bool testHostProcessMessageStarted = false;
+            #region Start child and cancellation
+            CancellationTokenSource waitForChildProcessMessageStarted = new CancellationTokenSource();
             InterProcessParentChildMock actual = null;
 
-            // Simulate processing on the test host
-            void testHostProcessMessage(InterProcessCommunicator.IMessage _, LogMessenger __, CancellationToken cancellationToken)
+            // Simulate processing on the child
+            void childProcessMessage(InterProcessCommunicator.IMessage _, Action<InterProcessCommunicator.IMessage> sendMessageFromChildToParent, LogMessenger ___, CancellationToken cancellationToken)
             {
-                testHostProcessMessageStarted = true;
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    // Wait for cancellation
-                    Thread.Sleep(100);
-                }
-                actual.Child.SendMessage(message);
+                waitForChildProcessMessageStarted.Cancel();
+                cancellationToken.WaitHandle.WaitOne();
+                sendMessageFromChildToParent(message);
             }
 
             // Start the simulation
-            actual = new InterProcessParentChildMock(testHostProcessMessage, null, null);
+            actual = new InterProcessParentChildMock(childProcessMessage, null, null);
             actual.Parent.SendMessage(message);
 
-            // Wait until the test host has started processing the task
-            while (!testHostProcessMessageStarted)
+            // Wait until the child has started processing the task
+            waitForChildProcessMessageStarted.Token.WaitHandle.WaitOne();
+
+            if (cancelBeforeWait)
             {
-                Thread.Sleep(100);
+                // Cancel what the child is doing
+                actual.Parent.Cancel();
+
+                // Wait for all processing to be completed
+                actual.WaitUntilProcessingIsCompleted();
+            }
+            else
+            {
+                var run = Task.Run(() =>
+                {
+                    // Make sure this is executed after the WaitUntilProcessingIsCompleted
+                    Task.Delay(100).GetAwaiter().GetResult();
+
+                    // Cancel what the child is doing
+                    actual.Parent.Cancel();
+                });
+                // Wait for all processing to be completed
+                actual.WaitUntilProcessingIsCompleted();
             }
 
-            // Cancel what the test host is doing
-            actual.Parent.Cancel();
-
-            // Wait for all processing to be completed
-            actual.WaitUntilProcessingIsCompleted();
             #endregion
 
             #region Asserts
-            // The test adapter still processes messages after cancellation
-            Assert.AreEqual(message.GetType(), actual.ReceivedByTestAdapter.FirstOrDefault()?.GetType());
-            Assert.AreEqual(id, (actual.ReceivedByTestAdapter[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
+            // The parent still processes messages after cancellation
+            Assert.AreEqual(message.GetType(), actual.ReceivedByParent.FirstOrDefault()?.GetType());
+            Assert.AreEqual(id, (actual.ReceivedByParent[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
             #endregion
         }
     }

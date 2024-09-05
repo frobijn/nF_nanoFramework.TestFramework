@@ -12,6 +12,7 @@ namespace TestFramework.Tooling.Tests
     public sealed class AssemblyMetadataTest
     {
         [TestMethod]
+        [TestCategory("Test execution")]
         public void AssemblyMetadata_Test()
         {
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v3");

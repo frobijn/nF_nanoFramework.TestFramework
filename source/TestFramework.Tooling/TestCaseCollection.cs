@@ -331,7 +331,7 @@ namespace nanoFramework.TestFramework.Tooling
             testsOnRealHardware.CustomAttributeProxies = customAssemblyAttributes;
             testsOnVirtualDevice.CustomAttributeProxies = customAssemblyAttributes;
 
-            HashSet<string> allTestsTraits = TraitsProxy.Collect(null, assemblyAttributes.OfType<TraitsProxy>());
+            HashSet<string> allTestsCategories = TestCategoriesProxy.Collect(null, assemblyAttributes.OfType<TestCategoriesProxy>());
 
             bool testAllOnVirtualDevice = assemblyAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
 
@@ -364,7 +364,7 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                 }
 
-                HashSet<string> testClassTraits = TraitsProxy.Collect(allTestsTraits, assemblyAttributes.OfType<TraitsProxy>());
+                HashSet<string> testClassCategories = TestCategoriesProxy.Collect(allTestsCategories, assemblyAttributes.OfType<TestCategoriesProxy>());
                 bool testClassTestOnVirtualDevice = testAllOnVirtualDevice || classAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
                 (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testClassTestOnRealHardware = allowTestOnRealHardware
                     ? TestOnRealHardwareProxy.Collect(testAllOnRealHardware, classAttributes.OfType<TestOnRealHardwareProxy>())
@@ -433,7 +433,7 @@ namespace nanoFramework.TestFramework.Tooling
                     if (setup is null && cleanup is null)
                     {
                         #region Create test cases from the test method
-                        HashSet<string> testTraits = TraitsProxy.Collect(testClassTraits, assemblyAttributes.OfType<TraitsProxy>());
+                        HashSet<string> testCategories = TestCategoriesProxy.Collect(testClassCategories, assemblyAttributes.OfType<TestCategoriesProxy>());
                         bool testOnVirtualDevice = testClassTestOnVirtualDevice || methodAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
                         (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testOnRealHardware = allowTestOnRealHardware
                             ? TestOnRealHardwareProxy.Collect(testClassTestOnRealHardware, methodAttributes.OfType<TestOnRealHardwareProxy>())
@@ -500,14 +500,14 @@ namespace nanoFramework.TestFramework.Tooling
                                         testCaseSource,
                                         true, null,
                                         deploymentArguments,
-                                        TraitsProxy.Collect(testTraits, null, new string[] { $"@{VirtualDeviceDescription}" })
+                                        TestCategoriesProxy.Collect(testCategories, null, new string[] { $"@{VirtualDeviceDescription}" })
                                     )));
                             }
                             if (!(testOnRealHardware.descriptions is null))
                             {
-                                HashSet<string> traits = TraitsProxy.Collect(testTraits, null, from d in testOnRealHardware.descriptions
-                                                                                               select $"@{d}");
-                                traits.Add($"@{s_realHardwareDescription}");
+                                HashSet<string> categories = TestCategoriesProxy.Collect(testCategories, null, from d in testOnRealHardware.descriptions
+                                                                                                               select $"@{d}");
+                                categories.Add($"@{s_realHardwareDescription}");
                                 testsOnRealHardware._testCases.Add((-1,
                                     new TestCase(
                                         testCaseId,
@@ -518,7 +518,7 @@ namespace nanoFramework.TestFramework.Tooling
                                         testCaseSource,
                                         false, testOnRealHardware.attributes,
                                         deploymentArguments,
-                                        traits
+                                        categories
                                     )));
                             }
 

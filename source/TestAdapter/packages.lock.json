@@ -118,6 +118,11 @@
           "System.Security.Principal.Windows": "5.0.0"
         }
       },
+      "nanoFramework.Tools.MetadataProcessor.CLI": {
+        "type": "Transitive",
+        "resolved": "3.0.51",
+        "contentHash": "Hht2aBveTehLnDYSuKZjqeVtKlRDkwV5vgXq0aAzrRtQninIID87h1M2MQJTjfWk8zG3eet9H5XeAlIV4/XY2w=="
+      },
       "Newtonsoft.Json.Schema": {
         "type": "Transitive",
         "resolved": "4.0.1",
@@ -226,12 +231,13 @@
         "type": "Project",
         "dependencies": {
           "CliWrap": "[3.6.6, )",
-          "ICSharpCode.Decompiler": "[7.2.1.6856, )",
+          "ICSharpCode.Decompiler": "[8.2.0.7535, )",
           "Microsoft.CodeAnalysis.CSharp": "[4.11.0, )",
           "Newtonsoft.Json": "[13.0.3, )",
           "Newtonsoft.Json.Schema": "[4.0.1, )",
           "nanoFramework.TestFramework.Tooling.Shared": "[1.0.0, )",
-          "nanoFramework.Tools.Debugger.Net": "[2.4.42, )"
+          "nanoFramework.Tools.Debugger.Net": "[2.4.42, )",
+          "nanoFramework.Tools.MetadataProcessor.CLI": "[3.0.51, )"
         }
       },
       "nanoframework.testframework.tooling.shared": {

@@ -32,7 +32,7 @@ namespace nanoFramework.TestFramework.Tooling.TestFrameworkProxy
             { typeof (ITestMethod).FullName, (true, false, false, false, (a,f,t) => new TestMethodProxy (a, f, t)) },
             { typeof (ITestOnRealHardware).FullName, (true, true, true, false, (a,f,t) => new TestOnRealHardwareProxy (a, f, t)) },
             { typeof (ITestOnVirtualDevice).FullName, (true, true, true, false, (a,f,t) => new TestOnVirtualDeviceProxy ()) },
-            { typeof (ITraits).FullName, (true, true, true, false, (a,f,t) => new TraitsProxy (a, f, t)) },
+            { typeof (ITestCategories).FullName, (true, true, true, false, (a,f,t) => new TestCategoriesProxy (a, f, t)) },
         };
         #endregion
 

@@ -37,7 +37,7 @@ namespace TestFramework.Tooling.Tests.NFUnitTest
         [TestMethod]
         [Cleanup]
         [Setup]
-        [Trait("Ignored")]
+        [TestCategory("Ignored")]
         public void All()
         {
 

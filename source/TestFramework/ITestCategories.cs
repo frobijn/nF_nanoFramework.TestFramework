@@ -4,7 +4,7 @@
 namespace nanoFramework.TestFramework
 {
     /// <summary>
-    /// Interface implemented by attributes that assign one or more traits or categories
+    /// Interface implemented by attributes that assign one or more test categories
     /// as a characterization of the test. The categories are listed under 'traits' in
     /// the Visual Studio test explorer. If no attribute that implements this interface
     /// is applied to a <see cref="TestMethodAttribute"/>, a default category is
@@ -16,12 +16,12 @@ namespace nanoFramework.TestFramework
 #else
     public
 #endif
-        interface ITraits
+        interface ITestCategories
     {
         /// <summary>
-        /// Get the traits or categories that are assigned to the test
+        /// Get the categories that are assigned to the test
         /// </summary>
-        string[] Traits
+        string[] Categories
         {
             get;
         }

@@ -89,15 +89,14 @@ namespace TestFramework.TestAdapter.Tests
             // Asserts
             testResults.Logger.AssertEqual("", TestMessageLevel.Warning);
 
-            // We do not need to assert the proper working of TestsRunner etc.
-            // Just make sure every test has a result and is not run.
-            foreach (TestCase testCase in testResults.TestCases)
-            {
-                Assert.IsTrue(testResults.TestResults.ContainsKey(testCase), $"{testCase.FullyQualifiedName} - {testCase.DisplayName}");
-                Assert.AreEqual(1, testResults.TestResults[testCase].Count);
-                TestResult testResult = testResults.TestResults[testCase][0];
-                Assert.IsTrue(testResult.Outcome == TestOutcome.None || testResult.Outcome == TestOutcome.Skipped);
-            }
+            // Assumption: the test runner should be cancelled before the Virtual Device has had an opportunity to run.
+            Assert.IsTrue(testResults.TestResults.Count < testResults.TestCases.Count);
+            // There are only results fo skipped hardware files.
+            Assert.IsFalse((from tc in testResults.TestResults
+                            where (from tr in tc.Value
+                                   where tr.Outcome != TestOutcome.Skipped
+                                   select tr).Any()
+                            select tc).Any());
         }
 
         [TestMethod]

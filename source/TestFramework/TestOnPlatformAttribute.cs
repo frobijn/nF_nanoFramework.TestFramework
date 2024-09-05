@@ -9,7 +9,7 @@ namespace nanoFramework.TestFramework
     /// Mark a test, all methods of a test class or all tests in a assembly (when applied to a class implementing the
     /// <see cref="IAssemblyAttributes"/> interface) as intended to be executed
     /// on real hardware based on the specified platform. For each platform a separate test case is created, and the
-    /// test case is selectable via its trait. The test will be executed on the available devices
+    /// test case is selectable via its test category. The test will be executed on the available devices
     /// that are based on the specified platform. If the available devices have a different CLR firmware (target)
     /// installed, the test is executed for each target on one of the devices with that firmware.
     /// </summary>

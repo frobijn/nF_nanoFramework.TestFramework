@@ -43,7 +43,7 @@ namespace nanoFramework.TestFramework.Tooling.Tools
 									DisplayName = tc.testCase.DisplayName,
 									FullyQualifiedName = tc.testCase.FullyQualifiedName,
 									LineNumber = tc.testCase.TestMethodSourceCodeLocation?.LineNumber ?? 0,
-									Traits = tc.testCase.Traits.ToList ()
+									Categories = tc.testCase.Categories.ToList ()
 								}
 							)
 					};

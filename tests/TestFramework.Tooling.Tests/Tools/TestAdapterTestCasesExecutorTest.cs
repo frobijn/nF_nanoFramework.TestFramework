@@ -275,7 +275,7 @@ $@"{{
                                         where t.testResult.Outcome == (int)TestResult.TestOutcome.Passed
                                         select t).Count());
                 }
-                else if (testCase.Traits.Contains("@ESP32"))
+                else if (testCase.Categories.Contains("@ESP32"))
                 {
                     // All ESP32-tests should have been run on a single of the ESP32 devices.
                     // or not at all

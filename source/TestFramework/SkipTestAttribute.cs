@@ -9,10 +9,10 @@ namespace nanoFramework.TestFramework
     /// The attribute to indicate that a test method cannot be run at this moment.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class SkipTestAttribute : Attribute, ITestMethod, ITraits
+    public sealed class SkipTestAttribute : Attribute, ITestMethod, ITestCategories
     {
         #region Fields
-        private readonly string[] _traits;
+        private readonly string[] _testCategories;
         #endregion
 
         #region Construction
@@ -23,7 +23,7 @@ namespace nanoFramework.TestFramework
         /// <param name="reason">Reason why the test cannot be run. This is shown in the test explorer as a trait.</param>
         public SkipTestAttribute(string reason)
         {
-            _traits = new string[] { reason };
+            _testCategories = new string[] { reason };
         }
         #endregion
 
@@ -32,9 +32,9 @@ namespace nanoFramework.TestFramework
             => false;
         #endregion
 
-        #region ITraits implementation
-        string[] ITraits.Traits
-            => _traits;
+        #region ITestCategories implementation
+        string[] ITestCategories.Categories
+            => _testCategories;
         #endregion
     }
 }

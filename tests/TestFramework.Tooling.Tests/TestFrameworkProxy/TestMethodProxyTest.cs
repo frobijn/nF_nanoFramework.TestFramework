@@ -73,7 +73,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  select msg.level).ToList()
             );
             Assert.AreEqual(0, actual?.OfType<TestMethodProxy>().Count());
-            Assert.AreEqual(0, custom?.Count);
+            Assert.AreEqual(0, custom?.OfType<TestMethodProxy>().Count());
         }
 
         [TestMethod]

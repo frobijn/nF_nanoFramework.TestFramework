@@ -473,7 +473,7 @@ Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}Tes
                 ""TestWithNewTestMethodsAttributes"": {
                     ""description"": ""Specify which test methods should be included. List the names (and data row attributes) of the methods in an array, or specify \""*\"" to include all test methods."",
                     ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""anyOf"": [
-                        { ""type"": ""string"", ""enum"": [ ""MethodToRunOnRealHardware"", ""MethodToRunOnRealHardwareWithData"", ""MethodWithTraits"" ] },
+                        { ""type"": ""string"", ""enum"": [ ""MethodToRunOnRealHardware"", ""MethodToRunOnRealHardwareWithData"", ""MethodWithCategories"" ] },
                         { ""$ref"": ""#/definitions/TestMethod_2"" }
                     ] } ]
                 }
@@ -517,7 +517,7 @@ Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}Tes
                 },,
                 ""TestWithNewTestMethodsAttributes"": {
                     ""description"": ""Specify which test methods should be included. List the names (and data row attributes) of the methods in an array, or specify \""*\"" to include all test methods."",
-                    ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""MethodWithNewTestMethods"", ""MethodWithTraits"" ] } ]
+                    ""anyOf"": [ { ""type"": ""string"", ""enum"": [ ""*"" ] }, { ""type"": ""array"", ""items"": { ""type"": ""string"", ""enum"": [ ""MethodWithCategories"", ""MethodWithNewTestMethods"" ] } ]
                 }
             }
         }

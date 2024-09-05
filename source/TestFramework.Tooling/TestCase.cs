@@ -11,7 +11,7 @@ namespace nanoFramework.TestFramework.Tooling
     public sealed class TestCase
     {
         #region Fields
-        private readonly HashSet<string> _traits;
+        private readonly HashSet<string> _categories;
         private readonly IEnumerable<TestOnRealHardwareProxy> _testOnRealHardware;
         #endregion
 
@@ -25,7 +25,7 @@ namespace nanoFramework.TestFramework.Tooling
             bool shouldRunOnVirtualDevice,
             IEnumerable<TestOnRealHardwareProxy> testOnRealHardware,
             IReadOnlyList<(string key, Type valueType)> requiredConfigurationKeys,
-            HashSet<string> traits)
+            HashSet<string> categories)
         {
             AssemblyFilePath = assemblyFilePath;
             TestCaseId = testCaseId;
@@ -36,7 +36,7 @@ namespace nanoFramework.TestFramework.Tooling
             ShouldRunOnVirtualDevice = shouldRunOnVirtualDevice;
             _testOnRealHardware = testOnRealHardware;
             RequiredConfigurationKeys = requiredConfigurationKeys ?? new (string, Type)[] { };
-            _traits = traits;
+            _categories = categories;
             Group = group;
             Group._testCases.Add(this);
         }
@@ -77,10 +77,10 @@ namespace nanoFramework.TestFramework.Tooling
         }
 
         /// <summary>
-        /// The traits that describe the test
+        /// The categories that describe the test
         /// </summary>
-        public IReadOnlyCollection<string> Traits
-            => _traits;
+        public IReadOnlyCollection<string> Categories
+            => _categories;
 
         /// <summary>
         /// Indicates whether the test should be executed on the Virtual Device.

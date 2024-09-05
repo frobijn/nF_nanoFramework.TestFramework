@@ -40,8 +40,8 @@ namespace ProjectSourceTest.TestFramework.Tooling.Tests
     public partial class SomeOtherTest
     {
         [TestMethod]
-        [Trait(""trait 1"")]
-        [Trait(""trait 2"")]
+        [TestCategory(""Category 1"")]
+        [TestCategory(""Category 2"")]
         public void Method3 ()
         {
         }
@@ -159,8 +159,8 @@ Method4 in SomeOtherTest.cs(11,20)
             // SomeOtherTest, Method2: attributes
             Assert.AreEqual(
 @"TestMethod in SomeTestClasses.cs(21,9)
-Trait in SomeTestClasses.cs(22,9)
-Trait in SomeTestClasses.cs(23,9)
+TestCategory in SomeTestClasses.cs(22,9)
+TestCategory in SomeTestClasses.cs(23,9)
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from a in

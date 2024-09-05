@@ -84,10 +84,10 @@ namespace nanoFramework.TestFramework.Tooling.Tools
             }
 
             /// <summary>
-            /// Gets or sets the collection of traits
+            /// Gets or sets the collection of categories
             /// </summary>
-            [JsonProperty("T")]
-            public List<string> Traits
+            [JsonProperty("C")]
+            public List<string> Categories
             {
                 get; set;
             }

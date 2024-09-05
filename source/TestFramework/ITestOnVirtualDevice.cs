@@ -29,7 +29,7 @@ namespace nanoFramework.TestFramework
     /// <see cref="IAssemblyAttributes"/> implementation are collected.
     /// If the set of unique <see cref="ITestOnRealHardware.Description"/> (and "Virtual Device") for
     /// <see cref="ITestOnVirtualDevice"/>) consists of more than one name, a test case is created for each
-    /// name. The test framework also adds a trait to test case to make it selectable.
+    /// name. The test framework also adds a test category to test case to make it selectable.
     /// </para>
     /// <para>
     /// If a test method has no (inherited) attributes that implement either <see cref="ITestOnRealHardware"/>

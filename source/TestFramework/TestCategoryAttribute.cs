@@ -11,26 +11,26 @@ namespace nanoFramework.TestFramework
     /// that is listed under 'traits' in the Visual Studio Test Explorer.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
-    public sealed class TraitAttribute : Attribute, ITraits
+    public sealed class TestCategoryAttribute : Attribute, ITestCategories
     {
         #region Fields
-        private readonly string _traits;
+        private readonly string _categories;
         #endregion
 
         #region Construction
         /// <summary>
         /// Assign a category to a test
         /// </summary>
-        /// <param name="trait">The trait/category to assign</param>
-        public TraitAttribute(string trait)
+        /// <param name="category">The test category to assign</param>
+        public TestCategoryAttribute(string category)
         {
-            _traits = trait;
+            _categories = category;
         }
         #endregion
 
-        #region ITraits implementation
-        string[] ITraits.Traits
-            => new string[] { _traits };
+        #region ITestCategories implementation
+        string[] ITestCategories.Categories
+            => new string[] { _categories };
         #endregion
     }
 }

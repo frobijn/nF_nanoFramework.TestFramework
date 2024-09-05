@@ -235,7 +235,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="deviceFound">Method to call when a device is found.</param>
         protected virtual async Task DiscoverAllRealHardware(IEnumerable<string> excludeSerialPorts, Action<IRealHardwareDevice> deviceFound)
         {
-            await RealHardwareDeviceHelper.GetAllAvailable(excludeSerialPorts, deviceFound, Logger, CancellationToken);
+            await RealHardwareDeviceHelper.GetAllAvailable(excludeSerialPorts, deviceFound, Logger);
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="deviceFound">Method to call when a device is found.</param>
         protected virtual async Task DiscoverSelectedRealHardware(IEnumerable<string> serialPorts, Action<IRealHardwareDevice> deviceFound)
         {
-            await RealHardwareDeviceHelper.GetForSelectedPorts(serialPorts, deviceFound, Logger, CancellationToken);
+            await RealHardwareDeviceHelper.GetForSelectedPorts(serialPorts, deviceFound, Logger);
         }
 
         /// <summary>
@@ -1290,6 +1290,12 @@ namespace nanoFramework.TestFramework.Tooling
         /// </summary>
         private void AddResultsForRealHardwareTestsNotExecuted()
         {
+            if (CancellationToken.IsCancellationRequested)
+            {
+                // We don't know whether the tests didn't run because the execution was cancelled,
+                // or whether no suitable real hardware is available.
+                return;
+            }
             foreach (KeyValuePair<TestCaseSelection, RealHardwareExecution> selection in _realHardwareExecution)
             {
                 var notRun = new List<TestResult>();

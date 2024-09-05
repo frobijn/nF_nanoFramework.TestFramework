@@ -8,9 +8,9 @@ The initial goal of the v3 version of the TestFramework was to address some limi
 
     In v2 it was possible to *specify* that a single test should be executed, but that is not how it was *implemented*. All tests are run and only the result of the single test is published. This is problematic if there are special tests, e.g., tests that require a particular setup or performance tests, as they may take up a lot of time or even damage hardware.
 
-- Traits / test categories
+- Test categories
 
-    Traits help organise the tests and allow a developer to easily select, execute and assess related tests. It is also one of the mechanism to prevent special tests from running in an automated build environment, where a filter can be specified to exclude test based on their traits. Traits are not present in v2.
+    Test categories help organise the tests and allow a developer to easily select, execute and assess related tests. It is also one of the mechanism to prevent special tests from running in an automated build environment, where a filter can be specified to exclude test based on their test categories and a few other criteria. Test categories are not present in v2.
 
 - Run tests on as many devices as required/possible
 
@@ -211,7 +211,7 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 
 - Attributes for the whole assembly must be applied to a special global type rather than to the assembly.
 
-    Initially it was considered to use assembly attributes for annotations that are valid for an entire test project. This is in line with other test projects. Candidates for assembly attributes are Traits (assembly attributes in MSTest, xUnit as well) and the attributes that determine on what device the unit tests should be executed.
+    Initially it was considered to use assembly attributes for annotations that are valid for an entire test project. This is in line with other test projects. Candidates for assembly attributes are test categories (assembly attributes in MSTest, xUnit as well) and the attributes that determine on what device the unit tests should be executed.
 
     Unfortunately that turned out to be impossible. The discovery of test framework attributes is possible only because the test framework uses only classes from nanoFramework's mscorlib. When the unit test assembly is loaded, the .NET Framework implementation (in which the discovery process is running) maps all types from nanoFramework's mscorlib to .NET Framework 4's mscorlib. This works amazingly well for the required types (attribute base type, string operations, etc.) But there is one attribute type in nanoFramework's mscorlib that is not present in .NET Framework 4's mscorlib and that is always present in nanoFramework assemblies: `System.Reflection.AssemblyNativeVersionAttribute`. As a consequence, the discovery process cannot retrieve the assembly attributes from the test assembly - every attempt to do that results in an exception. It would be quite complex to work around this to get to the assembly attributes.
 

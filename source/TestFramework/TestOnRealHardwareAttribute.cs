@@ -8,7 +8,7 @@ namespace nanoFramework.TestFramework
     /// <summary>
     /// Mark a test, all methods of a test class or all tests in a assembly (when applied to a class implementing the
     /// <see cref="IAssemblyAttributes"/> interface) as intended to be executed on real hardware. This is also visible in the
-    /// Visual Studio test explorer via a trait. The test will be executed on one
+    /// Visual Studio test explorer via its test category. The test will be executed on one
     /// of the available real hardware devices.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]

@@ -68,7 +68,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  select msg.level).ToList()
             );
             Assert.AreEqual(0, actual?.OfType<CleanupProxy>().Count());
-            Assert.AreEqual(0, custom?.Count);
+            Assert.AreEqual(0, custom?.OfType<CleanupProxy>().Count());
         }
 
         [TestMethod]

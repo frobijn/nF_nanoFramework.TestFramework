@@ -19,7 +19,7 @@ namespace nanoFramework.TestFramework.TestAdapter
     {
         #region Fields
         private readonly InterProcessParent _testAdapter;
-        private Process _testHostProcess;
+        private readonly Process _testHostProcess;
         #endregion
 
         #region Delegate to the test host
@@ -49,25 +49,29 @@ namespace nanoFramework.TestFramework.TestAdapter
                 return null;
             }
 
-            var testHost = new TestHost(processMessage, logger);
-
-            // Start the test host
-            testHost._testAdapter.StartChildProcess((a1, a2, a3) =>
-            {
-                testHost._testHostProcess = Process.Start(
-                    new ProcessStartInfo(testHostApplication)
-                    {
-                        // Use an extra "debug" argument to debug the TestHost in a separate Visual Studio instance
-                        // (that has opened the same solution)
-                        Arguments = $"{a1} {a2} {a3} debug",
-                        // Arguments = $"{a1} {a2} {a3}",
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    }
-                );
-            });
-            testHost._testAdapter.SendMessage(parameters);
-            return testHost;
+            Process testHostProcess = null;
+            var testAdapter = InterProcessParent.Start
+            (
+                TestAdapterMessages.Types,
+                (a1, a2, a3) =>
+                {
+                    testHostProcess = Process.Start(
+                        new ProcessStartInfo(testHostApplication)
+                        {
+                            // Use an extra "debug" argument to debug the TestHost in a separate Visual Studio instance
+                            // (that has opened the same solution)
+                            // Arguments = $"{a1} {a2} {a3} debug",
+                            Arguments = $"{a1} {a2} {a3}",
+                            CreateNoWindow = true,
+                            UseShellExecute = false
+                        }
+                    );
+                },
+                processMessage,
+                logger
+            );
+            testAdapter.SendMessage(parameters);
+            return new TestHost(testAdapter, testHostProcess);
         }
         #endregion
 
@@ -75,9 +79,10 @@ namespace nanoFramework.TestFramework.TestAdapter
         /// <summary>
         /// Create the communicator
         /// </summary>
-        private TestHost(InterProcessParent.ProcessMessage processMessage, LogMessenger logger)
+        private TestHost(InterProcessParent testAdapter, Process testHostProcess)
         {
-            _testAdapter = new InterProcessParent(TestAdapterMessages.Types, processMessage, logger);
+            _testAdapter = testAdapter;
+            _testHostProcess = testHostProcess;
         }
 
         #endregion

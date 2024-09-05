@@ -12,19 +12,19 @@ using nfTest = nanoFramework.TestFramework;
 
 namespace TestFramework.Tooling.Tests.TestFrameworkProxy
 {
-    [TraitsProxyTest.TraitsMock("In assembly")]
-    public abstract class TraitsProxyTest_AssemblyAttributes : nfTest.IAssemblyAttributes
+    [TestCategoriesProxyTest.CategoriesMock("In assembly")]
+    public abstract class CategoriesProxyTest_AssemblyAttributes : nfTest.IAssemblyAttributes
     {
     }
 
     [TestClass]
-    [TraitsMock("In test class")]
+    [CategoriesMock("In test class")]
     [TestCategory("nF test attributes")]
-    public sealed class TraitsProxyTest
+    public sealed class TestCategoriesProxyTest
     {
         [TestMethod]
-        [TraitsMock("Some", "trait")]
-        public void TraitsProxy_CreatedForMethod()
+        [CategoriesMock("Some", "category")]
+        public void CategoriesProxy_CreatedForMethod()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             var logger = new LogMessengerMock();
@@ -33,19 +33,19 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             logger.AssertEqual("");
             Assert.AreEqual(1, actual?.Count);
             Assert.AreEqual(0, custom?.Count);
-            Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
+            Assert.AreEqual(typeof(TestCategoriesProxy), actual[0].GetType());
 
-            var proxy = actual[0] as TraitsProxy;
+            var proxy = actual[0] as TestCategoriesProxy;
             CollectionAssert.AreEqual(
-                new string[] { "Some", "trait" },
-                proxy.Traits);
+                new string[] { "Some", "category" },
+                proxy.Categories);
         }
 
         [TestMethod]
         [TestCategory("Source code")]
-        [TraitsMock("Some", "trait")]
-        [TraitsMock("Other")]
-        public void TraitsProxy_CreatedForMethodWithSource()
+        [CategoriesMock("Some", "category")]
+        [CategoriesMock("Other")]
+        public void CategoriesProxy_CreatedForMethodWithSource()
         {
             var thisMethod = System.Reflection.MethodBase.GetCurrentMethod();
             ProjectSourceInventory.MethodDeclaration source = TestProjectHelper.FindMethodDeclaration(GetType(), thisMethod.Name);
@@ -55,27 +55,27 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             logger.AssertEqual("");
             Assert.AreEqual(2, actual?.Count);
             Assert.AreEqual(0, custom?.Count);
-            Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
-            Assert.AreEqual(typeof(TraitsProxy), actual[1].GetType());
+            Assert.AreEqual(typeof(TestCategoriesProxy), actual[0].GetType());
+            Assert.AreEqual(typeof(TestCategoriesProxy), actual[1].GetType());
 
-            var proxy = actual[0] as TraitsProxy;
+            var proxy = actual[0] as TestCategoriesProxy;
             CollectionAssert.AreEqual(
-                new string[] { "Some", "trait" },
-                proxy.Traits);
+                new string[] { "Some", "category" },
+                proxy.Categories);
             Assert.IsNotNull(proxy.Source);
-            Assert.AreEqual("TraitsMock", proxy.Source.Name);
+            Assert.AreEqual("CategoriesMock", proxy.Source.Name);
 
-            proxy = actual[1] as TraitsProxy;
+            proxy = actual[1] as TestCategoriesProxy;
             CollectionAssert.AreEqual(
                 new string[] { "Other" },
-                proxy.Traits);
+                proxy.Categories);
             Assert.IsNotNull(proxy.Source);
-            Assert.AreEqual("TraitsMock", proxy.Source.Name);
+            Assert.AreEqual("CategoriesMock", proxy.Source.Name);
             Assert.AreNotEqual(actual[0].Source.LineNumber, proxy.Source.LineNumber);
         }
 
         [TestMethod]
-        public void TraitsProxy_CreatedForAssembly()
+        public void CategoriesProxy_CreatedForAssembly()
         {
             var logger = new LogMessengerMock();
             (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetAssemblyAttributeProxies(GetType().Assembly, new TestFrameworkImplementation(), logger);
@@ -83,21 +83,21 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             CollectionAssert.AreEqual(
                 new object[] { },
                 (from msg in logger.Messages
-                 where msg.message.Contains(nameof(nfTest.ITraits))
+                 where msg.message.Contains(nameof(nfTest.ITestCategories))
                  select msg.level).ToList()
             );
 
-            TraitsProxy proxy = actual.OfType<TraitsProxy>()
+            TestCategoriesProxy proxy = actual.OfType<TestCategoriesProxy>()
                               .FirstOrDefault();
             Assert.IsNotNull(proxy);
             CollectionAssert.AreEquivalent(
                 new string[] { "In assembly" },
-                proxy.Traits);
-            Assert.AreEqual(0, custom?.Count);
+                proxy.Categories);
+            Assert.AreEqual(0, custom?.OfType<TestCategoriesProxy>().Count());
         }
 
         [TestMethod]
-        public void TraitsProxy_CreatedForClass()
+        public void CategoriesProxy_CreatedForClass()
         {
             var logger = new LogMessengerMock();
             (List<AttributeProxy> actual, List<AttributeProxy> custom) = AttributeProxy.GetClassAttributeProxies(GetType(), new TestFrameworkImplementation(), null, logger);
@@ -105,17 +105,17 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             logger.AssertEqual("");
             Assert.AreEqual(1, actual?.Count);
             Assert.AreEqual(0, custom?.Count);
-            Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
+            Assert.AreEqual(typeof(TestCategoriesProxy), actual[0].GetType());
 
-            var proxy = actual[0] as TraitsProxy;
+            var proxy = actual[0] as TestCategoriesProxy;
             CollectionAssert.AreEquivalent(
                 new string[] { "In test class" },
-                proxy.Traits);
+                proxy.Categories);
         }
 
         [TestMethod]
         [TestCategory("Source code")]
-        public void TraitsProxy_CreatedForClassWithSource()
+        public void CategoriesProxy_CreatedForClassWithSource()
         {
             var logger = new LogMessengerMock();
             ProjectSourceInventory.ClassDeclaration source = TestProjectHelper.FindClassDeclaration(GetType());
@@ -124,25 +124,25 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
             logger.AssertEqual("");
             Assert.AreEqual(1, actual?.Count);
             Assert.AreEqual(0, custom?.Count);
-            Assert.AreEqual(typeof(TraitsProxy), actual[0].GetType());
+            Assert.AreEqual(typeof(TestCategoriesProxy), actual[0].GetType());
 
-            var proxy = actual[0] as TraitsProxy;
+            var proxy = actual[0] as TestCategoriesProxy;
             CollectionAssert.AreEquivalent(
                 new string[] { "In test class" },
-                proxy.Traits);
-            Assert.AreEqual("TraitsMock", proxy.Source.Name);
+                proxy.Categories);
+            Assert.AreEqual("CategoriesMock", proxy.Source.Name);
         }
 
-        #region TraitsMockAttribute
+        #region CategoriesMockAttribute
         [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
-        internal sealed class TraitsMockAttribute : Attribute, nfTest.ITraits
+        internal sealed class CategoriesMockAttribute : Attribute, nfTest.ITestCategories
         {
-            public TraitsMockAttribute(params string[] traits)
+            public CategoriesMockAttribute(params string[] categories)
             {
-                Traits = traits;
+                Categories = categories;
             }
 
-            public string[] Traits
+            public string[] Categories
             {
                 get;
             }

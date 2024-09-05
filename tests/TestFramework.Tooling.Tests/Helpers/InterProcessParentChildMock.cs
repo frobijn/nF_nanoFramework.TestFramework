@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.Tools;
 
@@ -11,6 +12,10 @@ namespace TestFramework.Tooling.Tests.Helpers
 {
     public sealed class InterProcessParentChildMock
     {
+        #region Fields
+        private Task _childTask;
+        #endregion
+
         #region Construction
         /// <summary>
         /// Create a mock of a pair of components in the parent/child process
@@ -23,7 +28,7 @@ namespace TestFramework.Tooling.Tests.Helpers
         /// <param name="messageTypes">Message types that should be supported in the communication. The number and order of the
         /// messages must be the same for the parent and child process. Defaults to <see cref="TestAdapterMessages.Types"/></param>
         public InterProcessParentChildMock(
-            Action<InterProcessCommunicator.IMessage, LogMessenger, CancellationToken> childProcessMessage,
+            Action<InterProcessCommunicator.IMessage, Action<InterProcessCommunicator.IMessage>, LogMessenger, CancellationToken> childProcessMessage,
             Action<InterProcessCommunicator.IMessage, CancellationToken> parentProcessMessage,
             LogMessenger logger,
             IEnumerable<Type> messageTypes = null
@@ -31,25 +36,29 @@ namespace TestFramework.Tooling.Tests.Helpers
         {
             void ChildProcessMessage(InterProcessCommunicator.IMessage message, Action<InterProcessCommunicator.IMessage> sendMessage, LogMessenger logger2, CancellationToken token)
             {
-                lock (ReceivedByTestHost)
+                lock (ReceivedByChild)
                 {
-                    ReceivedByTestHost.Add(message);
+                    ReceivedByChild.Add(message);
                 }
-                childProcessMessage?.Invoke(message, logger2, token);
+                childProcessMessage?.Invoke(message, sendMessage, logger2, token);
             }
             void ParentProcessMessage(InterProcessCommunicator.IMessage message, LogMessenger logger2, CancellationToken token)
             {
-                lock (ReceivedByTestAdapter)
+                lock (ReceivedByParent)
                 {
-                    ReceivedByTestAdapter.Add(message);
+                    ReceivedByParent.Add(message);
                 }
                 parentProcessMessage?.Invoke(message, token);
             }
 
-            Parent = new InterProcessParent(messageTypes ?? TestAdapterMessages.Types, ParentProcessMessage, logger);
-            Parent.StartChildProcess(
-                (a1, a2, a3) => Child = InterProcessChild.Start(a1, a2, a3, messageTypes ?? TestAdapterMessages.Types, ChildProcessMessage)
-            );
+            Parent = InterProcessParent.Start(messageTypes ?? TestAdapterMessages.Types,
+                (a1, a2, a3) =>
+                {
+                    InterProcessChild child = InterProcessChild.Start(a1, a2, a3, messageTypes ?? TestAdapterMessages.Types, ChildProcessMessage);
+                    _childTask = Task.Run(child.WaitUntilProcessingIsCompleted);
+                },
+                ParentProcessMessage,
+                logger);
         }
         #endregion
 
@@ -63,26 +72,17 @@ namespace TestFramework.Tooling.Tests.Helpers
         }
 
         /// <summary>
-        /// The communicator in the role of the component in the child process
+        /// The messages received by the parent from the child
         /// </summary>
-        public InterProcessChild Child
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// The messages received by the test adapter from the test host
-        /// </summary>
-        public List<InterProcessCommunicator.IMessage> ReceivedByTestAdapter
+        public List<InterProcessCommunicator.IMessage> ReceivedByParent
         {
             get;
         } = new List<InterProcessCommunicator.IMessage>();
 
         /// <summary>
-        /// The messages received by the test host from the test adapter
+        /// The messages received by the child from the parent
         /// </summary>
-        public List<InterProcessCommunicator.IMessage> ReceivedByTestHost
+        public List<InterProcessCommunicator.IMessage> ReceivedByChild
         {
             get;
         } = new List<InterProcessCommunicator.IMessage>();
@@ -95,6 +95,7 @@ namespace TestFramework.Tooling.Tests.Helpers
         public void WaitUntilProcessingIsCompleted()
         {
             Parent.WaitUntilProcessingIsCompleted();
+            _childTask.GetAwaiter().GetResult();
         }
         #endregion
     }

@@ -92,7 +92,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  select msg.level).ToList()
             );
             Assert.AreEqual(0, actual?.OfType<DataRowProxy>().Count());
-            Assert.AreEqual(0, custom?.Count);
+            Assert.AreEqual(0, custom?.OfType<DataRowProxy>().Count());
         }
 
         [TestMethod]

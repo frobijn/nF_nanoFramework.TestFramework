@@ -16,12 +16,18 @@ namespace nanoFramework.TestFramework.Tooling
     public sealed class InterProcessParent : InterProcessCommunicator
     {
         #region Fields
-        private AnonymousPipeServerStream _parentToChild;
-        private AnonymousPipeServerStream _childToParent;
         private readonly LogMessenger _logger;
         #endregion
 
-        #region Construction
+        #region Public interface
+        /// <summary>
+        /// Start the process that runs the <see cref="InterProcessChild"/>.
+        /// </summary>
+        /// <param name="argument1">First argument to pass to the child.</param>
+        /// <param name="argument2">Second argument to pass to the child.</param>
+        /// <param name="argument3">Third argument to pass to the child.</param>
+        public delegate void StartChildProcess(string argument1, string argument2, string argument3);
+
         /// <summary>
         /// Method that is called to processes the messages sent by the child.
         /// </summary>
@@ -40,36 +46,26 @@ namespace nanoFramework.TestFramework.Tooling
         /// After a call to <see cref="Cancel"/>, incoming messages are still processed using <paramref name="messageProcessor"/>.
         /// The method is started with a cancellation token that indicates that cancel has been requested.
         /// </remarks>
-        public InterProcessParent(IEnumerable<Type> messageTypes, ProcessMessage messageProcessor, LogMessenger logger)
-            : base(messageTypes, $"{Guid.NewGuid():N}:", (c, m, t) => messageProcessor(m, logger, t))
+        public static InterProcessParent Start(IEnumerable<Type> messageTypes, StartChildProcess startChildProcess, ProcessMessage messageProcessor, LogMessenger logger)
         {
-            _logger = logger;
-        }
-        #endregion
+            var parentToChild = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
+            var childToParent = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable);
 
-        #region Methods
-        /// <summary>
-        /// Start the child process
-        /// </summary>
-        /// <param name="startChildProcess">Method that actually starts the process. The method receives three arguments
-        /// that should be passed to the child process.</param>
-        public void StartChildProcess(Action<string, string, string> startChildProcess)
-        {
-            _parentToChild = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
-            _childToParent = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable);
+            var parent = new InterProcessParent(childToParent, parentToChild, messageTypes, messageProcessor, logger);
 
-            string pipeOut = _parentToChild.GetClientHandleAsString();
-            string pipeIn = _childToParent.GetClientHandleAsString();
+            string pipeOut = parentToChild.GetClientHandleAsString();
+            string pipeIn = childToParent.GetClientHandleAsString();
             try
             {
-                startChildProcess(MessageSeparator, pipeOut, pipeIn);
+                startChildProcess(parent.MessageSeparator, pipeOut, pipeIn);
             }
             catch
             {
-                DisposeOfPipes();
+                parent.Dispose();
                 throw;
             }
-            StartCommunication(_childToParent, _parentToChild);
+            parent.StartCommunication();
+            return parent;
         }
 
         /// <summary>
@@ -78,50 +74,21 @@ namespace nanoFramework.TestFramework.Tooling
         /// </summary>
         public void Cancel()
         {
-            SendMessage(new ChildProcess_Stop() { Abort = true });
-        }
-
-        /// <inheritdoc/>
-        public override void WaitUntilProcessingIsCompleted()
-        {
-            if (!(_parentToChild is null))
-            {
-                SendMessage(new ChildProcess_Stop() { Abort = false });
-                try
-                {
-                    _parentToChild.WaitForPipeDrain();
-                }
-                catch (IOException)
-                {
-                    // Child may no longer be running
-                }
-            }
-            WaitUntilInputProcessingIsCompleted();
-            DisposeOfPipes();
+            DoSendMessage(new ChildProcess_Stop() { Abort = true });
         }
         #endregion
 
         #region Internal implementation
+        private InterProcessParent(AnonymousPipeServerStream input, AnonymousPipeServerStream output, IEnumerable<Type> messageTypes, ProcessMessage messageProcessor, LogMessenger logger)
+            : base(input, output, false, messageTypes, $"{Guid.NewGuid():N}:", (c, m, t) => messageProcessor(m, logger, t))
+        {
+            _logger = logger;
+        }
 
         /// <inheritdoc/>
         protected override void LogMessage(LoggingLevel level, string message)
         {
             _logger?.Invoke(level, message);
-        }
-
-        /// <inheritdoc/>
-        protected override void Stop(bool abort)
-        {
-            // Confirmation that the child process has stopped processing inputs
-        }
-
-        /// <inheritdoc/>
-        protected override void DisposeOfPipes()
-        {
-            _parentToChild?.Dispose();
-            _parentToChild = null;
-            _childToParent?.Dispose();
-            _childToParent = null;
         }
         #endregion
     }

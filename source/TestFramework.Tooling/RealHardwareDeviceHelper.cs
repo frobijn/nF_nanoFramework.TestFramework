@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using nanoFramework.Tools.Debugger;
 using nanoFramework.Tools.Debugger.Extensions;
+using nanoFramework.Tools.Debugger.WireProtocol;
 
 namespace nanoFramework.TestFramework.Tooling
 {
@@ -45,8 +46,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="deviceFound">Method to receive a real hardware device that is found.
         /// The method may be called simultaneously from different threads.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        /// <param name="cancellationToken">If the cancellation token is cancelled, the discovery of devices is aborted.</param>
-        public static async Task GetAllAvailable(IEnumerable<string> excludeSerialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger, CancellationToken? cancellationToken = null)
+        public static async Task GetAllAvailable(IEnumerable<string> excludeSerialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger)
         {
             if (deviceFound is null)
             {
@@ -77,11 +77,10 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="deviceFound">Method to receive a real hardware device that is found.
         /// The method may be called simultaneously from different threads.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
-        /// <param name="cancellationToken">If the cancellation token is cancelled, the discovery of devices is aborted.</param>
         /// <remarks>
         /// If a serial port is connected to something that is not a nanodevice, an error will be logged.
         /// </remarks>
-        public static async Task GetForSelectedPorts(IEnumerable<string> serialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger, CancellationToken? cancellationToken = null)
+        public static async Task GetForSelectedPorts(IEnumerable<string> serialPorts, Action<RealHardwareDeviceHelper> deviceFound, LogMessenger logger)
         {
             if (deviceFound is null)
             {
@@ -662,8 +661,7 @@ namespace nanoFramework.TestFramework.Tooling
 #if DEBUG
             var allOutput = new StringBuilder();
 #endif
-            // attach listener for messages
-            _device.DebugEngine.OnMessage += (message, text) =>
+            void ReceiveOutput(IncomingMessage message, string text)
             {
 #if DEBUG
                 lock (allOutput)
@@ -672,22 +670,31 @@ namespace nanoFramework.TestFramework.Tooling
                 }
 #endif
                 processOutput($"{text}");
-            };
-
-            _device.DebugEngine.RebootDevice(RebootOptions.ClrOnly);
-
-            // Wait until completion
-            var waitHandles = new List<WaitHandle>()
-            {
-                cancellationToken.WaitHandle
-            };
-            CancellationToken? cancelRun = createRunCancellationToken();
-            if (!(cancelRun is null))
-            {
-                waitHandles.Add(cancelRun.Value.WaitHandle);
             }
-            WaitHandle.WaitAny(waitHandles.ToArray());
 
+            // attach listener for messages
+            _device.DebugEngine.OnMessage += ReceiveOutput;
+            try
+            {
+                _device.DebugEngine.RebootDevice(RebootOptions.ClrOnly);
+
+                // Wait until completion
+                var waitHandles = new List<WaitHandle>()
+                {
+                    cancellationToken.WaitHandle
+                };
+                CancellationToken? cancelRun = createRunCancellationToken();
+                if (!(cancelRun is null))
+                {
+                    waitHandles.Add(cancelRun.Value.WaitHandle);
+                }
+                WaitHandle.WaitAny(waitHandles.ToArray());
+            }
+            finally
+            {
+                // Detach listener
+                _device.DebugEngine.OnMessage -= ReceiveOutput;
+            }
             return true;
         }
         #endregion

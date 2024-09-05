@@ -6,13 +6,13 @@ using nanoFramework.TestFramework;
 namespace TestFramework.Tooling.Tests.NFUnitTest
 {
     [TestClass]
-    [Trait("Test class with v3 attributes")]
+    [TestCategory("Test class with v3 attributes")]
     public class TestWithNewTestMethodsAttributes
     {
         [TestMethod]
-        [Trait("Example trait")]
-        [Trait("Other trait")]
-        public void MethodWithTraits()
+        [TestCategory("Example category")]
+        [TestCategory("Other category")]
+        public void MethodWithCategories()
         {
         }
 

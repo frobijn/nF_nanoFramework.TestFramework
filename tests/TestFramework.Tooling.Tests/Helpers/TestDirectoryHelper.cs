@@ -14,7 +14,7 @@ namespace TestFramework.Tooling.Tests.Helpers
             lock (typeof(TestDirectoryHelper))
             {
                 s_lastIndex++;
-                string path = Path.Combine(context.ResultsDirectory, s_lastIndex.ToString());
+                string path = Path.Combine(context.ResultsDirectory, "T.T.T", s_lastIndex.ToString());
                 Debug.WriteLine($"Test directory: {path}");
                 Directory.CreateDirectory(path);
                 return path;

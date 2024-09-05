@@ -60,7 +60,7 @@
     <Compile Include="ITestOnVirtualDevice.cs" />
     <Compile Include="ITestMethod.cs" />
     <Compile Include="ITestOnRealHardware.cs" />
-    <Compile Include="ITraits.cs" />
+    <Compile Include="ITestCategories.cs" />
     <Compile Include="ITestDevice.cs" />
     <Compile Include="NullableAttributes.cs" />
     <Compile Include="OutputHelper.cs" />
@@ -77,7 +77,7 @@
     <Compile Include="TestOnTargetAttribute.cs" />
     <Compile Include="TestOnVirtualDeviceAttribute.cs" />
     <Compile Include="TestMethodAttribute.cs" />
-    <Compile Include="TraitAttribute.cs" />
+    <Compile Include="TestCategoryAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

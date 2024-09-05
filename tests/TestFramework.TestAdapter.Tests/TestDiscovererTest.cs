@@ -65,10 +65,10 @@ TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test - Test [Real hardwar
 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test - Test [Virtual Device]
 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2 [Real hardware]
 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2 [Virtual Device]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories - MethodWithCategories [Real hardware]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories - MethodWithCategories [Virtual Device]
 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods - MethodWithNewTestMethods [Real hardware]
 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods - MethodWithNewTestMethods [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits - MethodWithTraits [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits - MethodWithTraits [Virtual Device]
 ".Trim().Replace("\r\n", "\n") + '\n',
                 string.Join("\n", from tc in sink.TestCases
                                   orderby tc.FullyQualifiedName, tc.DisplayName

@@ -35,7 +35,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
                  select msg.level).ToList()
             );
             Assert.IsNotNull(actual);
-            Assert.AreEqual(0, custom?.Count);
+            Assert.AreEqual(0, custom?.OfType<TestOnRealHardwareProxy>().Count());
 
             TestOnRealHardwareProxy proxy = actual.OfType<TestOnRealHardwareProxy>()
                               .FirstOrDefault();

@@ -46,7 +46,7 @@ G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.Test
 G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
 G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'");
 
-            AssertSourceLocationTraits(actual.TestCases,
+            AssertSourceLocationCategories(actual.TestCases,
 $@"G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
 G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
 G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device' DC()
@@ -98,7 +98,7 @@ G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real
 G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
 G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'");
 
-            AssertSourceLocationTraits(actual.TestCases,
+            AssertSourceLocationCategories(actual.TestCases,
 $@"G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
 G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Real hardware' DC()
 G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
@@ -182,12 +182,12 @@ G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virt
 G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
 G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
 G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
-G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Virtual Device]'
-G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits [Real hardware]'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories [Virtual Device]'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories [Real hardware]'
 G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Virtual Device]'
 G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Real hardware]'");
 
-            AssertSourceLocationTraits(actual.TestCases,
+            AssertSourceLocationCategories(actual.TestCases,
 $@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
 G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@TEST', '@Real hardware' DC()
 G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
@@ -234,8 +234,8 @@ G006T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
 G006T000 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
 G006T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
 G006T001 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-G007T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
-G007T000 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G007T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories
+G007T000 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories
 G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods
 G007T001 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods");
 
@@ -248,7 +248,7 @@ G007T001 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             var esp32Device = new TestDeviceProxy(new TestDeviceMock(Guid.NewGuid().ToString(), "ESP32"));
             foreach (TestCase testCase in actual.TestCases)
             {
-                if (testCase.ShouldRunOnRealHardware && testCase.Traits.Contains("@ESP32"))
+                if (testCase.ShouldRunOnRealHardware && testCase.Categories.Contains("@ESP32"))
                 {
                     Assert.IsTrue(testCase.RealHardwareDeviceSelectors?.Any());
                     Assert.IsTrue((from s in testCase.RealHardwareDeviceSelectors
@@ -287,10 +287,10 @@ G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.Test
 G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile'
 G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
 G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
-G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits 'MethodWithTraits'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories'
 G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods'");
 
-            AssertSourceLocationTraits(actual.TestCases,
+            AssertSourceLocationCategories(actual.TestCases,
 $@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
 G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
 G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device' DC()
@@ -315,7 +315,7 @@ G005T000 RH=False VD=True GS=Setup(String 'xyzzy', Int64 'Device ID', Int32 'Add
 G005T001 RH=False VD=True GS=Setup(String 'xyzzy', Int64 'Device ID', Int32 'Address') GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
 G006T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
 G006T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-G007T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits
+G007T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories
 G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods");
 
             // No test case for real hardware
@@ -349,7 +349,7 @@ G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             AssertTestCaseCollectionFQNDisplayName(actual.TestCases,
 $@"G000T000 TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly 'UseEsp32NativeAssembly'");
 
-            AssertSourceLocationTraits(actual.TestCases,
+            AssertSourceLocationCategories(actual.TestCases,
 $@"G000T000 @{pathPrefix}HardwareSpecificTest.cs(18,21) '@ESP32', '@Real hardware' DC()");
 
             AssertRunInformation(actual.TestCases,
@@ -576,8 +576,8 @@ $@"{assemblyFilePath1} #5
                     (assemblyFilePath1, "TestMethod1(1,1) [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1"),
                     (assemblyFilePath1, "TestMethod1(2,2) [some_platform]", "TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1"),
                     (assemblyFilePath1, "NoSuchMethod", "TestFramework.Tooling.Tests.NFUnitTest.NoSuchClass.NoSuchMethod"),
-                    (assemblyFilePath2, "MethodWithTraits [Virtual Device]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits"),
-                    (assemblyFilePath2, "MethodWithTraits [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits"),
+                    (assemblyFilePath2, "MethodWithCategories [Virtual Device]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories"),
+                    (assemblyFilePath2, "MethodWithCategories [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories"),
                     (assemblyFilePath1, "Method2 [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2"),
                 },
                 (f) => ProjectSourceInventory.FindProjectFilePath(f, logger),
@@ -594,8 +594,8 @@ Verbose: Test case 'Method2 [Real hardware]' (TestFramework.Tooling.Tests.NFUnit
             // Assert that the selected test case are present
             Assert.AreEqual(
 @"G000T001D00 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [Real hardware]
-G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Virtual Device]
-G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithTraits) MethodWithTraits [Real hardware]
+G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories) MethodWithCategories [Virtual Device]
+G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories) MethodWithCategories [Real hardware]
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases
@@ -623,16 +623,16 @@ G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttribute
         }
 
         /// <summary>
-        /// Assert source location of the tests, and the traits
+        /// Assert source location of the tests, and the categories
         /// </summary>
-        private static void AssertSourceLocationTraits(IEnumerable<TestCase> actual, string expected)
+        private static void AssertSourceLocationCategories(IEnumerable<TestCase> actual, string expected)
         {
             Assert.AreEqual(
                 expected.Trim().Replace("\r\n", "\n") + '\n',
                 string.Join("\n",
                     from tc in actual
                     orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
-                    select $"{tc.TestCaseId} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Traits select $"'{t}'")} DC({string.Join(", ", from t in tc.RequiredConfigurationKeys select $"{t.valueType.Name} '{t.key}'")})"
+                    select $"{tc.TestCaseId} @{tc.TestMethodSourceCodeLocation?.ForMessage()} {string.Join(", ", from t in tc.Categories select $"'{t}'")} DC({string.Join(", ", from t in tc.RequiredConfigurationKeys select $"{t.valueType.Name} '{t.key}'")})"
                 ) + '\n'
             );
         }
