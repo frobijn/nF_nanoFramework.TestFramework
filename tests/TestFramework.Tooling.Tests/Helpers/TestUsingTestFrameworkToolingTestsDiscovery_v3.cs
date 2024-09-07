@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 
 namespace TestFramework.Tooling.Tests.Helpers
@@ -25,15 +26,14 @@ namespace TestFramework.Tooling.Tests.Helpers
             var testCases = new TestCaseCollection(
                 new (string, string, string)[]
                 {
-                    (assemblyFilePath, TestClassWithSetupCleanup_TestMethodName, $"{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}"),
-                    (assemblyFilePath, $"{TestClassWithSetupCleanup_DataRowMethodName}(1,1)", $"{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}"),
-                    (assemblyFilePath, $"{TestClassWithSetupCleanup_DataRowMethodName}(2,2)", $"{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}"),
-                    (assemblyFilePath, TestClassTwoMethods_Method1Name, $"{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method1Name}"),
-                    (assemblyFilePath, TestClassTwoMethods_Method2Name, $"{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}"),
-                    (assemblyFilePath, TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName, $"{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}"),
+                    (assemblyFilePath, $"{TestClassWithSetupCleanup_TestMethodName} [{Constants.VirtualDevice_Description}]", $"{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}"),
+                    (assemblyFilePath, $"{TestClassWithSetupCleanup_DataRowMethodName}(1,1) [{Constants.VirtualDevice_Description}]", $"{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}"),
+                    (assemblyFilePath, $"{TestClassWithSetupCleanup_DataRowMethodName}(2,2) [{Constants.VirtualDevice_Description}]", $"{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}"),
+                    (assemblyFilePath, $"{TestClassTwoMethods_Method1Name} [{ Constants.VirtualDevice_Description }]", $"{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method1Name}"),
+                    (assemblyFilePath, $"{TestClassTwoMethods_Method2Name} [{Constants.VirtualDevice_Description}]", $"{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}"),
+                    (assemblyFilePath, $"{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName} [{Constants.VirtualDevice_Description}]", $"{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}"),
                 },
                 (f) => ProjectSourceInventory.FindProjectFilePath(f, logger),
-                false,
                 logger);
             logger.AssertEqual(
 $@"Error: {pathPrefix}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.
@@ -41,7 +41,7 @@ Error: {pathPrefix}TestWithALotOfErrors.cs(25,10): Error: A cleanup method canno
 Error: {pathPrefix}TestWithALotOfErrors.cs(55,10): Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements 'IDeploymentConfiguration'.", LoggingLevel.Error);
             TestSelection = testCases.TestOnVirtualDevice.First();
 
-            foreach (string file in Directory.EnumerateFiles(Path.GetDirectoryName(assemblyFilePath), "*.dll"))
+            foreach (string file in Directory.GetFiles(Path.GetDirectoryName(assemblyFilePath), "*.dll"))
             {
                 AssemblyFilePaths.Add(Path.ChangeExtension(file, ".pe"));
             }

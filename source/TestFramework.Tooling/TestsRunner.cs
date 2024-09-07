@@ -29,6 +29,7 @@ namespace nanoFramework.TestFramework.Tooling
         private bool _allowAllSerialPorts;
         private readonly HashSet<string> _allowedSerialPorts = new HashSet<string>();
         private readonly HashSet<string> _excludedSerialPorts = new HashSet<string>();
+        private readonly Dictionary<string, NanoCLRHelper> _virtualDeviceRunners = new Dictionary<string, NanoCLRHelper>();
         private int _nextRunningTaskIndex;
         private readonly Dictionary<int, Task> _runningTasks = new Dictionary<int, Task>();
         private readonly HashSet<TestCase> _testCasesWithResult = new HashSet<TestCase>();
@@ -254,9 +255,33 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="configuration">Configuration of the virtual device.</param>
         /// <param name="logger">Logger to pass process information to the caller.</param>
         /// <returns>A new instance of the Virtual Device.</returns>
+        /// <remarks>
+        /// By default an instance of <see cref="NanoCLRHelper"/> is returned. The instances are cached
+        /// by <see cref="TestFrameworkConfiguration.PathToLocalNanoCLR"/> and <see cref="TestFrameworkConfiguration.CLRVersion"/>
+        /// to prevent excessive locking of the nanoclr.exe file because of all kinds of install/auto-update actions.
+        /// </remarks>
         protected virtual IVirtualDevice CreateVirtualDevice(TestFrameworkConfiguration configuration, LogMessenger logger)
         {
-            return new NanoCLRHelper(configuration, logger);
+            NanoCLRHelper helper;
+
+            string key = (string.IsNullOrWhiteSpace(configuration.PathToLocalNanoCLR) ? "" : configuration.PathToLocalNanoCLR)
+                + '\n'
+                + (string.IsNullOrWhiteSpace(configuration.CLRVersion) ? "" : configuration.CLRVersion);
+
+            lock (_virtualDeviceRunners)
+            {
+                _virtualDeviceRunners.TryGetValue(key, out helper);
+            }
+
+            if (helper is null)
+            {
+                helper = new NanoCLRHelper(configuration, logger);
+                lock (_virtualDeviceRunners)
+                {
+                    _virtualDeviceRunners[key] = helper;
+                }
+            }
+            return helper;
         }
         #endregion
 
@@ -345,7 +370,7 @@ namespace nanoFramework.TestFramework.Tooling
 
                     var messages = new List<string>()
                     {
-                        "Test is not executed as the test framework configuration does not allow running tests on real hardware."
+                        $"Test is not executed as the test framework configuration does not allow running tests on a {Constants.RealHardware_Description}."
                     };
                     RunAsync(() =>
                         AddTestResults(null,
@@ -387,16 +412,16 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     if (_excludedSerialPorts.Count == 0)
                     {
-                        logger.Log(LoggingLevel.Verbose, "Execute tests on all available real hardware nanoDevices");
+                        logger.Log(LoggingLevel.Verbose, $"Execute tests on all available {Constants.RealHardware_Description}s");
                     }
                     else
                     {
-                        logger.Log(LoggingLevel.Verbose, $"Execute tests on all available real hardware nanoDevices not connected to {string.Join(", ", _excludedSerialPorts)}");
+                        logger.Log(LoggingLevel.Verbose, $"Execute tests on all available {Constants.RealHardware_Description}s not connected to {string.Join(", ", _excludedSerialPorts)}");
                     }
                 }
                 else
                 {
-                    logger.Log(LoggingLevel.Verbose, $"Execute tests on real hardware nanoDevices connected to {string.Join(", ", _allowedSerialPorts)} (if available)");
+                    logger.Log(LoggingLevel.Verbose, $"Execute tests on {Constants.RealHardware_Description}s connected to {string.Join(", ", _allowedSerialPorts)} (if available)");
                 }
             }
             #endregion
@@ -1119,7 +1144,7 @@ namespace nanoFramework.TestFramework.Tooling
                     messages.Add($"Test is skipped as a call to '{nameof(ITestOnRealHardware.ShouldTestOnDevice)}' fails for some of the attributes that implement '{nameof(ITestOnRealHardware)}'.");
                     testsNotSelected.Add(new TestResult(testCase.testCase, testCase.selectionIndex, device.SerialPort)
                     {
-                        ErrorMessage = "Real hardware test selection failed",
+                        ErrorMessage = $"{Constants.RealHardware_Description} test selection failed",
                         Outcome = TestResult.TestOutcome.Skipped,
                         _messages = messages.ToList()
                     });
@@ -1132,7 +1157,7 @@ namespace nanoFramework.TestFramework.Tooling
                         messages.Add($"Test is skipped on this device as none of the attributes that implement '{nameof(ITestOnRealHardware)}' return true for '{nameof(ITestOnRealHardware.ShouldTestOnDevice)}'.");
                         testsNotSelected.Add(new TestResult(testCase.testCase, testCase.selectionIndex, device.SerialPort)
                         {
-                            ErrorMessage = "Real hardware device not suitable",
+                            ErrorMessage = $"{Constants.RealHardware_Description} not suitable",
                             Outcome = TestResult.TestOutcome.Skipped,
                             _messages = messages.ToList()
                         });
@@ -1211,7 +1236,7 @@ namespace nanoFramework.TestFramework.Tooling
                     messages.Add($"Test is skipped as a call to '{nameof(ITestOnRealHardware.AreDevicesEqual)}' fails for some of the attributes that implement '{nameof(ITestOnRealHardware)}'.");
                     testsNotSelected.Add(new TestResult(testCase.testCase, testCase.selectionIndex, device.SerialPort)
                     {
-                        ErrorMessage = "Real hardware test selection failed",
+                        ErrorMessage = $"{Constants.RealHardware_Description} test selection failed",
                         Outcome = TestResult.TestOutcome.Skipped,
                         _messages = messages.ToList()
                     });
@@ -1306,16 +1331,16 @@ namespace nanoFramework.TestFramework.Tooling
                     if (selection.Value.Configuration.AllowSerialPorts.Count > 0
                         || selection.Value.Configuration.ExcludeSerialPorts.Count > 0)
                     {
-                        messages.Add($"No real hardware nanoDevices found within the limitations imposed by the {TestFrameworkConfiguration.SettingsFileName}/{TestFrameworkConfiguration.UserSettingsFileName} configuration.");
+                        messages.Add($"No {Constants.RealHardware_Description}s found within the limitations imposed by the {TestFrameworkConfiguration.SettingsFileName}/{TestFrameworkConfiguration.UserSettingsFileName} configuration.");
                     }
                     else
                     {
-                        messages.Add("No real hardware nanoDevices found.");
+                        messages.Add($"No {Constants.RealHardware_Description}s found.");
                     }
                 }
                 else
                 {
-                    messages.Add("No suitable real hardware device found to run the test on.");
+                    messages.Add($"No suitable {Constants.RealHardware_Description} found to run the test on.");
                     messages.Add("Available devices:");
                     foreach (KeyValuePair<string, RealHardwareExecutionOnDevice> device in from d in selection.Value.OnDevice
                                                                                            orderby d.Key
@@ -1336,7 +1361,7 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         notRun.Add(new TestResult(testCase, selectionIndex, null)
                         {
-                            ErrorMessage = "No suitable hardware available",
+                            ErrorMessage = $"No suitable {Constants.RealHardware_Description} available",
                             _messages = messages.ToList()
                         });
                     }
@@ -1373,7 +1398,7 @@ namespace nanoFramework.TestFramework.Tooling
             #region ITestsExecutionLogger implementation
             /// <inheritdoc/>
             string ITestsExecutionLogger.DeviceName
-                => "Virtual nanoDevice";
+                => Constants.VirtualDevice_Description;
 
             /// <inheritdoc/>
             bool ITestsExecutionLogger.HasErrors

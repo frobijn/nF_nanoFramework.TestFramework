@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using TestFramework.Tooling.Tests.Helpers;
 
@@ -39,7 +40,7 @@ namespace TestFramework.Tooling.Tests
         }
 
         [TestMethod]
-        [TestCategory("@Real hardware")]
+        [TestCategory(Constants.RealHardware_TestCategory)]
         [DoNotParallelize]
         public void RealHardwareDevice_DeviceByPort()
         {
@@ -63,14 +64,14 @@ namespace TestFramework.Tooling.Tests
         }
 
         [TestMethod]
-        [TestCategory("@Real hardware")]
+        [TestCategory(Constants.RealHardware_TestCategory)]
         [DoNotParallelize]
         public void RealHardwareDevice_AllAvailable()
         {
             var realHardwarePorts = RealHardwareSerialPorts.GetAllSerialPortNames().ToList();
             if (realHardwarePorts.Count == 0)
             {
-                Assert.Inconclusive("This test requires that one or more real hardware devices are connected");
+                Assert.Inconclusive($"This test requires that one or more {Constants.RealHardware_Description}s are connected");
             }
 
             var logger = new LogMessengerMock();

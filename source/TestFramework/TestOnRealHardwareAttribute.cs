@@ -39,7 +39,7 @@ namespace nanoFramework.TestFramework
 
         #region ITestOnRealHardware implementation
         string ITestOnRealHardware.Description
-            => "Real hardware";
+            => Constants.RealHardware_Description;
 
         bool ITestOnRealHardware.ShouldTestOnDevice(ITestDevice testDevice)
             => true;

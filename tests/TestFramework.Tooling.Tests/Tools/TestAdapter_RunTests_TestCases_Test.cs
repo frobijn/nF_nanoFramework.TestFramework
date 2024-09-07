@@ -7,6 +7,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.Tools;
 using TestFramework.Tooling.Tests.Helpers;
@@ -16,11 +17,12 @@ namespace TestFramework.Tooling.Tests.Tools
 {
     [TestClass]
     [TestCategory("Visual Studio/VSTest")]
-    public sealed class TestAdapterTestCasesExecutorTest
+    [TestCategory("Test host")]
+    public sealed class TestAdapter_RunTests_TestCases_Test
     {
         /// <summary>
         /// The purpose of this test is to verify that the method
-        /// <see cref="TestAdapterTestCasesExecutor.AddTestResults"/> is working correctly
+        /// <see cref="TestAdapter.AddTestResults"/> is working correctly
         /// for tests run on the virtual device.
         /// The correct working of running tests on a Virtual Device is already tested
         /// by <see cref="TestsRunnerExecutionTest"/>.
@@ -32,7 +34,8 @@ namespace TestFramework.Tooling.Tests.Tools
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void TestAdapterTestCasesExecutor_VirtualDeviceOnly(bool allowRealHardware)
+        [TestCategory(Constants.VirtualDevice_TestCategory)]
+        public void TestAdapter_RunTests_TestCases_VirtualDeviceOnly(bool allowRealHardware)
         {
             #region Set up the configurations and create the parameters
             var configuration = new TestFrameworkConfiguration()
@@ -50,12 +53,12 @@ namespace TestFramework.Tooling.Tests.Tools
             );
             #endregion
 
-            #region Execute the TestAdapterTestCasesExecutor
+            #region Execute TestAdapter().RunTests(TestCases)
             var logger = new LogMessengerMock();
 
             using (var cancellationToken = new CancellationTokenSource())
             {
-                TestAdapterTestCasesExecutor.Run(
+                new TestAdapter().RunTests(
                     parameters,
                     (message) =>
                     {
@@ -104,7 +107,7 @@ namespace TestFramework.Tooling.Tests.Tools
                 {
                     // Should have been run
                     Assert.AreNotEqual((int)TestResult.TestOutcome.None, testResult.Outcome, $"{testCase.FullyQualifiedName} - {testCase.DisplayName}");
-                    Assert.AreEqual("Virtual nanoDevice", computerName, $"{testCase.FullyQualifiedName} - {testCase.DisplayName}");
+                    Assert.AreEqual(Constants.VirtualDevice_Description, computerName, $"{testCase.FullyQualifiedName} - {testCase.DisplayName}");
 
                     if (testCase.FullyQualifiedName == "TestFramework.Tooling.Execution.Tests.FailInTest.Test")
                     {
@@ -130,7 +133,7 @@ namespace TestFramework.Tooling.Tests.Tools
         /// <summary>
         /// The purpose of this test is to verify the working of the interaction between
         /// <see cref="TestsRunner"/> and <see cref="RealHardwareDeviceHelper"/>, and
-        /// that the method <see cref="TestAdapterTestCasesExecutor.AddTestResults"/> is working correctly
+        /// that the method <see cref="TestAdapter.AddTestResults"/> is working correctly
         /// for tests run on a real hardware device.
         /// This test method requires that one or more real hardware devices are connected.
         /// Any type of device will do. Actual results depend on whether there is a esp32 device present.
@@ -138,9 +141,10 @@ namespace TestFramework.Tooling.Tests.Tools
         /// Make sure to run this test at least once with a esp32-device connected.
         /// </summary>
         [TestMethod]
-        [TestCategory("@Real hardware")]
+        [TestCategory(Constants.RealHardware_TestCategory)]
+        [TestCategory(Constants.VirtualDevice_TestCategory)]
         [DoNotParallelize]
-        public void TestAdapterTestCasesExecutor_IncludingHardware_AllTests()
+        public void TestAdapter_RunTests_TestCases_IncludingHardware_AllTests()
         {
             #region Set up the configurations and create the parameters
             List<RealHardwareDeviceHelper> realHardwareDevices = GetRealHardwareDevices();
@@ -163,7 +167,7 @@ $@"{{
     ""DisplayName"": ""Configuration for device connected to {device.SerialPort}"",
     ""Configuration"":
     {{
-        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every real hardware device."",
+        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every {Constants.RealHardware_Description}."",
         ""RGB LED pin"": 42,
         ""data.bin"": {{ ""File"": ""data.bin"" }},
         ""data.txt"": ""Content of the data.txt file""
@@ -173,29 +177,29 @@ $@"{{
             File.WriteAllText(Path.Combine(testDirectoryPath, $"data.bin"), "Binary data");
             #endregion
 
-            #region Execute the TestAdapterTestCasesExecutor
+            #region Execute TestAdapter().RunTests(TestCases)
             var logger = new LogMessengerMock();
 
             using (var cancellationToken = new CancellationTokenSource())
             {
-                TestAdapterTestCasesExecutor.Run(
-                parameters,
-                (message) =>
-                {
-                    lock (testResults)
+                new TestAdapter().RunTests(
+                    parameters,
+                    (message) =>
                     {
-                        if (message is TestExecutor_TestResults results)
+                        lock (testResults)
                         {
-                            testResults.AddTestResults(results, logger);
+                            if (message is TestExecutor_TestResults results)
+                            {
+                                testResults.AddTestResults(results, logger);
+                            }
+                            else
+                            {
+                                ((LogMessenger)logger)(LoggingLevel.Error, $"Unexpected message type: {message.GetType()}");
+                            }
                         }
-                        else
-                        {
-                            ((LogMessenger)logger)(LoggingLevel.Error, $"Unexpected message type: {message.GetType()}");
-                        }
-                    }
-                },
-                logger,
-                cancellationToken.Token);
+                    },
+                    logger,
+                    cancellationToken.Token);
             }
             #endregion
 
@@ -312,9 +316,10 @@ $@"{{
         /// (one is enough). Any type of device will do.
         /// </summary>
         [TestMethod]
-        [TestCategory("@Real hardware")]
+        [TestCategory(Constants.RealHardware_TestCategory)]
+        [TestCategory(Constants.VirtualDevice_TestCategory)]
         [DoNotParallelize]
-        public void TestAdapterTestCasesExecutor_IncludingHardware_Cancel()
+        public void TestAdapter_RunTests_TestCases_IncludingHardware_Cancel()
         {
             #region Set up the configurations and create the parameters
             List<RealHardwareDeviceHelper> realHardwareDevices = GetRealHardwareDevices();
@@ -336,7 +341,7 @@ $@"{{
     ""DisplayName"": ""Configuration for device connected to {device.SerialPort}"",
     ""Configuration"":
     {{
-        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every real hardware device."",
+        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every {Constants.RealHardware_Description}."",
         ""RGB LED pin"": 42,
         ""data.bin"": {{ ""File"": ""data.bin"" }},
         ""data.txt"": ""Content of the data.txt file""
@@ -346,14 +351,14 @@ $@"{{
             File.WriteAllText(Path.Combine(testDirectoryPath, $"data.bin"), "Binary data");
             #endregion
 
-            #region Execute the TestAdapterTestCasesExecutor
+            #region Execute TestAdapter().RunTests(TestCases)
             var logger = new LogMessengerMock();
 
             using (var cancellationToken = new CancellationTokenSource())
             {
                 bool firstHardwareMessage = true;
 
-                TestAdapterTestCasesExecutor.Run(
+                new TestAdapter().RunTests(
                     parameters,
                     (message) =>
                     {
@@ -429,9 +434,10 @@ $@"{{
         /// (one is enough). Any type of device will do.
         /// </summary>
         [TestMethod]
-        [TestCategory("@Real hardware")]
+        [TestCategory(Constants.RealHardware_TestCategory)]
+        [TestCategory(Constants.VirtualDevice_TestCategory)]
         [DoNotParallelize]
-        public void TestAdapterTestCasesExecutor_IncludingHardware_Timeout()
+        public void TestAdapter_RunTests_TestCases_IncludingHardware_Timeout()
         {
             #region Set up the configurations and create the parameters
             List<RealHardwareDeviceHelper> realHardwareDevices = GetRealHardwareDevices();
@@ -456,7 +462,7 @@ $@"{{
     ""DisplayName"": ""Configuration for device connected to {device.SerialPort}"",
     ""Configuration"":
     {{
-        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every real hardware device."",
+        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every {Constants.RealHardware_Description}."",
         ""RGB LED pin"": 42,
         ""data.bin"": {{ ""File"": ""data.bin"" }},
         ""data.txt"": ""Content of the data.txt file""
@@ -466,12 +472,12 @@ $@"{{
             File.WriteAllText(Path.Combine(testDirectoryPath, $"data.bin"), "Binary data");
             #endregion
 
-            #region Execute the TestAdapterTestCasesExecutor
+            #region Execute TestAdapter().RunTests(TestCases)
             var logger = new LogMessengerMock();
 
             using (var cancellationToken = new CancellationTokenSource())
             {
-                TestAdapterTestCasesExecutor.Run(
+                new TestAdapter().RunTests(
                     parameters,
                     (message) =>
                     {
@@ -536,9 +542,10 @@ $@"{{
         /// (one is enough). Any type of device will do.
         /// </summary>
         [TestMethod]
-        [TestCategory("@Real hardware")]
+        [TestCategory(Constants.RealHardware_TestCategory)]
+        [TestCategory(Constants.VirtualDevice_TestCategory)]
         [DoNotParallelize]
-        public void TestAdapterTestCasesExecutor_IncludingHardware_DetailedLogging()
+        public void TestAdapter_RunTests_TestCases_IncludingHardware_DetailedLogging()
         {
             #region Set up the configurations and create the parameters
             List<RealHardwareDeviceHelper> realHardwareDevices = GetRealHardwareDevices();
@@ -563,7 +570,7 @@ $@"{{
     ""DisplayName"": ""Configuration for device connected to {device.SerialPort}"",
     ""Configuration"":
     {{
-        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every real hardware device."",
+        ""xyzzy"": ""Value unique for the device connected to {device.SerialPort} to ensure the test has to run on every {Constants.RealHardware_Description}."",
         ""RGB LED pin"": 42,
         ""data.bin"": {{ ""File"": ""data.bin"" }},
         ""data.txt"": ""Content of the data.txt file""
@@ -573,12 +580,12 @@ $@"{{
             File.WriteAllText(Path.Combine(testDirectoryPath, $"data.bin"), "Binary data");
             #endregion
 
-            #region Execute the TestAdapterTestCasesExecutor
+            #region Execute the TestAdapter().RunTests(TestCases)
             var logger = new LogMessengerMock();
 
             using (var cancellationToken = new CancellationTokenSource())
             {
-                TestAdapterTestCasesExecutor.Run(
+                new TestAdapter().RunTests(
                     parameters,
                     (message) =>
                     {
@@ -639,7 +646,7 @@ $@"{{
             var realHardwarePorts = RealHardwareSerialPorts.GetAllSerialPortNames().ToList();
             if (realHardwarePorts.Count == 0)
             {
-                Assert.Inconclusive("This test requires that one or more real hardware devices are connected");
+                Assert.Inconclusive($"This test requires that one or more {Constants.RealHardware_Description}s are connected");
             }
 
             var logger = new LogMessengerMock();
@@ -656,7 +663,7 @@ $@"{{
                 .GetAwaiter().GetResult();
             if (realHardwareDevices.Count == 0)
             {
-                Assert.Inconclusive("This test requires that one or more real hardware devices are connected");
+                Assert.Inconclusive($"This test requires that one or more {Constants.RealHardware_Description}s are connected");
             }
 
             logger.AssertEqual("", LoggingLevel.Error);
@@ -719,7 +726,7 @@ $@"{{
                                     select Path.ChangeExtension(a, ".dll")).First());
             }
 
-            var testCases = new TestCaseCollection(testAssemblies, (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger), true, setupLogger);
+            var testCases = new TestCaseCollection(testAssemblies, (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger), setupLogger);
             setupLogger.AssertEqual("", LoggingLevel.Error);
             #endregion
 

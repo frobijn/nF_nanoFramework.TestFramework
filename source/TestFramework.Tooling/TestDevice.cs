@@ -35,7 +35,7 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="configuration">Deployment configuration for the device, or <c>null</c>
         /// if no configuration is available.</param>
         public TestDevice(DeploymentConfiguration configuration)
-            : this("nanoCLR", "Virtual Device", configuration)
+            : this("nanoCLR", Constants.VirtualDevice_Description, configuration)
         {
         }
         #endregion

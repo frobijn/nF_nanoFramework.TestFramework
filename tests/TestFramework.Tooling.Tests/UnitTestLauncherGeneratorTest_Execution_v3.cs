@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using TestFramework.Tooling.Tests.Helpers;
 
@@ -14,7 +15,7 @@ namespace TestFramework.Tooling.Tests
     [TestClass]
     [TestCategory("Test execution")]
     [TestCategory("Unit test launcher")]
-    [TestCategory("Virtual device")]
+    [TestCategory(Constants.VirtualDevice_TestCategory)]
     public class UnitTestLauncherGeneratorTest_Execution_v3
     {
         [TestMethod]
@@ -23,9 +24,9 @@ namespace TestFramework.Tooling.Tests
         public void UnitTestLauncher_GeneratedApplication_RunWithNanoCLRHelper_Execution_v3_WithConfiguration(bool communicateByNames)
         {
             UnitTestLauncher_GenerateApplication_RunWithNanoCLRHelper(communicateByNames, true,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData#0
-DisplayName : 'MethodToRunOnRealHardwareWithData - Passed'
+DisplayName : 'MethodToRunOnRealHardwareWithData [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -33,7 +34,7 @@ ErrorMessage: ''
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware
-DisplayName : 'MethodToRunOnRealHardware - Passed'
+DisplayName : 'MethodToRunOnRealHardware [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -73,7 +74,7 @@ ErrorMessage: ''
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_AreDevicesEqual
-DisplayName : 'TestOnDeviceWithProgrammingError_AreDevicesEqual - Passed'
+DisplayName : 'TestOnDeviceWithProgrammingError_AreDevicesEqual [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -81,7 +82,7 @@ ErrorMessage: ''
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_ShouldTestOnDevice
-DisplayName : 'TestOnDeviceWithProgrammingError_ShouldTestOnDevice - Passed'
+DisplayName : 'TestOnDeviceWithProgrammingError_ShouldTestOnDevice [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -89,7 +90,7 @@ ErrorMessage: ''
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile
-DisplayName : 'TestDeviceWithSomeFile - Passed'
+DisplayName : 'TestDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -290,9 +291,9 @@ ErrorMessage: 'Setup failed'
         public void UnitTestLauncher_GeneratedApplication_RunWithNanoCLRHelper_Execution_v3_NoConfiguration(bool communicateByNames)
         {
             UnitTestLauncher_GenerateApplication_RunWithNanoCLRHelper(communicateByNames, false,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardwareWithData#0
-DisplayName : 'MethodToRunOnRealHardwareWithData - Test failed'
+DisplayName : 'MethodToRunOnRealHardwareWithData [{Constants.VirtualDevice_Description}] - Test failed'
 Outcome     : Failed
 ErrorMessage: 'Test failed'
 ----------------------------------------
@@ -300,7 +301,7 @@ ErrorMessage: 'Test failed'
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.TestFramework.Tooling.Execution.Tests.TestWithNewTestMethodsAttributes.MethodToRunOnRealHardware
-DisplayName : 'MethodToRunOnRealHardware - Test failed'
+DisplayName : 'MethodToRunOnRealHardware [{Constants.VirtualDevice_Description}] - Test failed'
 Outcome     : Failed
 ErrorMessage: 'Test failed'
 ----------------------------------------
@@ -340,7 +341,7 @@ ErrorMessage: ''
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_AreDevicesEqual
-DisplayName : 'TestOnDeviceWithProgrammingError_AreDevicesEqual - Setup failed'
+DisplayName : 'TestOnDeviceWithProgrammingError_AreDevicesEqual [{Constants.VirtualDevice_Description}] - Setup failed'
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
 ----------------------------------------
@@ -348,7 +349,7 @@ ErrorMessage: 'Setup failed'
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_ShouldTestOnDevice
-DisplayName : 'TestOnDeviceWithProgrammingError_ShouldTestOnDevice - Setup failed'
+DisplayName : 'TestOnDeviceWithProgrammingError_ShouldTestOnDevice [{Constants.VirtualDevice_Description}] - Setup failed'
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
 ----------------------------------------
@@ -356,7 +357,7 @@ ErrorMessage: 'Setup failed'
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestDeviceWithSomeFile
-DisplayName : 'TestDeviceWithSomeFile - Setup failed'
+DisplayName : 'TestDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Setup failed'
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
 ----------------------------------------
@@ -557,7 +558,7 @@ ErrorMessage: 'Setup failed'
 
             string pathPrefix = Path.GetDirectoryName(projectFilePath) + Path.DirectorySeparatorChar;
             var logger = new LogMessengerMock();
-            var testCases = new TestCaseCollection(assemblyFilePath, false, projectFilePath, logger);
+            var testCases = new TestCaseCollection(assemblyFilePath, projectFilePath, logger);
             logger.AssertEqual("");
             TestCaseSelection testSelection = testCases.TestOnVirtualDevice.First();
             #endregion

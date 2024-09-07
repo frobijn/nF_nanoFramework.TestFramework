@@ -26,7 +26,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -34,7 +34,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -69,6 +69,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../../source/TestFramework/Constants.cs">
+      <Link>TestFramework/Constants.cs</Link>
+    </Compile>
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\DiscoveryContextMock.cs" />
     <Compile Include="Helpers\MessageLoggerMock.cs" />
@@ -77,7 +80,8 @@
     <Compile Include="MSTest.cs" />
     <Compile Include="TestDiscovererTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestExecutorTest.cs" />
+    <Compile Include="TestExecutor_Sources_Test.cs" />
+    <Compile Include="TestExecutor_TestCases_Test.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

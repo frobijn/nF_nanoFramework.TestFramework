@@ -13,21 +13,26 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using nanoFramework.TestFramework.TestAdapter;
 using nanoFramework.TestFramework.Tooling;
 using TestFramework.TestAdapter.Tests.Helpers;
+
+using nfTest = nanoFramework.TestFramework;
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace TestFramework.TestAdapter.Tests
 {
     /// <summary>
-    /// These test only runs tests on the Virtual Device.
-    /// A fully functional test is available in <c>TestAdapterTestCasesExecutorTest</c>
+    /// The purpose of these tests is to verify that the implementation of the interface
+    /// exposed to Visual Studio/VSTest is working correctly. This is a smoke test;
+    /// a fully functional test is available in <c>TestAdapterRunTests_TestCases_Test</c>
     /// and the tests for <c>TestsRunner</c>.
+    /// These tests use both the test host and a Virtual nanoDevice as external processes.
     /// </summary>
     [TestClass]
     [TestCategory("Visual Studio/VSTest")]
-    public sealed class TestExecutorTest
+    public sealed class TestExecutor_TestCases_Test
     {
         [TestMethod]
-        public void TestExecutor_TestCases()
+        [TestCategory(nfTest.Constants.VirtualDevice_TestCategory)]
+        public void TestAdapter_ITestExecutor_TestCases()
         {
             // Setup
             TestResultCollection testResults = GetTestCases("TestFramework.Tooling.Tests.Execution.v3");
@@ -69,7 +74,8 @@ namespace TestFramework.TestAdapter.Tests
         }
 
         [TestMethod]
-        public void TestExecutor_TestCases_Cancel()
+        [TestCategory(nfTest.Constants.VirtualDevice_TestCategory)]
+        public void TestAdapter_ITestExecutor_TestCases_Cancel()
         {
             // Setup
             TestResultCollection testResults = GetTestCases("TestFramework.Tooling.Tests.Execution.v3");
@@ -100,10 +106,11 @@ namespace TestFramework.TestAdapter.Tests
         }
 
         [TestMethod]
-        public void TestExecutor_TestCases_IsBeingDebugged()
+        public void TestAdapter_ITestExecutor_TestCases_IsBeingDebugged()
         {
             // Setup
-            TestResultCollection testResults = GetTestCases("TestFramework.Tooling.Tests.Execution.v3");
+            var testResults = new TestResultCollection();
+            testResults.TestCases.Add(new TestCase("xxx", new Uri(TestExecutor.NanoExecutor), "some.dll"));
             testResults.IsBeingDebugged = true;
 
             // Test
@@ -177,9 +184,6 @@ namespace TestFramework.TestAdapter.Tests
             {
                 get; set;
             }
-            public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
-                => throw new NotImplementedException();
-
             #endregion
 
             #region Unsupported IRunContext properties
@@ -194,6 +198,8 @@ namespace TestFramework.TestAdapter.Tests
             string IRunContext.SolutionDirectory => throw new NotImplementedException();
 
             IRunSettings IDiscoveryContext.RunSettings => throw new NotImplementedException();
+            ITestCaseFilterExpression IRunContext.GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
+                => throw new NotImplementedException();
             #endregion
 
             #region Unsupported IFrameworkHandle properties and methods

@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.Tools;
 using TestFramework.Tooling.Tests.Helpers;
@@ -11,12 +12,12 @@ using TestFramework.Tooling.Tests.Helpers;
 namespace TestFramework.Tooling.Tests.Tools
 {
     [TestClass]
-    [TestCategory("Visual Studio/VSTest")]
+    [TestCategory("Test host")]
     [TestCategory("Test cases")]
-    public sealed class TestAdapterDiscovererTest
+    public sealed class TestAdapter_DiscoverTests_Test
     {
         [TestMethod]
-        public void TestAdapterDiscoverer_Discovery_v3()
+        public void TestAdapter_DiscoverTests_Discovery_v3()
         {
             #region Setup
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v3");
@@ -33,9 +34,9 @@ namespace TestFramework.Tooling.Tests.Tools
             #endregion
 
             #region Run the discovery method
-            TestAdapterDiscoverer.Run(new TestDiscoverer_Parameters()
+            new TestAdapter().DiscoverTests(new TestDiscoverer_Parameters()
             {
-                Sources = new List<string>()
+                AssemblyFilePaths = new List<string>()
                 {
                     assemblyFilePath
                 }
@@ -98,30 +99,30 @@ Error: {Path.GetDirectoryName(projectFilePath)}\TestWithALotOfErrors.cs(55,10): 
             }
             testCases.Sort();
             Assert.AreEqual(
-@"TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 - Method1 [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 - Method1 [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 - Method2 [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 - Method2 [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method - Method [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method - Method [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod - TestMethod [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod - TestMethod [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(1,1) [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(1,1) [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(2,2) [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(2,2) [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray - TestThatIsNowInDisarray [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray - TestThatIsNowInDisarray [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test - Test [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test - Test [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2 [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2 [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories - MethodWithCategories [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories - MethodWithCategories [Virtual Device]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods - MethodWithNewTestMethods [Real hardware]
-TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods - MethodWithNewTestMethods [Virtual Device]
+$@"TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 - Method1 [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 - Method1 [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 - Method2 [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 - Method2 [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method - Method [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method - Method [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod - TestMethod [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod - TestMethod [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(1,1) [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(1,1) [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(2,2) [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 - TestMethod1(2,2) [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray - TestThatIsNowInDisarray [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray - TestThatIsNowInDisarray [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test - Test [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test - Test [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2 [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2 [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories - MethodWithCategories [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories - MethodWithCategories [{Constants.VirtualDevice_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods - MethodWithNewTestMethods [{Constants.RealHardware_Description}]
+TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods - MethodWithNewTestMethods [{Constants.VirtualDevice_Description}]
 ".Trim().Replace("\r\n", "\n") + '\n',
                 string.Join("\n", testCases) + '\n'
             );

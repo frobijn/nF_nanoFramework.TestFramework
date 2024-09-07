@@ -66,11 +66,7 @@ While working on the implementation of the must-have requirements, it turned out
 
 - Extensible test framework
 
-    The interaction between the attributes describing the tests and the test framework is no longer based on the names of attributes but on the interfaces the attributes implement. That makes it easy for a developer to create custom attributes. One use case is to define attributes with the same type as a .NET framework (MSTest, NUnit, xUnit) so that not only the source code but also unit tests can be shared between nanoFramework and .NET projects.
-
-- Monitoring test progress on real hardware
-
-    While developing code for a (new) hardware/IoT device connected to a MCU, a development board may be used to connect the hardware to. The board may have extra features (e.g., RGB LED, small display) that could be used to monitor the progress of the tests. This is not supported out of the box, but the extensibility of the test framework allows for the creation of custom test monitors that run on real hardware and are only included if the required extra features are present according to the "make and model" information.
+    The interaction between the attributes describing the tests and the test framework is no longer based on the names of attributes but on the interfaces the attributes implement. That makes it easy for a developer to create custom attributes. One use case is to define attributes with the same type as a .NET framework (MSTest, NUnit, xUnit) so that not only the source code but also unit tests can be shared between nanoFramework and .NET projects. Extending the test framework is required to define additional attributes that test for "make and model" information.
 
 - Test framework exceptions are easily discernible from other exceptions
 
@@ -78,7 +74,7 @@ While working on the implementation of the must-have requirements, it turned out
 
 - Library for building custom test tooling
 
-    All functionality required for the test adapter and for debugging the unit tests is placed in a separate class library (`TestFramework.Tooling`), with accompanying unit tests. If a developer has a requirement for a custom tool to work with test projects, the library can provide classes that do most of the hard work.
+    All functionality required for the test adapter and for debugging the unit tests is placed in a separate class library (`TestFramework.Tooling`), with accompanying unit tests. If a developer has a requirement for a custom tool to work with test projects, the library can provide classes that do most of the hard work. The custom tooling (that runs on .NET Framework) can get the full description of test cases in a (.NET nanoFramework) test assembly and even introduce custom attributes (in .NET nanoFramework) that are visible to the custom tooling.
 
 - Test adapter should not be limited by its test host
 
@@ -86,7 +82,7 @@ While working on the implementation of the must-have requirements, it turned out
 
 - Protection against running tests simultaneously from multiple Visual Studio/VSTest instances
 
-    Running tests in parallel from multiple Visual Studio/VSTest instances may cause problems for tests that should be run on real hardware, as multiple instances may try to access the same device. Exclusive access control is implemented for obtaining access to a device and running tests on a device. It is intended as a protection mechanism; no attempt has been optimize running the tests in an optimal way.
+    Running tests in parallel from multiple Visual Studio/VSTest instances may cause problems for tests that should be run on real hardware, as multiple instances may try to access the same device. Similarly, running tests on a Virtual Device may use the same `nanoclr.exe` file that can be updated by other processes at the same time. Exclusive access control is implemented for obtaining access to a device and running tests on a device. It is intended as a protection mechanism; no attempt has been optimize running the tests in an optimal way. As the other nanoFramework applications do not use this protection mechanism, it only works as a protection in the test framework.
 
 - The result of a single test is made available to Visual Studio/VSTest immediately after the test is completed, rather than after completion of all tests in a test assembly.
 
@@ -107,12 +103,14 @@ There are three possible exceptions to the backward compatibility claim that are
 
     The backward compatibility claim holds if the test projects are configured to run on the virtual device and are using nano.runsettings in the project's directory as propagated by the nanoFramework documentation/project templates. It is believed that the v3 test adapter will always be compatible with the v2 version, but it is impossible to conceive of all possible ways to configure VSTest and to verify that the v3 test adapter is working in the same way as the v2 adapter.
 
+As the v3 test framework behaves quite differently from the v2 version, a nanoFramework user should not be surprised with an unexpected change from v2 to v3. Migrating from v2 to v3 is a choice that has to be made explicitly. The general nanoFramework documentation describes how to do that.
+
 ## Hands-on demo
 A hands-on demo for all features are available in this repository:
 
 - Clone this repository and switch to this branch.
 - Build the `nanoFramework.TestFramework.Tooling` solution
-- Open the `poc\NFUnit Test DemoByReference` solution. The solution contains a test project that only uses v2 features, two that show off the new v3 features and two projects to debug the unit tests. The projects are configured to use the test adapter and other tools from this repository.
+- Open the `poc\By Reference\Demo By Reference` solution. The solution contains a test project that only uses v2 features, two that show off the new v3 features and two projects to debug the unit tests. The projects are configured to use the test adapter and other tools from this repository.
 - Play around to run selective tests, all tests, tests from the two test projects running in parallel on the Virtual Device, tests running simultaneously on multiple connected hardware devices and the Virtual Device, etc.
 - Play around with the projects to debug the unit tests. Make sure to build the projects after cloning the repository, as some files are not stored in the git repository.
 - Use/view the `poc\vstest-*.bat` scripts to run tests as in an automated build environment. The options used in the script are available in the Azure DevOps `VSTest@2` task.
@@ -131,13 +129,28 @@ All v3 code and tests are collected in `nanoFramework.TestFramework.sln`. There 
 
 There are several test projects:
 
-- `TestFramework.Tooling.Tests` contains the unit tests for `nanoFramework.TestFramework.Tooling`.
-- `TestFramework.Tooling.Tests.Discovery.v2`, `TestFramework.Tooling.Tests.Discovery.v3` and `TestFramework.Tooling.Execution.Discovery.v3` are modified nanoFramework unit tests projects. The assemblies and project files are used by the unit tests of `nanoFramework.TestFramework.Tooling`.
+- `TestFramework.Tooling.Tests` contains the unit tests for `nanoFramework.TestFramework.Tooling` and `nanoFramework.TestFramework.Tooling.Shared`.
+- `TestFramework.Tooling.BuildTools.Tests` contains the unit tests for `nanoFramework.TestFramework.DebugProjectBuildTool` and `nanoFramework.TestFramework.TestProjectBuildTool`.
+- `TestFramework.TestAdapter.Tests` contains the unit tests for `nanoFramework.TestFramework.TestAdapter`.
+- `TestFramework.Tooling.Tests.Discovery.v2`, `TestFramework.Tooling.Tests.Discovery.v3`, `TestFramework.Tooling.Execution.Execution.v3` and `TestFramework.Tooling.Execution.Hardware_esp32.v3` are modified nanoFramework unit tests projects. The assemblies and project files are used by the unit tests in `TestFramework.Tooling.Tests` and `TestFramework.TestAdapter.Tests`.
 
-And there are additional projects that help with debugging:
-- `TestFramework.Tooling.UnitTestLauncher.Tests` is a nanoFramework application that includes the source code for the unit test launcher that is used for the generation of the unit test launcher. This is not a unit test debug project; no code is generated for this project. Use this project to code and debug the unit test launcher code. The unit tests for the code generation, including running the unit test launcher on a virtual device, are part of `TestFramework.Tooling.Tests`.
-- `nanoFramework.TestFramework.DebugProjectBuildTool` is configured to run and debug the tool for the v3 unit test project from the `poc\NFUnit Test DemoByReference` solution.
-- The v2 `nanoFramework.TestAdapter.sln` solution has been updated to v3. It is a solution to debug the test adapter.
+Some of the unit tests require a connected real hardware device. If no device is available, the test will be skipped. The tests have *@Hardware nanoDevice* as trait, same as for nanoFramework tests that require real hardware. To exclude the tests from the Visual Studio Test Explorer, filter by *-Trait:@Hardware nanoDevice*.
+
+Some of the tests require a computer with multiple (logical) processors to run the test on. The tests have *@Multiple logical processors* as trait.
+
+The unit tests are using the MS Test platform and are configured to run in parallel. This works well if a subset of tests are selected from the Visual Studio Test Explorer to be run. If all tests are selected and run, some tests may fail. The root cause seems to be that the number of asynchronous tasks is so high that some of them start to suffer from hardcoded timeouts. And/or the start of new tasks is delayed so much that the sequence of (parallel) steps in a test is different from the sequence that occurs if the test is run in isolation. However, as some test take quite a while to finish, running all tests one after the other in Visual Studio makes development/maintenance of the code very slow. It is much quicker for a developer to run all tests in parallel, and rerun the few test again that incorrectly failed. For automated tests, MS Test should be configured to have `<Parallelize><Workers>1</Workers></Parallelize>` in the [MSTest runsettings](https://learn.microsoft.com/en-us/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file).
+
+Most of the code can be debugged via the unit tests. There are three exceptions:
+- The code generated for the unit test launcher. Most of the code can be developed and debugged using the auxiliary project `TestFramework.Tooling.UnitTestLauncher.Tests`. It is a nanoFramework application that includes the same source code for the unit test launcher that is used for the generation of the unit test launcher. This is not a unit test debug project; no code generation is done in the project. Use this project to code and debug the unit test launcher code. The unit tests for the code generation, including running the unit test launcher on a virtual device, are part of `TestFramework.Tooling.Tests`.
+- The `nanoFramework.TestFramework.TestHost` can be debugged:
+    - Compile the test host with the `LAUNCHDEBUGGER` symbol
+    - Open the `nanoFramework.TestFramework` solution in two Visual Studio instances.
+    - Use one Visual Studio instance to run/debug one of the tests with trait *Test host*. If the test host starts, a dialog opens; select the other Visual Studio instance (typically the top one) to debug the test host.
+- The `nanoFramework.TestFramework.TestAdapter` can be debugged:
+    - Compile the test adapter with the `LAUNCHDEBUGGER` symbol
+    - Open the `nanoFramework.TestFramework` solution in Visual Studio.
+    - If you want to debug the adapter as used from Visual Studio, open the `poc\By Reference\Demo By Reference` solution. If Visual Studio uses the test adapter, a dialog opens; select the Visual Studio instance with the `nanoFramework.TestFramework` solution to debug the adapter.
+    - If you want to debug the adapter as used from the VSTest command line, use one of the `poc\By Reference\VSTest.*` scripts. If VSTest uses the test adapter, a dialog opens; select the Visual Studio instance with the `nanoFramework.TestFramework` solution to debug the adapter.
 
 ## Changes to the software architecture
 
@@ -169,13 +182,9 @@ Other architectural changes/implementation aspects are:
 
     The build task loads unit test assemblies and their dependencies, but does not unload them. It is technically complex to unload assemblies, this would require loading assemblies in a different AppDomain from the discovery software. For performance reasons Visual Studio keeps MSBuild processes alive even after the build. If `nanoFramework.TestFramework.DebugProjectBuildTool` was implemented as a build task, the unit test assemblies and dependencies are locked and cannot be overwritten by subsequent builds. The easiest way to solve that is to make the build task an application that ends (and unloads the assemblies) after its work is done. A second reason is potential assembly/platform version conflicts, the same issue the test adapter suffered from and that was solved by introducing a custom test host.
 
-- A full suite of unit tests covers the functionality in `TestFramework.Tooling`
+- A full suite of unit tests covers the functionality in the various code libraries.
 
-    The motivation to work on v3 was that de contributor would like to improve the nanoFramework because unit testing is so important. The contributor would not be taken seriously if the v3 code was not sufficiently be covered by unit tests. As most heavy lifting is done by `TestFramework.Tooling`, that class library is the main target of the tests. Including running the generated code in a virtual device, parsing and asserting the output as part of the execution of the unit tests.
-
-    The unit tests for the test adapter assert the communication between the 
-
-    The new build task `nanoFramework.TestFramework.DebugProjectBuildTool` can be tested by running it. Included is the set of command line arguments for the *Smart command line arguments* VS-extension that runs the task for the hands-on debug project *poc\TestOfTestDebugProjectByReference*.
+    The motivation to work on v3 was that the contributor would like to improve the nanoFramework because unit testing is so important. The contributor would not be taken seriously if the v3 code was not sufficiently covered by unit tests. As most heavy lifting is done by `TestFramework.Tooling`, that class library is the main target of the tests. Including running the generated code in a virtual device, parsing and asserting the output as part of the execution of the unit tests. The unit tests for the test adapter assert the communication between the test adapter and the host that runs the tooling, and tests the test host. There are no automated tests to test the interaction between Visual Studio/VSTest and the test adapter, but those interactions can be debugged.
 
 - A hierarchy of .runsettings configuration files that are separate from Visual Studio's .runsettings files.
 
@@ -195,7 +204,11 @@ Other architectural changes/implementation aspects are:
 
 ## Other code changes / implementation considerations
 
-A selection of changes in the code that are not merely a refactoring of the v2 code or new code for implementation of the v3 features, and some technical considerations behind the v3 implementation.
+This section describes a selection of changes in the code that are not merely a refactoring of the v2 code or new code for implementation of the v3 features, and some technical considerations behind the v3 implementation.
+
+- Traits only have a *name* and are not *name=value*, nanoDevice trait starts with @
+
+    The Visual Studio/VSTest object model allows for traits that have the form *name = value*, e.g., nanoDevice = Hardware. If a trait has a non-empty value, is is shown in the Test Explorer as *name=value*, if it has an empty value, just *name* is shown. Other test frameworks have different approaches. MSTest has TestCategory and that is just the *name*, while xUnit allows for *name=value*. The *name=value* option has a problem if *value* is empty, as it is not possible to select or omit the test in a test case filter for VSTest because of an issue in VSTest. A trait that has *name=value* where *name* is fixed by the framework (e.g., *nanoDevice*) clutters the list of traits in the Test Explorer. Not surprisingly, VSTest/Visual Studio seems to work best with the MSTest use of traits (just *name*), so that is also chosen for the nanoFramework test framework. The only special type of trait is the type of device a test should run on. It is prefixed with a "@" to mark its special role. Another advantage is that the traits used in the test framework can be reproduced in all other test frameworks. As an example, the *@Hardware nanoDevice* and *@Virtual nanoDevice* categories are also used in the MSTest unit tests for the test framework to indicate that a nanoDevice is required for the tests.
 
 - AssertException is now in the nanoFramework.TestFramework namespace
 
@@ -207,13 +220,13 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 
 - Test classes are instantiated if they are not static
 
-    This is also true for v2 test projects that are run using the v3 test adapter/framework. The backward compatibility of v2 projects that are upgraded to the v3 test adapter/test framework is obtained by a smart choice of the defaults for the new test attributes. It is not possible to detect whether the test project should be run in a "backward compatible way".
+    This is also true for migrated v2 test projects that are run using the v3 test adapter/framework. The backward compatibility of v2 projects that are upgraded to the v3 test adapter/test framework is obtained by a smart choice of the defaults for the new test attributes. It is not possible to detect whether the test project should be run in a "backward compatible way".
 
 - Attributes for the whole assembly must be applied to a special global type rather than to the assembly.
 
     Initially it was considered to use assembly attributes for annotations that are valid for an entire test project. This is in line with other test projects. Candidates for assembly attributes are test categories (assembly attributes in MSTest, xUnit as well) and the attributes that determine on what device the unit tests should be executed.
 
-    Unfortunately that turned out to be impossible. The discovery of test framework attributes is possible only because the test framework uses only classes from nanoFramework's mscorlib. When the unit test assembly is loaded, the .NET Framework implementation (in which the discovery process is running) maps all types from nanoFramework's mscorlib to .NET Framework 4's mscorlib. This works amazingly well for the required types (attribute base type, string operations, etc.) But there is one attribute type in nanoFramework's mscorlib that is not present in .NET Framework 4's mscorlib and that is always present in nanoFramework assemblies: `System.Reflection.AssemblyNativeVersionAttribute`. As a consequence, the discovery process cannot retrieve the assembly attributes from the test assembly - every attempt to do that results in an exception. It would be quite complex to work around this to get to the assembly attributes.
+    Unfortunately that turned out to be impossible. The discovery of test framework attributes is possible only because the test framework uses only classes from nanoFramework's mscorlib. When the unit test assembly is loaded, the .NET Framework implementation (in which the discovery process is running) maps all types from nanoFramework's mscorlib to .NET Framework 4's mscorlib. This works amazingly well for the required types (attribute base type, string operations, etc.) But there is one attribute type in nanoFramework's mscorlib that is not present in .NET Framework 4's mscorlib and that is always present in nanoFramework assemblies: `System.Reflection.AssemblyNativeVersionAttribute`. As a consequence, the discovery process cannot retrieve the assembly attributes from the test assembly - every attempt to do that results in an exception. It would be quite complex to work around this to get to the assembly attributes. (A work around is applied to get assembly metadata for each naoFramework assembly, but that is a much less complex use case.)
 
     The easiest workaround is to define a special class that should be defined in the test assembly and apply the attributes to that class. As all attributes are then applied to classes or methods that are specifically designed for test purposes, there is minimal risk that attribute retrieval in the discovery process suffers from the issue of missing types or type conflicts.
 
@@ -227,11 +240,11 @@ A selection of changes in the code that are not merely a refactoring of the v2 c
 
 - The unit test launcher uses the type of test classes and the name of methods
 
-    The code for the unit test launcher is generated based on the results of the discovery process. It does not have to re-analyze the classes and methods for test attributes, as the discovery process already provides all required information. Some aspects (device information, but also whether a test class is static = abstract and sealed) cannot be determined by the unit test launcher. It is sufficient to generate code that states: for this class, do/do not instantiate it, run this setup/cleanup method, run these test methods, apply these data row attributes. A first idea was to identify the classes, methods and data row attributes by their index in the enumeration of types in the assembly, methods in the class, attribute in the list of attributes. This is apparently not robust as classes (and methods?) may be removed from the assembly in the conversion to .pe assembly. Instead the `typeof (testclass)` is used and `nameof(method)`, and the index of the data row attribute among the IDataRow-implementing attributes. This seems to be the most robust (compiler/Roslyn will detect type/name conflicts), has most selection-related data on ROM rather than RAM, and eliminates the need to use the name of the test assembly.
+    The code for the unit test launcher is generated based on the results of the discovery process. It does not have to re-analyze the classes and methods for test attributes, as the discovery process already provides all required information. Some aspects (device information, but also whether a test class is static = abstract and sealed) cannot be determined by the unit test launcher. It is sufficient to generate code that states: for this class, do/do not instantiate it, run this setup/cleanup method, run these test methods, apply these data row attributes. A first idea was to identify the classes, methods and data row attributes by their index in the enumeration of types in the assembly, methods in the class, attribute in the list of attributes. This is apparently not robust as classes (and methods?) may be removed from the assembly in the conversion to .pe assembly. Instead the `typeof (testclass)` is used and `nameof(method)`, and the index of the data row attribute among the IDataRow-implementing attributes. This seems to be the most robust (compiler/Roslyn will detect type/name conflicts), has most selection-related data in ROM rather than RAM, and eliminates the need to use the name of the test assembly.
 
 - The unit test launcher uses static data for deployment configuration ("make and model")
 
-    If a test class setup requires deployment configuration data, it is added as `const string` / `static readonly byte[]` to the generated code. Not sure if that is the best way, at least the data is stored in ROM/metadata and not in RAM. The alternative (store as resource) cannot be implemented because the tools to create both the resource manager code and the resources is only part of the Visual Studio extension and cannot be used as a stand-alone tool.
+    If a test class setup requires deployment configuration data, it is added as `const string` / `static readonly byte[]` to the generated code. Not sure if that is the best way, at least the data is stored in ROM/metadata and not in RAM. The alternative (store as resource) cannot be implemented because the tools to create both the resource manager code and the resources is only part of the Visual Studio extension and cannot be used as a stand-alone tool, which is required to generate the unit test launcher at runtime.
 
 - The relation between the deployment configuration ("make and model") and a device must be assigned by hand
 

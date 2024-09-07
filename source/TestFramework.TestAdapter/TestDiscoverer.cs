@@ -21,12 +21,20 @@ namespace nanoFramework.TestFramework.TestAdapter
     {
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
         {
+#if DEBUG
+#if LAUNCHDEBUGGER
+            if (!Debugger.IsAttached)
+            {
+                Debugger.Launch();
+            }
+#endif
+#endif
             var logMessenger = new TestAdapterLogger(logger);
 
             TestHost.Start(
                 new TestDiscoverer_Parameters()
                 {
-                    Sources = sources.ToList(),
+                    AssemblyFilePaths = sources.ToList(),
                     LogLevel = (int)LoggingLevel.Verbose
                 },
                 (m, l, c) => ProcessTestHostMessage(m, discoverySink),
@@ -36,6 +44,10 @@ namespace nanoFramework.TestFramework.TestAdapter
         }
 
         private static void ProcessTestHostMessage(InterProcessCommunicator.IMessage message, ITestCaseDiscoverySink discoverySink)
+        {
+            ProcessTestHostMessage(message, testCase => discoverySink.SendTestCase(testCase));
+        }
+        internal static void ProcessTestHostMessage(InterProcessCommunicator.IMessage message, Action<TestCase> addTestCase)
         {
             if (message is TestDiscoverer_DiscoveredTests tests)
             {
@@ -49,15 +61,13 @@ namespace nanoFramework.TestFramework.TestAdapter
                         LineNumber = testCaseData.LineNumber ?? 0,
                     };
 
-                    if (!(testCase.Traits is null))
+                    if ((testCaseData.Categories?.Count ?? 0) > 0)
                     {
-                        foreach (Trait trait in testCase.Traits)
-                        {
-                            testCase.Traits.Add(trait);
-                        }
+                        testCase.Traits.AddRange(from category in testCaseData.Categories
+                                                 select new Trait(category, ""));
                     }
 
-                    discoverySink.SendTestCase(testCase);
+                    addTestCase(testCase);
                 }
             }
         }

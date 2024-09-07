@@ -20,28 +20,32 @@ namespace nanoFramework.TestFramework.Tooling.Tools
         public static readonly Type[] Types = new Type[]
         {
             typeof(TestDiscoverer_Parameters), typeof(TestDiscoverer_DiscoveredTests),
+            typeof(TestExecutor_Sources_Parameters), typeof(TestExecutor_Sources_Done), typeof(TestExecutor_Sources_RunAll),
             typeof(TestExecutor_TestCases_Parameters), typeof(TestExecutor_TestResults)
         };
     }
 
     #region TestDiscoverer
     /// <summary>
-    /// Parameters to start the discovery of tests with.
+    /// Parameters to start the discovery of tests with. The test host should reply with
+    /// ome or more <see cref="TestDiscoverer_DiscoveredTests"/> messages.
+    /// This is typically used by Visual Studio.
     /// </summary>
     public sealed class TestDiscoverer_Parameters : ChildProcess_Parameters, InterProcessCommunicator.IMessage
     {
         /// <summary>
         /// The path of the assemblies to examine to discover unit tests
         /// </summary>
-        [JsonProperty("S")]
-        public List<string> Sources
+        [JsonProperty("A")]
+        public List<string> AssemblyFilePaths
         {
             get; set;
         }
     }
 
     /// <summary>
-    /// (Partial) result of the test discovery
+    /// (Partial) result of the test discovery. Sent by the test host in response to
+    /// <see cref="TestDiscoverer_Parameters"/> or <see cref="TestExecutor_Sources_Parameters"/>.
     /// </summary>
     public sealed class TestDiscoverer_DiscoveredTests : InterProcessCommunicator.IMessage
     {
@@ -115,7 +119,54 @@ namespace nanoFramework.TestFramework.Tooling.Tools
 
     #region TestExecutor
     /// <summary>
-    /// Parameters to start the execution of a selection of previously discovered tests with
+    /// Parameters to start the execution of a selection of test assemblies for which the tests have not yet
+    /// been discovered. The test host should reply with ome or more
+    /// <see cref="TestDiscoverer_DiscoveredTests"/> message and a <see cref="TestExecutor_Sources_Done"/>
+    /// message.
+    /// This is typically used by VSTest as used from the command line.
+    /// </summary>
+    public sealed class TestExecutor_Sources_Parameters : ChildProcess_Parameters, InterProcessCommunicator.IMessage
+    {
+        /// <summary>
+        /// The path to the assemblies that (may) contain the tests.
+        /// </summary>
+        [JsonProperty("A")]
+        public List<string> AssemblyFilePaths
+        {
+            get; set;
+        }
+    }
+
+    /// <summary>
+    /// Message sent by the test host in response to the <see cref="TestExecutor_Sources_Parameters"/>
+    /// message. The test adapter responds by sending the <see cref="TestExecutor_TestCases_Parameters"/>
+    /// or <see cref="TestExecutor_Sources_RunAll"/> message.
+    /// </summary>
+    public sealed class TestExecutor_Sources_Done : InterProcessCommunicator.IMessage
+    {
+        /// <summary>
+        /// The total number  <see cref="TestDiscoverer_DiscoveredTests"/> message.
+        /// </summary>
+        [JsonProperty("N")]
+        public int NumberOfTestCases
+        {
+            get; set;
+        }
+    }
+
+    /// <summary>
+    /// Message sent by the test adapter in response to the <see cref="TestExecutor_Sources_Done"/>
+    /// message to start the execution of all previously discovered tests.
+    /// The test host should reply with one or more <see cref="TestExecutor_TestResults"/> messages.
+    /// </summary>
+    public sealed class TestExecutor_Sources_RunAll : InterProcessCommunicator.IMessage
+    {
+    }
+
+    /// <summary>
+    /// Parameters to start the execution of a selection of previously discovered tests with.
+    /// The test host should reply with one or more <see cref="TestExecutor_TestResults"/> messages.
+    /// This is typically used by Visual Studio, or as a response to the <see cref="TestExecutor_Sources_Done"/> message.
     /// </summary>
     public sealed class TestExecutor_TestCases_Parameters : ChildProcess_Parameters, InterProcessCommunicator.IMessage
     {
@@ -153,7 +204,7 @@ namespace nanoFramework.TestFramework.Tooling.Tools
         }
 
         /// <summary>
-        /// Get the test cases to execute.
+        /// The test cases to execute.
         /// </summary>
         [JsonProperty("T")]
         public List<TestCase> TestCases
@@ -241,7 +292,7 @@ namespace nanoFramework.TestFramework.Tooling.Tools
         public string ComputerName { get; set; }
 
         /// <summary>
-        /// Get the test results.
+        /// The test results.
         /// </summary>
         [JsonProperty("R")]
         public List<TestResult> TestResults

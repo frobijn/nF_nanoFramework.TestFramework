@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.TestFrameworkProxy;
 using TestFramework.Tooling.Tests.Helpers;
@@ -23,53 +24,6 @@ namespace TestFramework.Tooling.Tests
     {
         #region TestFramework.Tooling.Tests.Discovery.v2
         [TestMethod]
-        public void TestCases_Discovery_v2_VirtualDevice()
-        {
-            string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
-            string assemblyFilePath = TestProjectHelper.FindNFUnitTestAssembly(projectFilePath);
-            var logger = new LogMessengerMock();
-            string pathPrefix = Path.GetDirectoryName(projectFilePath) + Path.DirectorySeparatorChar;
-
-            var actual = new TestCaseCollection(assemblyFilePath, false, projectFilePath, logger);
-
-            Assert.IsNotNull(actual.TestCases);
-            logger.AssertEqual(
-$@"Detailed: {pathPrefix}TestAllCurrentAttributes.cs(13,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
-Detailed: {pathPrefix}TestAllCurrentAttributes.cs(19,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
-Detailed: {pathPrefix}TestWithMethods.cs(9,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.
-Detailed: {pathPrefix}TestWithMethods.cs(14,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.");
-
-            AssertTestCaseCollectionFQNDisplayName(actual.TestCases,
-$@"G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
-G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
-G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
-G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
-G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'");
-
-            AssertSourceLocationCategories(actual.TestCases,
-$@"G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
-G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
-G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device' DC()
-G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device' DC()
-G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device' DC()");
-
-            AssertRunInformation(actual.TestCases,
-$@"G000T000 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G000T001D00 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G000T001D01 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G001T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G001T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2");
-
-            // No test case for real hardware, only virtual device
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where tc.ShouldRunOnRealHardware
-                                select tc).Count());
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where !tc.ShouldRunOnVirtualDevice
-                                select tc).Count());
-        }
-
-        [TestMethod]
         public void TestCases_Discovery_v2_VirtualDevice_RealHardware()
         {
             string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
@@ -77,7 +31,7 @@ G001T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             var logger = new LogMessengerMock();
             string pathPrefix = Path.GetDirectoryName(projectFilePath) + Path.DirectorySeparatorChar;
 
-            var actual = new TestCaseCollection(assemblyFilePath, true, projectFilePath, logger);
+            var actual = new TestCaseCollection(assemblyFilePath, projectFilePath, logger);
 
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
@@ -87,28 +41,28 @@ Detailed: {pathPrefix}TestWithMethods.cs(9,21): Warning: Method, class and assem
 Detailed: {pathPrefix}TestWithMethods.cs(14,21): Warning: Method, class and assembly have no attributes to indicate on what device the test should be run. The defaults will be used.");
 
             AssertTestCaseCollectionFQNDisplayName(actual.TestCases,
-$@"G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
-G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
-G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
-G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
-G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
-G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
-G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
-G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
-G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
-G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'");
+$@"G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [{Constants.VirtualDevice_Description}]'
+G000T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [{Constants.RealHardware_Description}]'
+G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}]'
+G000T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [{Constants.RealHardware_Description}]'
+G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}]'
+G000T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [{Constants.RealHardware_Description}]'
+G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [{Constants.VirtualDevice_Description}]'
+G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [{Constants.RealHardware_Description}]'
+G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [{Constants.VirtualDevice_Description}]'
+G001T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [{Constants.RealHardware_Description}]'");
 
             AssertSourceLocationCategories(actual.TestCases,
-$@"G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
-G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Real hardware' DC()
-G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
-G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Real hardware' DC()
-G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device' DC()
-G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Real hardware' DC()
-G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '@Virtual Device' DC()
-G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '@Real hardware' DC()
-G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '@Virtual Device' DC()
-G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '@Real hardware' DC()");
+$@"G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G000T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '{Constants.RealHardware_TestCategory}' DC()
+G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '{Constants.VirtualDevice_TestCategory}' DC()
+G000T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '{Constants.RealHardware_TestCategory}' DC()
+G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '{Constants.VirtualDevice_TestCategory}' DC()
+G000T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '{Constants.RealHardware_TestCategory}' DC()
+G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G001T000 @{pathPrefix}TestWithMethods.cs(9,21) '{Constants.RealHardware_TestCategory}' DC()
+G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G001T001 @{pathPrefix}TestWithMethods.cs(14,21) '{Constants.RealHardware_TestCategory}' DC()");
 
             AssertRunInformation(actual.TestCases,
 $@"G000T000 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
@@ -151,7 +105,7 @@ G001T001 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             var logger = new LogMessengerMock();
             string pathPrefix = Path.GetDirectoryName(projectFilePath) + Path.DirectorySeparatorChar;
 
-            var actual = new TestCaseCollection(assemblyFilePath, true, projectFilePath, logger);
+            var actual = new TestCaseCollection(assemblyFilePath, projectFilePath, logger);
 
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
@@ -162,56 +116,56 @@ Warning: {pathPrefix}TestWithALotOfErrors.cs(41,21): Warning: No other attribute
 Error: {pathPrefix}TestWithALotOfErrors.cs(55,10): Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements 'IDeploymentConfiguration'.");
 
             AssertTestCaseCollectionFQNDisplayName(actual.TestCases,
-$@"G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Virtual Device]'
-G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [Real hardware]'
-G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Virtual Device]'
-G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [Real hardware]'
-G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Virtual Device]'
-G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [Real hardware]'
-G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Virtual Device]'
-G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [Real hardware]'
-G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Virtual Device]'
-G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [Real hardware]'
-G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Virtual Device]'
-G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [Real hardware]'
-G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Virtual Device]'
-G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [Real hardware]'
-G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Virtual Device]'
-G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [Real hardware]'
-G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Virtual Device]'
-G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [Real hardware]'
-G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Virtual Device]'
-G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [Real hardware]'
-G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories [Virtual Device]'
-G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories [Real hardware]'
-G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Virtual Device]'
-G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [Real hardware]'");
+$@"G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [{Constants.VirtualDevice_Description}]'
+G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod [{Constants.RealHardware_Description}]'
+G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}]'
+G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1) [{Constants.RealHardware_Description}]'
+G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}]'
+G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2) [{Constants.RealHardware_Description}]'
+G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [{Constants.VirtualDevice_Description}]'
+G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method [{Constants.RealHardware_Description}]'
+G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [{Constants.VirtualDevice_Description}]'
+G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1 [{Constants.RealHardware_Description}]'
+G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [{Constants.VirtualDevice_Description}]'
+G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2 [{Constants.RealHardware_Description}]'
+G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [{Constants.VirtualDevice_Description}]'
+G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray [{Constants.RealHardware_Description}]'
+G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}]'
+G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile [{Constants.RealHardware_Description}]'
+G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [{Constants.VirtualDevice_Description}]'
+G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test [{Constants.RealHardware_Description}]'
+G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [{Constants.VirtualDevice_Description}]'
+G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2 [{Constants.RealHardware_Description}]'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories [{Constants.VirtualDevice_Description}]'
+G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories [{Constants.RealHardware_Description}]'
+G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [{Constants.VirtualDevice_Description}]'
+G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods [{Constants.RealHardware_Description}]'");
 
             AssertSourceLocationCategories(actual.TestCases,
-$@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
-G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@TEST', '@Real hardware' DC()
-G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
-G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@TEST', '@Real hardware' DC()
-G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device' DC()
-G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@TEST', '@Real hardware' DC()
-G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device' DC()
-G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@TEST', '@Real hardware' DC()
-G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device' DC()
-G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@TEST', '@Real hardware' DC()
-G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device' DC()
-G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@TEST', '@Real hardware' DC()
-G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device' DC()
-G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@TEST', '@Real hardware' DC()
-G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device' DC()
-G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@TEST', '@DeviceWithSomeFile', '@Real hardware' DC()
-G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '@Virtual Device' DC()
-G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '@TEST', '@Real hardware' DC()
-G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '@Virtual Device' DC(Byte[] 'Make and model')
-G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '@TEST', '@Real hardware' DC(Byte[] 'Make and model')
-G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device' DC()
-G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@TEST', '@Real hardware' DC()
-G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@Virtual Device' DC(Int32 'RGB LED pin', Int64 'Device ID')
-G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@TEST', '@ESP32', '@Real hardware' DC(Int32 'RGB LED pin', Int64 'Device ID')");
+$@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '{Constants.VirtualDevice_TestCategory}' DC()
+G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '{Constants.VirtualDevice_TestCategory}' DC()
+G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '{Constants.VirtualDevice_TestCategory}' DC()
+G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@TEST', '@DeviceWithSomeFile', '{Constants.RealHardware_TestCategory}' DC()
+G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '{Constants.VirtualDevice_TestCategory}' DC(Byte[] 'Make and model')
+G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '@TEST', '{Constants.RealHardware_TestCategory}' DC(Byte[] 'Make and model')
+G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '{Constants.VirtualDevice_TestCategory}' DC()
+G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@TEST', '{Constants.RealHardware_TestCategory}' DC()
+G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '{Constants.VirtualDevice_TestCategory}' DC(Int32 'RGB LED pin', Int64 'Device ID')
+G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@TEST', '@ESP32', '{Constants.RealHardware_TestCategory}' DC(Int32 'RGB LED pin', Int64 'Device ID')");
 
             AssertRunInformation(actual.TestCases,
 $@"G001T000 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
@@ -257,75 +211,6 @@ G007T001 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
                 }
             }
         }
-
-        [TestMethod]
-        public void TestCases_Discovery_v3_NoRealHardware()
-        {
-            string projectFilePath = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v3");
-            string assemblyFilePath = TestProjectHelper.FindNFUnitTestAssembly(projectFilePath);
-            var logger = new LogMessengerMock();
-            string pathPrefix = Path.GetDirectoryName(projectFilePath) + Path.DirectorySeparatorChar;
-
-            var actual = new TestCaseCollection(assemblyFilePath, false, projectFilePath, logger);
-
-            Assert.IsNotNull(actual.TestCases);
-            logger.AssertEqual(
-$@"Warning: {pathPrefix}TestWithALotOfErrors.cs(10,6): Warning: Only one attribute that implements 'ITestClass' is allowed. Only the first one is used, subsequent attributes are ignored.
-Error: {pathPrefix}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.
-Error: {pathPrefix}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.
-Warning: {pathPrefix}TestWithALotOfErrors.cs(41,21): Warning: No other attributes are allowed when the attributes that implement 'ICleanup'/'IDeploymentConfiguration'/'ISetup' are present. Extra attributes are ignored.
-Error: {pathPrefix}TestWithALotOfErrors.cs(55,10): Error: The number of arguments of the method does not match the number of configuration keys specified by the attribute that implements 'IDeploymentConfiguration'.");
-
-            AssertTestCaseCollectionFQNDisplayName(actual.TestCases,
-$@"G001T000 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod 'TestMethod'
-G001T001D00 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(1,1)'
-G001T001D01 TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1 'TestMethod1(2,2)'
-G002T000 TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method 'Method'
-G003T000 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1 'Method1'
-G003T001 TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2 'Method2'
-G005T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray 'TestThatIsNowInDisarray'
-G005T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile 'TestOnDeviceWithSomeFile'
-G006T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test 'Test'
-G006T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 'Test2'
-G007T000 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories 'MethodWithCategories'
-G007T001 TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods 'MethodWithNewTestMethods'");
-
-            AssertSourceLocationCategories(actual.TestCases,
-$@"G001T000 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual Device' DC()
-G001T001D00 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@Virtual Device' DC()
-G001T001D01 @{pathPrefix}TestAllCurrentAttributes.cs(18,10) '@Virtual Device' DC()
-G002T000 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual Device' DC()
-G003T000 @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual Device' DC()
-G003T001 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual Device' DC()
-G005T000 @{pathPrefix}TestWithFrameworkExtensions.cs(13,21) '@Virtual Device' DC()
-G005T001 @{pathPrefix}TestWithFrameworkExtensions.cs(19,21) '@Virtual Device' DC()
-G006T000 @{pathPrefix}TestWithMethods.cs(16,21) '@Virtual Device' DC()
-G006T001 @{pathPrefix}TestWithMethods.cs(21,21) '@Virtual Device' DC(Byte[] 'Make and model')
-G007T000 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual Device' DC()
-G007T001 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@Virtual Device' DC(Int32 'RGB LED pin', Int64 'Device ID')");
-
-            AssertRunInformation(actual.TestCases,
-$@"G001T000 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-G001T001D00 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G001T001D01 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1
-G002T000 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.StaticTestClass.Method
-G003T000 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1
-G003T001 RH=False VD=True GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method2
-G005T000 RH=False VD=True GS=Setup(String 'xyzzy', Int64 'Device ID', Int32 'Address') GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestThatIsNowInDisarray
-G005T001 RH=False VD=True GS=Setup(String 'xyzzy', Int64 'Device ID', Int32 'Address') GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-G006T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-G006T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-G007T000 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories
-G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods");
-
-            // No test case for real hardware
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where tc.ShouldRunOnRealHardware
-                                select tc).Count());
-            Assert.AreEqual(0, (from tc in actual.TestCases
-                                where !tc.ShouldRunOnVirtualDevice
-                                select tc).Count());
-        }
         #endregion
 
         #region TestFramework.Tooling.Tests.Hardware_esp32.v3
@@ -341,7 +226,7 @@ G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
             var logger = new LogMessengerMock();
             string pathPrefix = Path.GetDirectoryName(projectFilePath) + Path.DirectorySeparatorChar;
 
-            var actual = new TestCaseCollection(assemblyFilePath, true, projectFilePath, logger);
+            var actual = new TestCaseCollection(assemblyFilePath, projectFilePath, logger);
 
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual("");
@@ -350,7 +235,7 @@ G007T001 RH=False VD=True GS= GC= FQN=TestFramework.Tooling.Tests.NFUnitTest.Tes
 $@"G000T000 TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly 'UseEsp32NativeAssembly'");
 
             AssertSourceLocationCategories(actual.TestCases,
-$@"G000T000 @{pathPrefix}HardwareSpecificTest.cs(18,21) '@ESP32', '@Real hardware' DC()");
+$@"G000T000 @{pathPrefix}HardwareSpecificTest.cs(18,21) '@ESP32', '{Constants.RealHardware_TestCategory}' DC()");
 
             AssertRunInformation(actual.TestCases,
 $@"G000T000 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly");
@@ -372,7 +257,6 @@ $@"G000T000 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Hardware_esp32.Te
             var logger = new LogMessengerMock();
             var actual = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath3, assemblyFilePath2 },
                                                 (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
-                                                true,
                                                 logger);
             Assert.IsNotNull(actual.TestCases);
             logger.AssertEqual(
@@ -423,11 +307,9 @@ $@"{assemblyFilePath1} #5
 
             var withLogger = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath3, assemblyFilePath2 },
                                                     (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
-                                                    true,
                                                     new LogMessengerMock());
             var actual = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath3, assemblyFilePath2 },
                                                 (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
-                                                true,
                                                 null);
             Assert.IsNotNull(actual.TestCases);
             Assert.AreEqual(withLogger.TestCases.Count(), actual.TestCases.Count());
@@ -447,13 +329,11 @@ $@"{assemblyFilePath1} #5
 
             var withLogger = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath3, assemblyFilePath2 },
                                                     (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
-                                                    true,
                                                     logger);
 
             logger = new LogMessengerMock();
             var actual = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath3, assemblyFilePath2 },
                                                 (f) => null,
-                                                true,
                                                 logger);
             Assert.IsNotNull(actual.TestCases);
             Assert.AreEqual(withLogger.TestCases.Count(), actual.TestCases.Count());
@@ -462,11 +342,7 @@ $@"{assemblyFilePath1} #5
 
         #region Selection
         [TestMethod]
-        [DataRow(true, true)]
-        [DataRow(true, false)]
-        [DataRow(false, true)]
-        [DataRow(false, false)]
-        public void TestCases_NFUnitTests_SelectAll(bool originalAllowHardware, bool selectionAllowHardware)
+        public void TestCases_NFUnitTests_SelectAllByProperties()
         {
             string projectFilePath1 = TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Discovery.v2");
             string assemblyFilePath1 = TestProjectHelper.FindNFUnitTestAssembly(projectFilePath1);
@@ -476,7 +352,6 @@ $@"{assemblyFilePath1} #5
             var logger = new LogMessengerMock();
             var original = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath2 },
                                                   (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
-                                                  originalAllowHardware,
                                                   logger);
             if (original.TestCases.Count() == 0)
             {
@@ -491,7 +366,6 @@ $@"{assemblyFilePath1} #5
             logger = new LogMessengerMock();
             var actual = new TestCaseCollection(selectionSpecification,
                                                 (f) => ProjectSourceInventory.FindProjectFilePath(f, logger),
-                                                selectionAllowHardware,
                                                 logger);
 
             // Assert that there are no selection-related messages
@@ -501,7 +375,6 @@ $@"{assemblyFilePath1} #5
             Assert.AreEqual(
                 string.Join("\n",
                     from tc in original.TestCases
-                    where tc.ShouldRunOnVirtualDevice || (originalAllowHardware && selectionAllowHardware && tc.ShouldRunOnRealHardware)
                     orderby tc.AssemblyFilePath, tc.TestCaseId, tc.ShouldRunOnVirtualDevice ? 0 : 1
                     select $"{tc.TestCaseId} ({tc.FullyQualifiedName}) {s_stripDevice.Replace(tc.DisplayName, "")} VD={tc.ShouldRunOnVirtualDevice} RH={tc.ShouldRunOnRealHardware}"
                 ) + '\n',
@@ -525,7 +398,7 @@ $@"{assemblyFilePath1} #5
 
                     int idx = testCase.DisplayName.IndexOf('[');
                     string displayBaseName = idx < 0 ? testCase.DisplayName : testCase.DisplayName.Substring(0, idx).Trim();
-                    string deviceName = $"{displayBaseName} [Virtual Device]";
+                    string deviceName = $"{displayBaseName} [{Constants.VirtualDevice_Description}]";
                     Assert.IsTrue(displayName == displayBaseName || displayName == deviceName);
                 }
             }
@@ -541,7 +414,7 @@ $@"{assemblyFilePath1} #5
 
                     int idx = testCase.DisplayName.IndexOf('[');
                     string displayBaseName = idx < 0 ? testCase.DisplayName : testCase.DisplayName.Substring(0, idx).Trim();
-                    string deviceName = $"{displayBaseName} [Real hardware]";
+                    string deviceName = $"{displayBaseName} [{Constants.RealHardware_Description}]";
                     Assert.IsTrue(DisplayName == displayBaseName || DisplayName == deviceName);
                 }
             }
@@ -560,7 +433,6 @@ $@"{assemblyFilePath1} #5
             var logger = new LogMessengerMock();
             var original = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath2 },
                                                   (f) => ProjectSourceInventory.FindProjectFilePath(f, null),
-                                                  true,
                                                   logger);
             if (original.TestCases.Count() == 0)
             {
@@ -573,15 +445,14 @@ $@"{assemblyFilePath1} #5
             var actual = new TestCaseCollection(
                 new (string, string, string)[]
                 {
-                    (assemblyFilePath1, "TestMethod1(1,1) [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1"),
-                    (assemblyFilePath1, "TestMethod1(2,2) [some_platform]", "TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1"),
-                    (assemblyFilePath1, "NoSuchMethod", "TestFramework.Tooling.Tests.NFUnitTest.NoSuchClass.NoSuchMethod"),
-                    (assemblyFilePath2, "MethodWithCategories [Virtual Device]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories"),
-                    (assemblyFilePath2, "MethodWithCategories [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories"),
-                    (assemblyFilePath1, "Method2 [Real hardware]", "TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2"),
+                    (assemblyFilePath1, $"TestMethod1(1,1) [{Constants.RealHardware_Description}]", "TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1"),
+                    (assemblyFilePath1, $"TestMethod1(2,2) [some_platform]", "TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1"),
+                    (assemblyFilePath1, $"NoSuchMethod", "TestFramework.Tooling.Tests.NFUnitTest.NoSuchClass.NoSuchMethod"),
+                    (assemblyFilePath2, $"MethodWithCategories [{Constants.VirtualDevice_Description}]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories"),
+                    (assemblyFilePath2, $"MethodWithCategories [{Constants.RealHardware_Description}]", "TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories"),
+                    (assemblyFilePath1, $"Method2 [{Constants.RealHardware_Description}]", "TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2"),
                 },
                 (f) => ProjectSourceInventory.FindProjectFilePath(f, logger),
-                true,
                 logger);
 
             // Assert the selection-related messages
@@ -589,13 +460,13 @@ $@"{assemblyFilePath1} #5
                 expectedDiscoveryMessages +
 $@"Verbose: Test case 'TestMethod1(2,2) [some_platform]' (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) from '{assemblyFilePath1}' is no longer available
 Verbose: Test case 'NoSuchMethod' (TestFramework.Tooling.Tests.NFUnitTest.NoSuchClass.NoSuchMethod) from '{assemblyFilePath1}' is no longer available
-Verbose: Test case 'Method2 [Real hardware]' (TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2) from '{assemblyFilePath1}' is no longer available");
+Verbose: Test case 'Method2 [{Constants.RealHardware_Description}]' (TestFramework.Tooling.Tests.NFUnitTest.TestClassInstantiatePerMethodRunInParallel.Method2) from '{assemblyFilePath1}' is no longer available");
 
             // Assert that the selected test case are present
             Assert.AreEqual(
-@"G000T001D00 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [Real hardware]
-G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories) MethodWithCategories [Virtual Device]
-G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories) MethodWithCategories [Real hardware]
+$@"G000T001D00 (TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1) TestMethod1(1,1) [{Constants.RealHardware_Description}]
+G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories) MethodWithCategories [{Constants.VirtualDevice_Description}]
+G007T000 (TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithCategories) MethodWithCategories [{Constants.RealHardware_Description}]
 ".Replace("\r\n", "\n"),
                 string.Join("\n",
                     from tc in actual.TestCases

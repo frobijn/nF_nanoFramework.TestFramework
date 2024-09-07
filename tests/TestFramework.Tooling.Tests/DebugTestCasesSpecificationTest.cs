@@ -332,7 +332,7 @@ namespace TestFramework.Tooling.Tests
             var logger = new LogMessengerMock();
             var testCases = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath2, assemblyFilePath3 },
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
-                true, logger);
+                logger);
             logger.AssertEqual(
 $@"Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.
 Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.
@@ -540,7 +540,7 @@ Error: {Path.GetDirectoryName(projectFilePath2)}{Path.DirectorySeparatorChar}Tes
             var logger = new LogMessengerMock();
             var testCases = new TestCaseCollection(new string[] { assemblyFilePath1, assemblyFilePath2 },
                 (a) => ProjectSourceInventory.FindProjectFilePath(a, logger),
-                true, logger);
+                logger);
             logger.AssertEqual(
 $@"Error: {Path.GetDirectoryName(projectFilePath1)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(13,17): Error: An argument of the method must be of type 'byte[]', 'int', 'long' or 'string'.
 Error: {Path.GetDirectoryName(projectFilePath1)}{Path.DirectorySeparatorChar}TestWithALotOfErrors.cs(25,10): Error: A cleanup method cannot have an attribute that implements 'IDeploymentConfiguration' - the attribute is ignored.

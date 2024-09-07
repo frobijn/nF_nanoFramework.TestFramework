@@ -1,11 +1,13 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Diagnostics;
-using System.Threading;
-using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tooling.Tools;
+
+#if DEBUG
+#if LAUNCHDEBUGGER
+using System.Diagnostics;
+#endif
+#endif
 
 namespace nanoFramework.TestFramework.TestHost
 {
@@ -13,26 +15,17 @@ namespace nanoFramework.TestFramework.TestHost
     {
         static void Main(string[] args)
         {
-            if (args.Length > 3 && args[3] == "debug" && !Debugger.IsAttached)
+#if DEBUG
+#if LAUNCHDEBUGGER
+            if (!Debugger.IsAttached)
             {
                 Debugger.Launch();
             }
+#endif
+#endif
             if (args.Length > 2)
             {
-                var testHost = InterProcessChild.Start(args[0], args[1], args[2], TestAdapterMessages.Types, Process);
-                testHost.WaitUntilProcessingIsCompleted();
-            }
-        }
-
-        private static void Process(InterProcessCommunicator.IMessage message, Action<InterProcessCommunicator.IMessage> sendMessage, LogMessenger logger, CancellationToken token)
-        {
-            if (message is TestDiscoverer_Parameters discoverer)
-            {
-                TestAdapterDiscoverer.Run(discoverer, sendMessage, logger);
-            }
-            else if (message is TestExecutor_TestCases_Parameters executeTestCases)
-            {
-                TestAdapterTestCasesExecutor.Run(executeTestCases, sendMessage, logger, token);
+                TestAdapter.Run(args[0], args[1], args[2]);
             }
         }
     }

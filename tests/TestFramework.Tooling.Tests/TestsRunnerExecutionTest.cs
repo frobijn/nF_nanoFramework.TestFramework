@@ -20,7 +20,7 @@ namespace TestFramework.Tooling.Tests
     /// The tests use instances of the Virtual Device to actually run the tests.
     /// The real hardware devices are simulated with Virtual Devices as well.
     /// There are no tests for <see cref="TestsRunner"/> involving real hardware; use
-    /// the <see cref="Tools.TestAdapterTestCasesExecutorTest"/> for that.
+    /// the <see cref="Tools.TestAdapter_RunTests_TestCases_Test"/> for that.
     /// </summary>
     [TestClass]
     [TestCategory("Visual Studio/VSTest")]
@@ -202,11 +202,10 @@ namespace TestFramework.Tooling.Tests
                 #endregion
 
                 #region Select all available test cases
-                var testCases = new TestCaseCollection(testAssemblies, (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger), true, setupLogger);
+                var testCases = new TestCaseCollection(testAssemblies, (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger), setupLogger);
                 var selection = new TestCaseCollection(from tc in testCases.TestCases
                                                        select (tc.AssemblyFilePath, tc.DisplayName, tc.FullyQualifiedName),
                                                        (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger),
-                                                       true,
                                                        setupLogger);
                 setupLogger.AssertEqual("", LoggingLevel.Error);
                 #endregion

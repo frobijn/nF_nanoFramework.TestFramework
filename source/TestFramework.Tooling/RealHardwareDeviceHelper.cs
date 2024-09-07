@@ -116,7 +116,7 @@ namespace nanoFramework.TestFramework.Tooling
             {
                 lock (logger)
                 {
-                    logger(LoggingLevel.Detailed, $"Checking for real hardware device on port {serialPort}.");
+                    logger(LoggingLevel.Detailed, $"Checking for {Constants.RealHardware_Description} on port {serialPort}.");
                 }
             }
             var serialDebugClient = PortBase.CreateInstanceForSerial(false);
@@ -160,22 +160,22 @@ namespace nanoFramework.TestFramework.Tooling
                             {
                                 if (isVirtualDevice)
                                 {
-                                    logger(LoggingLevel.Verbose, $"The device connected to '{serialPort}' is a virtual device and not real hardware.");
+                                    logger(LoggingLevel.Verbose, $"The device connected to '{serialPort}' is a {Constants.VirtualDevice_Description} and not a {Constants.RealHardware_Description}.");
                                 }
                                 else
                                 {
-                                    logger(LoggingLevel.Verbose, $"The device connected to '{serialPort}' is not recognized as a real hardware device.");
+                                    logger(LoggingLevel.Verbose, $"The device connected to '{serialPort}' is not recognized as a {Constants.RealHardware_Description}.");
                                 }
                             }
                             else
                             {
                                 if (isVirtualDevice)
                                 {
-                                    logger(LoggingLevel.Detailed, $"Virtual device and not real hardware connected to {serialPort}.");
+                                    logger(LoggingLevel.Detailed, $"{Constants.VirtualDevice_Description} and not a {Constants.RealHardware_Description} connected to {serialPort}.");
                                 }
                                 else
                                 {
-                                    logger(LoggingLevel.Detailed, $"Couldn't find a valid nanoDevice connected to {serialPort}.");
+                                    logger(LoggingLevel.Detailed, $"Couldn't find a {Constants.RealHardware_Description} connected to {serialPort}.");
                                 }
                             }
                         }
@@ -188,7 +188,7 @@ namespace nanoFramework.TestFramework.Tooling
                     {
                         if (!(logger is null))
                         {
-                            logger(LoggingLevel.Verbose, $"Real hardware device with target '{device.TargetName}' / platform '{device.Platform}' connected to {serialPort}.");
+                            logger(LoggingLevel.Verbose, $"{Constants.RealHardware_Description} with target '{device.TargetName}' / platform '{device.Platform}' connected to {serialPort}.");
                         }
                     }
                     if (cancellationToken?.IsCancellationRequested ?? false)
@@ -211,7 +211,7 @@ namespace nanoFramework.TestFramework.Tooling
                         }
                         else
                         {
-                            logger(LoggingLevel.Detailed, $"Couldn't find a valid nanoDevice connected to {serialPort}.");
+                            logger(LoggingLevel.Detailed, $"Couldn't find a {Constants.RealHardware_Description} connected to {serialPort}.");
                         }
                     }
                 }
@@ -312,7 +312,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="cancellationToken">Cancellation token that can be cancelled to stop/abort running the <paramref name="communication"/>.
         /// This method does not stop/abort execution of <paramref name="communication"/> after it has been started.</param>
         /// <returns>Indicates whether the <paramref name="communication"/> has been executed. Returns <c>false</c> if exclusive access
-        /// cannot be obtained within <paramref name="millisecondsTimeout"/>.</returns>
+        /// cannot be obtained within <paramref name="millisecondsTimeout"/>, or if <paramref name="cancellationToken"/> has been cancelled
+        /// before the <paramref name="communication"/> has been started.</returns>
         public bool CommunicateWithDevice(Action communication, int millisecondsTimeout = Timeout.Infinite, CancellationToken? cancellationToken = null)
         {
             return CommunicateWithDevice(SerialPort, communication, millisecondsTimeout, cancellationToken);
@@ -329,7 +330,8 @@ namespace nanoFramework.TestFramework.Tooling
         /// <param name="cancellationToken">Cancellation token that can be cancelled to stop/abort running the <paramref name="communication"/>.
         /// This method does not stop/abort execution of <paramref name="communication"/> after it has been started.</param>
         /// <returns>Indicates whether the <paramref name="communication"/> has been executed. Returns <c>false</c> if exclusive access
-        /// cannot be obtained within <paramref name="millisecondsTimeout"/>.</returns>
+        /// cannot be obtained within <paramref name="millisecondsTimeout"/>, or if <paramref name="cancellationToken"/> was cancelled
+        /// before the <paramref name="communication"/> has been started.</returns>
         public static bool CommunicateWithDevice(string serialPort, Action communication, int millisecondsTimeout = Timeout.Infinite, CancellationToken? cancellationToken = null)
         {
             var waitHandles = new List<WaitHandle>();

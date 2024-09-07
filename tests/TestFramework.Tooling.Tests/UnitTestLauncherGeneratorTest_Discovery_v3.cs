@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using TestFramework.Tooling.Tests.Helpers;
 
@@ -118,7 +119,7 @@ namespace nanoFramework.TestFramework.Tools
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
-        [TestCategory("Virtual device")]
+        [TestCategory(Constants.VirtualDevice_TestCategory)]
         public void UnitTestLauncher_GeneratedApplication_RunWithNanoCLRHelper(bool communicateByNames)
         {
             (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application actual) = UnitTestLauncher_GenerateApplication(communicateByNames);
@@ -143,9 +144,9 @@ namespace nanoFramework.TestFramework.Tools
             parser.Flush();
 
             testResults.AssertResults(TestSelection,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Passed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -153,7 +154,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Passed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -161,7 +162,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Passed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -169,7 +170,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Passed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -177,7 +178,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Passed'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -185,7 +186,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Passed'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------", false);
@@ -195,7 +196,7 @@ ErrorMessage: ''
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
-        [TestCategory("Virtual device")]
+        [TestCategory(Constants.VirtualDevice_TestCategory)]
         public void UnitTestLauncher_GeneratedApplication_RunWithNanoCLRHelper_NoDeploymentConfiguration(bool communicateByNames)
         {
             (UnitTestLauncherGenerator generator, UnitTestLauncherGenerator.Application actual) = UnitTestLauncher_GenerateApplication(communicateByNames, false);
@@ -220,9 +221,9 @@ ErrorMessage: ''
             parser.Flush();
 
             testResults.AssertResults(TestSelection,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Passed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -230,7 +231,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Passed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -238,7 +239,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Passed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -246,7 +247,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Passed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Passed'
 Outcome     : Passed
 ErrorMessage: ''
 ----------------------------------------
@@ -254,7 +255,7 @@ ErrorMessage: ''
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Test failed'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Test failed'
 Outcome     : Failed
 ErrorMessage: 'Test failed'
 ----------------------------------------
@@ -262,7 +263,7 @@ ErrorMessage: 'Test failed'
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Setup failed'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Setup failed'
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
 ----------------------------------------", false);
@@ -296,7 +297,7 @@ ErrorMessage: 'Setup failed'
             if (withDeploymentConfiguration)
             {
                 Assert.AreEqual(
-@"TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile: Address
+$@"TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}]: Address
 ".Trim().Replace("\r\n", "\n") + '\n',
                     string.Join("\n", from tc in application.MissingDeploymentConfigurationKeys
                                       orderby tc.Key.FullyQualifiedName, tc.Key.DisplayName
@@ -307,8 +308,8 @@ ErrorMessage: 'Setup failed'
             else
             {
                 Assert.AreEqual(
-@"TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile: Address;Device ID;xyzzy
-TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2: Make and model
+$@"TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile - TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}]: Address;Device ID;xyzzy
+TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2 - Test2 [{Constants.VirtualDevice_Description}]: Make and model
 ".Trim().Replace("\r\n", "\n") + '\n',
                     string.Join("\n", from tc in application.MissingDeploymentConfigurationKeys
                                       orderby tc.Key.FullyQualifiedName, tc.Key.DisplayName

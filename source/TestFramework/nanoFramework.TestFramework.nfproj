@@ -67,6 +67,7 @@
     <Compile Include="SetupAttribute.cs" />
     <Compile Include="SkipTestAttribute.cs" />
     <Compile Include="SkipTestException.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="TestClassAttribute.cs" />
     <Compile Include="TestFrameworkException.cs" />
     <Compile Include="CleanupFailedException.cs" />

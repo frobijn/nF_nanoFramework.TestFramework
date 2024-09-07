@@ -15,6 +15,7 @@ namespace TestFramework.Tooling.Tests.Tools
 {
     [TestClass]
     [TestCategory("Visual Studio/VSTest")]
+    [TestCategory("Test host")]
     public sealed class InterProcessCommunicatorTest
     {
         [TestMethod]
@@ -24,12 +25,12 @@ namespace TestFramework.Tooling.Tests.Tools
             string idParent = Guid.NewGuid().ToString();
             var messageFromParent = new TestDiscoverer_Parameters()
             {
-                Sources = new List<string>() { idParent }
+                AssemblyFilePaths = new List<string>() { idParent }
             };
             string idChild = Guid.NewGuid().ToString();
             var messageFromChild = new TestDiscoverer_Parameters()
             {
-                Sources = new List<string>() { idChild }
+                AssemblyFilePaths = new List<string>() { idChild }
             };
             #endregion
 
@@ -47,10 +48,10 @@ namespace TestFramework.Tooling.Tests.Tools
 
             actual.WaitUntilProcessingIsCompleted();
             Assert.AreEqual(messageFromParent.GetType(), actual.ReceivedByChild.FirstOrDefault()?.GetType());
-            Assert.AreEqual(idParent, (actual.ReceivedByChild[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
+            Assert.AreEqual(idParent, (actual.ReceivedByChild[0] as TestDiscoverer_Parameters).AssemblyFilePaths?.FirstOrDefault());
 
             Assert.AreEqual(messageFromChild.GetType(), actual.ReceivedByParent.FirstOrDefault()?.GetType());
-            Assert.AreEqual(idChild, (actual.ReceivedByParent[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
+            Assert.AreEqual(idChild, (actual.ReceivedByParent[0] as TestDiscoverer_Parameters).AssemblyFilePaths?.FirstOrDefault());
         }
 
         [TestMethod]
@@ -111,7 +112,7 @@ Error: {id}");
             string id = Guid.NewGuid().ToString();
             var message = new TestDiscoverer_Parameters()
             {
-                Sources = new List<string> { id }
+                AssemblyFilePaths = new List<string> { id }
             };
             #endregion
 
@@ -161,7 +162,7 @@ Error: {id}");
             #region Asserts
             // The parent still processes messages after cancellation
             Assert.AreEqual(message.GetType(), actual.ReceivedByParent.FirstOrDefault()?.GetType());
-            Assert.AreEqual(id, (actual.ReceivedByParent[0] as TestDiscoverer_Parameters).Sources?.FirstOrDefault());
+            Assert.AreEqual(id, (actual.ReceivedByParent[0] as TestDiscoverer_Parameters).AssemblyFilePaths?.FirstOrDefault());
             #endregion
         }
     }

@@ -23,21 +23,19 @@
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DefineConstants>$(DefineConstants);NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DefineConstants>$(DefineConstants);NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -56,6 +54,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../../source/TestFramework/Constants.cs">
+      <Link>TestFramework/Constants.cs</Link>
+    </Compile>
     <Compile Include="../../source/TestFramework/IAssemblyAttributes.cs">
       <Link>TestFramework/IAssemblyAttributes.cs</Link>
     </Compile>
@@ -123,8 +124,9 @@
     <Compile Include="TestsRunnerOrchestrationTest.cs" />
     <Compile Include="TestsRunnerExecutionTest.cs" />
     <Compile Include="Tools\DebugProjectBuildToolTest.cs" />
-    <Compile Include="Tools\TestAdapterDiscovererTest.cs" />
-    <Compile Include="Tools\TestAdapterTestCasesExecutorTest.cs" />
+    <Compile Include="Tools\TestAdapter_DiscoverTests_Test.cs" />
+    <Compile Include="Tools\TestAdapter_RunTests_Assemblies_Test.cs" />
+    <Compile Include="Tools\TestAdapter_RunTests_TestCases_Test.cs" />
     <Compile Include="UnitTestLauncherGeneratorTest_Discovery_v3.cs" />
     <Compile Include="UnitTestLauncherGeneratorTest_Execution_v3.cs" />
     <Compile Include="UnitTestsOutputParserTest.cs" />

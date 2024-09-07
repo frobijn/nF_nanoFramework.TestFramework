@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using nanoFramework.TestFramework;
 using nanoFramework.TestFramework.Tooling;
 using nanoFramework.TestFramework.Tools;
 using TestFramework.Tooling.Tests.Helpers;
@@ -58,9 +59,9 @@ Some output from the test
 
             #region Assert
             actualTestResults.AssertResults(TestSelection,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Test has not been run'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -76,7 +77,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Test has not been run'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -92,7 +93,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Test has not been run'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -108,7 +109,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Passed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -125,7 +126,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Test has not been run'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -141,7 +142,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -215,9 +216,9 @@ Message from the Dispose method
 
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ";
-            string expectedTestResults = @"----------------------------------------
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Passed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -249,7 +250,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Passed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 10000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -278,7 +279,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Passed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 20000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -307,7 +308,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Passed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -329,7 +330,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Passed'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 70000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -351,7 +352,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Passed'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -449,9 +450,9 @@ Message from the Dispose method
 
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ";
-            string expectedTestResults = @"----------------------------------------
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Passed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -485,7 +486,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Passed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 10000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -516,7 +517,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Passed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 20000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -547,7 +548,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Passed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -569,7 +570,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Passed'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 70000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -591,7 +592,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Passed'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -696,9 +697,9 @@ Message from the Dispose method
 
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
 ";
-            string expectedTestResults = @"----------------------------------------
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Passed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -732,7 +733,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Passed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 10000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -763,7 +764,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Passed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 20000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -794,7 +795,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Test has not been run'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -810,7 +811,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Test has not been run'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -826,7 +827,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -919,9 +920,9 @@ Message from the Dispose method
 {ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}:70000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 ";
-            string expectedTestResults = @"----------------------------------------
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Passed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 50000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -955,7 +956,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Passed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 10000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -986,7 +987,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Passed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Passed'
 Duration    : 20000 ticks
 Outcome     : Passed
 ErrorMessage: ''
@@ -1017,7 +1018,7 @@ Some information about the assemblies
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Test has not been run'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1033,7 +1034,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Test has not been run'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1049,7 +1050,7 @@ Some information about the assemblies
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1094,9 +1095,9 @@ Some information about the assemblies
 
 Oops, something went wrong.
 ";
-            string expectedTestResults = @"----------------------------------------
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Test has not been run'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1113,7 +1114,7 @@ Oops, something went wrong.
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Test has not been run'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1130,7 +1131,7 @@ Oops, something went wrong.
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Test has not been run'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1147,7 +1148,7 @@ Oops, something went wrong.
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Test has not been run'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1164,7 +1165,7 @@ Oops, something went wrong.
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Test has not been run'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1181,7 +1182,7 @@ Oops, something went wrong.
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'
@@ -1271,9 +1272,9 @@ Exception in cleanup!
 
             #region Assert
             actualTestResults.AssertResults(TestSelection,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Setup failed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1289,7 +1290,7 @@ Execution of setup method failed after 3 ms: AssertException
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Setup failed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1305,7 +1306,7 @@ Execution of setup method failed after 3 ms: AssertException
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Setup failed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1321,7 +1322,7 @@ Execution of setup method failed after 3 ms: AssertException
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Cleanup failed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 50000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1340,7 +1341,7 @@ Execution of cleanup method failed after 10 ms: Exception
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Cleanup failed'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 70000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1359,7 +1360,7 @@ Execution of cleanup method failed after 10 ms: Exception
     
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Cleanup failed'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 10000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1422,9 +1423,9 @@ Exception in constructor!
 
             #region Assert
             actualTestResults.AssertResults(TestSelection,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Setup failed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1439,7 +1440,7 @@ Constructor of test class failed after 1 ms: AssertException
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Setup failed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1454,7 +1455,7 @@ Constructor of test class failed after 1 ms: AssertException
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Setup failed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1469,7 +1470,7 @@ Constructor of test class failed after 1 ms: AssertException
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Cleanup failed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 50000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1487,7 +1488,7 @@ IDisposable.Dispose of test class failed after < 1 ms: Exception
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Cleanup failed'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 70000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1505,7 +1506,7 @@ IDisposable.Dispose of test class failed after < 1 ms: Exception
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Setup failed'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 10000 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1580,9 +1581,9 @@ Exception!
 
             #region Assert
             actualTestResults.AssertResults(TestSelection,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Setup failed'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 50000 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1600,7 +1601,7 @@ Setup completed after < 1 ms
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Test skipped'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Test skipped'
 Duration    : 10000 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test skipped'
@@ -1618,7 +1619,7 @@ Setup completed after < 1 ms
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Test failed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Test failed'
 Duration    : 20000 ticks
 Outcome     : Failed
 ErrorMessage: 'Test failed'
@@ -1636,7 +1637,7 @@ Setup completed after < 1 ms
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Cleanup failed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 50000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1654,7 +1655,7 @@ Setup completed after 1 ms
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Method not found'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Method not found'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Method not found'
@@ -1671,7 +1672,7 @@ Setup completed after 1 ms
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Test failed'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Test failed'
 Duration    : 50000 ticks
 Outcome     : Failed
 ErrorMessage: 'Test failed'
@@ -1740,9 +1741,9 @@ $@"
 
             #region Assert
             actualTestResults.AssertResults(TestSelection,
-@"----------------------------------------
+$@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod
-DisplayName : 'TestMethod - Method not found'
+DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Method not found'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Method not found'
@@ -1762,7 +1763,7 @@ Cleanup method not found
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#0
-DisplayName : 'TestMethod1(1,1) - Cleanup failed'
+DisplayName : 'TestMethod1(1,1) [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 1000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1782,7 +1783,7 @@ Cleanup method not found
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod1#1
-DisplayName : 'TestMethod1(2,2) - Cleanup failed'
+DisplayName : 'TestMethod1(2,2) [{Constants.VirtualDevice_Description}] - Cleanup failed'
 Duration    : 20000 ticks
 Outcome     : Failed
 ErrorMessage: 'Cleanup failed'
@@ -1802,7 +1803,7 @@ Cleanup method not found
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test
-DisplayName : 'Test - Setup failed'
+DisplayName : 'Test [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1819,7 +1820,7 @@ Setup method not found
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.TestFramework.Tooling.Tests.NFUnitTest.TestWithMethods.Test2
-DisplayName : 'Test2 - Setup failed'
+DisplayName : 'Test2 [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
 Outcome     : Failed
 ErrorMessage: 'Setup failed'
@@ -1836,7 +1837,7 @@ Setup method not found
 
 ----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestFramework.Tooling.Tests.NFUnitTest.TestWithFrameworkExtensions.TestOnDeviceWithSomeFile
-DisplayName : 'TestOnDeviceWithSomeFile - Test has not been run'
+DisplayName : 'TestOnDeviceWithSomeFile [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
 Outcome     : Skipped
 ErrorMessage: 'Test has not been run'

@@ -58,9 +58,6 @@ namespace nanoFramework.TestFramework.TestAdapter
                     testHostProcess = Process.Start(
                         new ProcessStartInfo(testHostApplication)
                         {
-                            // Use an extra "debug" argument to debug the TestHost in a separate Visual Studio instance
-                            // (that has opened the same solution)
-                            // Arguments = $"{a1} {a2} {a3} debug",
                             Arguments = $"{a1} {a2} {a3}",
                             CreateNoWindow = true,
                             UseShellExecute = false
@@ -91,10 +88,8 @@ namespace nanoFramework.TestFramework.TestAdapter
         /// <summary>
         /// Send a message to the test host
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="message"></param>
-        public void SendMessage<T>(T message)
-            where T : InterProcessCommunicator.IMessage
+        public void SendMessage(InterProcessCommunicator.IMessage message)
         {
             _testAdapter.SendMessage(message);
         }

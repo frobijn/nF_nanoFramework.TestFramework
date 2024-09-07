@@ -45,6 +45,9 @@
   <!-- </ItemGroup> -->
   
   <ItemGroup>
+	<Compile Include="../TestFramework/Constants.cs">
+		<Link>TestFramework/Constants.cs</Link>
+	</Compile>
 	<Compile Include="../TestFramework/IAssemblyAttributes.cs">
 		<Link>TestFramework/IAssemblyAttributes.cs</Link>
 	</Compile>
@@ -113,8 +116,7 @@
 	<Compile Include="TestFrameworkProxy\TestCategoriesProxy.cs" />
 	<Compile Include="TestCaseCollection.cs" />
 	<Compile Include="TestResult.cs" />
-	<Compile Include="Tools\TestAdapterDiscoverer.cs" />
-	<Compile Include="Tools\TestAdapterTestCasesExecutor.cs" />
+	<Compile Include="Tools\TestAdapter.cs" />
 	<Compile Include="UnitTestsOutputParser.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
 	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs" />

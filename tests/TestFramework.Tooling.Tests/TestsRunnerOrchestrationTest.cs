@@ -116,9 +116,12 @@ namespace TestFramework.Tooling.Tests
                     TestResult testResult = testCase.Value[0];
 
                     // Not all deployment information was present; check that a message about that is present
-                    Assert.IsTrue((from m in testResult.Messages
-                                   where m.Contains("data.bin")
-                                   select m).Any());
+                    if (!(from m in testResult.Messages
+                          where m.Contains("data.bin")
+                          select m).Any())
+                    {
+                        Assert.Fail($"Expected message about missing 'data.bin', but instead:\n{string.Join("\n", testResult.Messages)}");
+                    }
                 }
                 else if (testCase.Key.FullyQualifiedName.StartsWith("TestFramework.Tooling.Execution.Tests.TestWithFrameworkExtensions.TestOnDeviceWithProgrammingError_"))
                 {
@@ -171,7 +174,7 @@ namespace TestFramework.Tooling.Tests
         /// This test is inconclusive if there's only 1 logical processor available to run this test.
         /// </summary>
         [TestMethod]
-        [TestCategory("@MultipleLogicalProcessors")]
+        [TestCategory("@Multiple logical processors")]
         public void TestsRunner_RunInParallel()
         {
             if (Environment.ProcessorCount == 1)
@@ -256,7 +259,7 @@ namespace TestFramework.Tooling.Tests
         /// This test is inconclusive if there's only 1 logical processor available to run this test.
         /// </summary>
         [TestMethod]
-        [TestCategory("@MultipleLogicalProcessors")]
+        [TestCategory("@Multiple logical processors")]
         public void TestsRunner_MaxVirtualDevices()
         {
             // Setup
@@ -556,11 +559,10 @@ namespace TestFramework.Tooling.Tests
                 #endregion
 
                 #region Select all available test cases
-                var testCases = new TestCaseCollection(testAssemblies, (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger), true, setupLogger);
+                var testCases = new TestCaseCollection(testAssemblies, (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger), setupLogger);
                 var selection = new TestCaseCollection(from tc in testCases.TestCases
                                                        select (tc.AssemblyFilePath, tc.DisplayName, tc.FullyQualifiedName),
                                                        (a) => ProjectSourceInventory.FindProjectFilePath(a, setupLogger),
-                                                       true,
                                                        setupLogger);
                 setupLogger.AssertEqual("", LoggingLevel.Error);
                 #endregion
@@ -937,7 +939,7 @@ namespace TestFramework.Tooling.Tests
 
             #region Mock implementation
             public override string DeviceName
-                => $"real hardware device connected to {SerialPort}";
+                => $"{Constants.RealHardware_Description} connected to {SerialPort}";
 
 
             async Task<bool> TestsRunner.IRealHardwareDevice.RunAssembliesAsync(

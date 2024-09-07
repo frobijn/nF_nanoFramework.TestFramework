@@ -30,7 +30,7 @@ namespace TestFramework.Tooling.Tests.TestFrameworkProxy
         {
             string assemblyFilePath = TestProjectHelper.FindNFUnitTestAssembly(TestProjectHelper.FindProjectFilePath("TestFramework.Tooling.Tests.Execution.v3"));
             var logger = new LogMessengerMock();
-            var testCases = new TestCaseCollection(assemblyFilePath, true, null, logger);
+            var testCases = new TestCaseCollection(assemblyFilePath, null, logger);
 
             #region TestOnTarget (assembly attribute)
             TestCase actual = (from tc in testCases.TestCases

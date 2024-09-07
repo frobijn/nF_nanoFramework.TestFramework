@@ -49,7 +49,6 @@ namespace nanoFramework.TestFramework.Tooling.Tools
                 testCases = new TestCaseCollection(
                     Directory.EnumerateFiles(outputDirectoryPath, "*.dll", SearchOption.TopDirectoryOnly),
                     null,
-                    true,
                     logger);
             }
             return testCases;
