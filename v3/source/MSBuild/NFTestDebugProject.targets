@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      NF_TDP_GenerateSourceAndSchema;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <Target Name="NF_TDP_GenerateSourceAndSchema">
+    <!--
+    Run the MSBuild tools in a separate process to avoid the assemblies being loaded in the current process.
+    This is important when the build is carried out in Visual Studio, as the assemblies are then loaded into
+    the IDE's process. This will lock the assemblies and prevent replacing them.
+    -->
+    <Exec Command="&quot;$(NF_TDP_BUILDTOOL)&quot; &quot;$(MSBuildProjectDirectory)&quot; &quot;$(IntermediateOutputPath)nF&quot; &quot;$(OutputPath).&quot; $(NF_TDP_BUILDTOOL_VERBOSE)" ConsoleToMSBuild="true"/>
+  </Target>
+</Project>

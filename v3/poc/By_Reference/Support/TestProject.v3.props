@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- 
+  Direct reference of the TestFramework.TestProjectBuildTool and TestFramework.TestAdapter
+  -->
+  <PropertyGroup>
+    <NF_TP_BUILDTOOL>$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestProjectBuildTool\bin\debug\nanoFramework.TestFramework.TestProjectBuildTool.dll</NF_TP_BUILDTOOL>
+    <NF_TP_BUILDTOOL Condition=" !Exists('$(NF_TP_BUILDTOOL)')">$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestProjectBuildTool\bin\debug\netstandard2.0\nanoFramework.TestFramework.TestProjectBuildTool.dll</NF_TP_BUILDTOOL>
+    <NF_TP_BUILDTOOL Condition=" !Exists('$(NF_TP_BUILDTOOL)')">$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestProjectBuildTool\bin\release\nanoFramework.TestFramework.TestProjectBuildTool.dll</NF_TP_BUILDTOOL>
+    <NF_TP_BUILDTOOL Condition=" !Exists('$(NF_TP_BUILDTOOL)')">$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestProjectBuildTool\bin\release\netstandard2.0\nanoFramework.TestFramework.TestProjectBuildTool.dll</NF_TP_BUILDTOOL>
+    <NF_TP_TESTADAPTER>$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestAdapter\bin\debug\nanoFramework.TestFramework.TestAdapter.dll</NF_TP_TESTADAPTER>
+    <NF_TP_TESTADAPTER Condition=" !Exists('$(NF_TP_TESTADAPTER)')">$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestAdapter\bin\debug\net4.8\nanoFramework.TestFramework.TestAdapter.dll</NF_TP_TESTADAPTER>
+    <NF_TP_TESTADAPTER Condition=" !Exists('$(NF_TP_TESTADAPTER)')">$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestAdapter\bin\release\nanoFramework.TestFramework.TestAdapter.dll</NF_TP_TESTADAPTER>
+    <NF_TP_TESTADAPTER Condition=" !Exists('$(NF_TP_TESTADAPTER)')">$(MSBuildThisFileDirectory)..\..\..\source\TestFramework.TestAdapter\bin\release\net4.8\nanoFramework.TestFramework.TestAdapter.dll</NF_TP_TESTADAPTER>
+  </PropertyGroup>
+
+  <!-- 
+  Direct reference of the Test Project MSBuild *.props file
+  (instead of reference to *.props from the nanoFramework.TestFramework.TestProject package)
+  -->
+  <Import Project="..\..\..\source\MSBuild\NFTestProject.props" />
+
+  <!-- 
+  Direct reference of the nanoFramework.TestFramework v3
+  (instead of reference to the nanoFramework.TestFramework.Core package)
+  -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\..\source\TestFramework\nanoFramework.TestFramework.nfproj" />
+  </ItemGroup>
+
+</Project>

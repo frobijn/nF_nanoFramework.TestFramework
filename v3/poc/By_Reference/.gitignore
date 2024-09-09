@@ -1,0 +1,6 @@
+# This file is generated and contains an absolute path
+vstest.runsettings
+
+# This project should not be in the repository,
+# it is created by Copy TestProject.v2.AlmostMigratedTo.v3.bat
+TestProject.v2.AlmostMigratedTo.v3

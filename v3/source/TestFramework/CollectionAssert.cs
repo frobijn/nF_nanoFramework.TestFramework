@@ -6,7 +6,6 @@
 
 
 using System.Collections;
-using TestFrameworkShared;
 
 namespace nanoFramework.TestFramework
 {
@@ -31,7 +30,6 @@ namespace nanoFramework.TestFramework
         /// <param name="collection">The collection the test expects to be empty.</param>
         /// <param name="message">The message to include in the exception when the collection is empty. The message is shown in test results.</param>
         /// <exception cref="AssertFailedException">Raises an exception if the collection is not empty.</exception>
-        /// <exception cref=""></exception>
         public static void Empty(ICollection collection, string message = "")
         {
             Assert.EnsureParameterIsNotNull(collection, "CollectionAssert.Empty");

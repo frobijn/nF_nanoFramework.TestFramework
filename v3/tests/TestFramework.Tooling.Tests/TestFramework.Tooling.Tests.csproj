@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.props" Condition="Exists('..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AD199E32-91CE-4AB6-B315-40046D0DAE6E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TestFramework.Tooling.Tests</RootNamespace>
+    <AssemblyName>TestFramework.Tooling.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MSTest.TestFramework.2.2.10\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MSTest.TestFramework.2.2.10\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.1.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../source/TestFramework/Constants.cs">
+      <Link>TestFramework/Constants.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/IAssemblyAttributes.cs">
+      <Link>TestFramework/IAssemblyAttributes.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ICleanup.cs">
+      <Link>TestFramework/ICleanup.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/IDataRow.cs">
+      <Link>TestFramework/IDataRow.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/IDeploymentConfiguration.cs">
+      <Link>TestFramework/IDeploymentConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ISetup.cs">
+      <Link>TestFramework/ISetup.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ITestClass.cs">
+      <Link>TestFramework/ITestClass.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ITestMethod.cs">
+      <Link>TestFramework/ITestMethod.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ITestOnRealHardware.cs">
+      <Link>TestFramework/ITestOnRealHardware.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ITestOnVirtualDevice.cs">
+      <Link>TestFramework/ITestOnVirtualDevice.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ITestCategories.cs">
+      <Link>TestFramework/ITestCategories.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/Tools/TestDeviceProxy.cs">
+      <Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
+    </Compile>
+    <Compile Include="AssemblyMetadataTest.cs" />
+    <Compile Include="DebugTestCasesSpecificationTest.cs" />
+    <Compile Include="DeploymentConfigurationTest.cs" />
+    <Compile Include="Helpers\AssemblyHelper.cs" />
+    <Compile Include="Helpers\RealHardwareSerialPorts.cs" />
+    <Compile Include="Helpers\InterProcessParentChildMock.cs" />
+    <Compile Include="Helpers\TestDirectoryHelper.cs" />
+    <Compile Include="Helpers\TestResultsHelper.cs" />
+    <Compile Include="Helpers\TestUsingTestFrameworkToolingTestsDiscovery_v3.cs" />
+    <Compile Include="MSTest.cs" />
+    <Compile Include="NanoCLRHelperTest.cs" />
+    <Compile Include="RealHardwareDeviceHelperTest.cs" />
+    <Compile Include="TestCaseCollectionTest.cs" />
+    <Compile Include="Helpers\TestProjectHelper.cs" />
+    <Compile Include="ProjectSourceInventoryTest.cs" />
+    <Compile Include="TestFrameworkConfigurationTest.cs" />
+    <Compile Include="TestFrameworkProxy\CleanupProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\CustomProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\DataRowProxyTest.cs" />
+    <Compile Include="Helpers\LogMessengerMock.cs" />
+    <Compile Include="Helpers\TestDeviceMock.cs" />
+    <Compile Include="TestFrameworkProxy\DeploymentConfigurationProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\SetupProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\TestClassProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\TestOnRealHardwareProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\TestMethodProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\NFTestFramework_TestOnRealHardwareProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\TestOnVirtualDeviceProxyTest.cs" />
+    <Compile Include="TestFrameworkProxy\TestCategoriesProxyTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="InterProcessCommunicatorTest.cs" />
+    <Compile Include="TestsRunnerOrchestrationTest.cs" />
+    <Compile Include="TestsRunnerExecutionTest.cs" />
+    <Compile Include="Tools\DebugProjectBuildToolTest.cs" />
+    <Compile Include="Tools\TestAdapter_DiscoverTests_Test.cs" />
+    <Compile Include="Tools\TestAdapter_RunTests_Assemblies_Test.cs" />
+    <Compile Include="Tools\TestAdapter_RunTests_TestCases_Test.cs" />
+    <Compile Include="UnitTestLauncherGeneratorTest_Discovery_v3.cs" />
+    <Compile Include="UnitTestLauncherGeneratorTest_Execution_v3.cs" />
+    <Compile Include="UnitTestsOutputParserTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="ProjectSourceInventoryTest\InvalidProject.nfproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\source\TestFramework.Tooling.Shared\nanoFramework.TestFramework.Tooling.Shared.csproj">
+      <Project>{22aec17a-1744-4b28-9612-6b09aa5e92b8}</Project>
+      <Name>nanoFramework.TestFramework.Tooling.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\source\TestFramework.Tooling\nanoFramework.TestFramework.Tooling.csproj">
+      <Project>{D10594AF-5494-4A91-8456-D7CDC4CA0459}</Project>
+      <Name>nanoFramework.TestFramework.Tooling</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.props'))" />
+    <Error Condition="!Exists('..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.targets'))" />
+  </Target>
+  <Import Project="..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.targets" Condition="Exists('..\..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.targets')" />
+</Project>

@@ -1,0 +1,139 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net4.8</TargetFramework>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <LangVersion>8.0</LangVersion>
+    <RestoreLockedMode Condition="'$(TF_BUILD)' == 'True' or '$(ContinuousIntegrationBuild)' == 'True'">true</RestoreLockedMode>
+	<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+	<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>$(DefineConstants);NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>$(DefineConstants);NFTF_REFERENCED_SOURCE_FILE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+     <PackageReference Include="CliWrap" Version="3.6.6" />
+     <PackageReference Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
+     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+     <PackageReference Include="nanoFramework.Tools.Debugger.Net" Version="2.4.42" />
+     <PackageReference Include="nanoFramework.Tools.MetadataProcessor.CLI" Version="3.0.51" />
+     <!-- <PackageReference Include="nanoFramework.Tools.MetadataProcessor" Version="1.12.1" GeneratePathProperty="true" /> -->
+     <PackageReference Include="Nerdbank.GitVersioning">
+      <Version>3.6.143</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+     <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
+  </ItemGroup>
+  
+  <!-- <ItemGroup> -->
+    <!-- <Content Include="$(PkgnanoFramework_Tools_MetadataProcessor)\content\nanoFramework.Tools.MetaDataProcessor.exe"> -->
+      <!-- <Link>MetaDataProcessor\nanoFramework.Tools.MetaDataProcessor.exe</Link> -->
+      <!-- <CopyToOutputDirectory>Always</CopyToOutputDirectory> -->
+      <!-- <CopyToPublishDirectory>Always</CopyToPublishDirectory> -->
+    <!-- </Content> -->
+  <!-- </ItemGroup> -->
+  
+  <ItemGroup>
+	<Compile Include="../TestFramework/Constants.cs">
+		<Link>TestFramework/Constants.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/IAssemblyAttributes.cs">
+		<Link>TestFramework/IAssemblyAttributes.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ICleanup.cs">
+		<Link>TestFramework/ICleanup.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/IDataRow.cs">
+		<Link>TestFramework/IDataRow.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/IDeploymentConfiguration.cs">
+		<Link>TestFramework/IDeploymentConfiguration.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ISetup.cs">
+		<Link>TestFramework/ISetup.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestClass.cs">
+		<Link>TestFramework/ITestClass.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestDevice.cs">
+		<Link>TestFramework/ITestDevice.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestMethod.cs">
+		<Link>TestFramework/ITestMethod.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/ITestOnRealHardware.cs">
+		<Link>TestFramework/ITestOnRealHardware.cs</Link>
+	</Compile>
+    <Compile Include="../TestFramework/ITestOnVirtualDevice.cs">
+      <Link>TestFramework/ITestOnVirtualDevice.cs</Link>
+    </Compile>
+	<Compile Include="../TestFramework/ITestCategories.cs">
+		<Link>TestFramework/ITestCategories.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/TestOnRealHardwareAttribute.cs">
+		<Link>TestFramework/TestOnRealHardwareAttribute.cs</Link>
+	</Compile>
+	<Compile Include="../TestFramework/Tools/TestDeviceProxy.cs">
+		<Link>TestFramework/Tools/TestDeviceProxy.cs</Link>
+	</Compile>
+	<Compile Include="AssemblyLoader.cs" />
+	<Compile Include="DeploymentConfiguration.cs" />
+	<Compile Include="AssemblyMetadata.cs" />
+	<Compile Include="RealHardwareDeviceHelper.cs" />
+	<Compile Include="TestsRunner.cs" />
+	<Compile Include="Tools\DebugProjectBuildTool.cs" />
+	<Compile Include="NanoCLRHelper.cs" />
+	<Compile Include="PathHelper.cs" />
+	<Compile Include="ProjectSourceInventory.cs" />
+	<Compile Include="TestCase.cs" />
+	<Compile Include="TestCaseGroup.cs" />
+	<Compile Include="TestCaseSelection.cs" />
+	<Compile Include="DebugTestCasesSpecification.cs" />
+	<Compile Include="TestDevice.cs" />
+	<Compile Include="TestFrameworkProxy\AttributeProxy.cs" />
+	<Compile Include="TestFrameworkProxy\CleanupProxy.cs" />
+	<Compile Include="TestFrameworkProxy\DataRowProxy.cs" />
+	<Compile Include="TestFrameworkProxy\DeploymentConfigurationProxy.cs" />
+	<Compile Include="TestFrameworkProxy\FrameworkMismatchException.cs" />
+	<Compile Include="TestFrameworkProxy\SetupProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestClassProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestDeviceProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestFrameworkImplementation.cs" />
+	<Compile Include="TestFrameworkProxy\TestOnVirtualDeviceProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestOnRealHardwareProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestMethodProxy.cs" />
+	<Compile Include="TestFrameworkProxy\TestCategoriesProxy.cs" />
+	<Compile Include="TestCaseCollection.cs" />
+	<Compile Include="TestResult.cs" />
+	<Compile Include="Tools\TestAdapter.cs" />
+	<Compile Include="UnitTestsOutputParser.cs" />
+	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
+	<Compile Include="UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.Communication.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.TestClassInitialisation.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.RunUnitTests.cs" />
+	<EmbeddedResource Include="UnitTestLauncherGenerator.UnitTestLauncher.Main.cs" />
+	<Compile Include="UnitTestLauncherGenerator.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\TestFramework.Tooling.Shared\nanoFramework.TestFramework.Tooling.Shared.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Framework" />
+  </ItemGroup>
+  
+</Project>
