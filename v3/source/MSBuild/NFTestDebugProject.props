@@ -8,13 +8,13 @@
 
   <ItemGroup>
     <UpToDateCheckInput Include="SelectUnitTests.json" />
-    <Compile Include="$(MSBuildProjectDirectory)$(IntermediateOutputPath)nF\UnitTestLauncher.cs">
+    <Compile Include="$(MSBuildProjectDirectory)\$(IntermediateOutputPath)..\nF\UnitTestLauncher.cs">
       <Link>GeneratedCode\UnitTestLauncher.cs</Link>
     </Compile>
-    <Compile Include="$(MSBuildProjectDirectory)$(IntermediateOutputPath)nF\UnitTestLauncher.RunUnitTests.cs">
+    <Compile Include="$(MSBuildProjectDirectory)\$(IntermediateOutputPath)..\nF\UnitTestLauncher.RunUnitTests.cs">
       <Link>GeneratedCode\UnitTestLauncher.RunUnitTests.cs</Link>
     </Compile>
-    <Compile Include="$(MSBuildProjectDirectory)$(IntermediateOutputPath)nF\UnitTestLauncher.TestClassInitialisation.cs">
+    <Compile Include="$(MSBuildProjectDirectory)\$(IntermediateOutputPath)..\nF\UnitTestLauncher.TestClassInitialisation.cs">
       <Link>GeneratedCode\UnitTestLauncher.TestClassInitialisation.cs</Link>
     </Compile>
   </ItemGroup>

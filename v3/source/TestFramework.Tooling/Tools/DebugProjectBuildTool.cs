@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -30,10 +31,10 @@ namespace nanoFramework.TestFramework.Tooling.Tools
         /// <summary>
         /// Load all available test cases from the assemblies in the output directory.
         /// </summary>
-        /// <param name="outputDirectoryPath">Relative path to the output directory of the debug project</param>
+        /// <param name="referencedAssemblyFilePaths">Absolute paths to the assemblies referenced by the debug project.</param>
         /// <param name="logger">Method to pass process information to the caller.</param>
         /// <returns>The test cases, or <c>null</c> if the test cases cannot be discovered.</returns>
-        public TestCaseCollection LoadTestCases(string outputDirectoryPath, LogMessenger logger)
+        public TestCaseCollection LoadTestCases(IEnumerable<string> referencedAssemblyFilePaths, LogMessenger logger)
         {
             if (!Directory.Exists(_projectDirectoryPath))
             {
@@ -43,14 +44,12 @@ namespace nanoFramework.TestFramework.Tooling.Tools
 
             // Get all test cases
             TestCaseCollection testCases = null;
-            outputDirectoryPath = Path.Combine(_projectDirectoryPath, outputDirectoryPath);
-            if (Directory.Exists(outputDirectoryPath))
-            {
-                testCases = new TestCaseCollection(
-                    Directory.EnumerateFiles(outputDirectoryPath, "*.dll", SearchOption.TopDirectoryOnly),
-                    null,
-                    logger);
-            }
+            testCases = new TestCaseCollection(
+                from fp in referencedAssemblyFilePaths
+                where !string.IsNullOrWhiteSpace(fp) && File.Exists(fp)
+                select fp,
+                null,
+                logger);
             return testCases;
         }
 
@@ -108,8 +107,11 @@ namespace nanoFramework.TestFramework.Tooling.Tools
             System.Collections.Generic.IEnumerable<TestCaseSelection> selection = specification.SelectTestCases(testCases, logger, true);
             if (!selection.Any())
             {
-                logger(LoggingLevel.Error, $"{selectionSpecificationFilePath}(0,0): error: No test cases selected; nothing to debug.");
-                return;
+                // This may be caused by a mismatch of test project assemblies and the specification.
+                // Do not report an error, the build process should continue!
+                // If the build is aborted, the latest test project's assemblies are never
+                // going to be copied to the output directory.
+                logger(LoggingLevel.Warning, $"{selectionSpecificationFilePath}(0,0): warning: No test cases selected; nothing to debug.");
             }
             #endregion
 

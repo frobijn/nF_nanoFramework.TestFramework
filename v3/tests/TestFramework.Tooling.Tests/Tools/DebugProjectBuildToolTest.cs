@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -23,13 +24,14 @@ namespace TestFramework.Tooling.Tests.Tools
             #region Get test cases
             string projectDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
             string outputDirectory = Path.Combine("bin", "Debug");
-            AssemblyHelper.CopyAssemblies(Path.Combine(projectDirectoryPath, outputDirectory), "TestFramework.Tooling.Tests.Execution.v3");
+            List<string> assemblyFilePaths = AssemblyHelper.CopyAssemblies(Path.Combine(projectDirectoryPath, outputDirectory), "TestFramework.Tooling.Tests.Execution.v3");
 
             var actual = new DebugProjectBuildTool(projectDirectoryPath);
 
             var logger = new LogMessengerMock();
-            TestCaseCollection testCases = actual.LoadTestCases(outputDirectory, logger);
-            logger.AssertEqual("", LoggingLevel.Error);
+            TestCaseCollection testCases = actual.LoadTestCases(from a in assemblyFilePaths
+                                                                select Path.ChangeExtension(a, ".dll"), logger);
+            logger.AssertEqual("", LoggingLevel.Warning);
             Assert.IsNotNull(testCases);
             Assert.IsTrue(testCases.TestCases.Any());
             #endregion
@@ -46,13 +48,14 @@ namespace TestFramework.Tooling.Tests.Tools
             #region Get test cases
             string projectDirectoryPath = TestDirectoryHelper.GetTestDirectory(TestContext);
             string outputDirectory = Path.Combine("bin", "Debug");
-            AssemblyHelper.CopyAssemblies(Path.Combine(projectDirectoryPath, outputDirectory), "TestFramework.Tooling.Tests.Execution.v3");
+            List<string> assemblyFilePaths = AssemblyHelper.CopyAssemblies(Path.Combine(projectDirectoryPath, outputDirectory), "TestFramework.Tooling.Tests.Execution.v3");
             string specificationFilePath = Path.Combine(projectDirectoryPath, DebugTestCasesSpecification.SpecificationFileName);
 
             var actual = new DebugProjectBuildTool(projectDirectoryPath);
 
             var logger = new LogMessengerMock();
-            TestCaseCollection testCases = actual.LoadTestCases(outputDirectory, logger);
+            TestCaseCollection testCases = actual.LoadTestCases(from a in assemblyFilePaths
+                                                                select Path.ChangeExtension(a, ".dll"), logger);
             logger.AssertEqual("", LoggingLevel.Error);
             Assert.IsNotNull(testCases);
             Assert.IsTrue(testCases.TestCases.Any());
@@ -63,9 +66,18 @@ namespace TestFramework.Tooling.Tests.Tools
             actual.GenerateUnitTestLauncherSourceCode(testCases, "obj/nF", logger);
 
             logger.AssertEqual(
-$@"Error: {specificationFilePath}(0,0): error: No test cases selected; nothing to debug.",
-                LoggingLevel.Error);
-            Assert.IsFalse(Directory.Exists(Path.Combine(projectDirectoryPath, "obj", "nF")));
+$@"Warning: {specificationFilePath}(0,0): warning: No test cases selected; nothing to debug.",
+                LoggingLevel.Warning);
+            Assert.IsTrue(Directory.Exists(Path.Combine(projectDirectoryPath, "obj", "nF")));
+            Assert.AreEqual(
+$@"{projectDirectoryPath}\obj\nF\UnitTestLauncher.cs
+{projectDirectoryPath}\obj\nF\UnitTestLauncher.RunUnitTests.cs
+{projectDirectoryPath}\obj\nF\UnitTestLauncher.TestClassInitialisation.cs
+".Trim().Replace("\r\n", "\n") + '\n',
+                string.Join("\n", from f in Directory.EnumerateFiles(Path.Combine(projectDirectoryPath, "obj", "nF"))
+                                  orderby f
+                                  select f) + '\n'
+            );
             #endregion
 
             #region Test case specified
@@ -81,7 +93,7 @@ $@"Error: {specificationFilePath}(0,0): error: No test cases selected; nothing t
             logger = new LogMessengerMock();
             actual.GenerateUnitTestLauncherSourceCode(testCases, "obj/nF2", logger);
 
-            logger.AssertEqual("", LoggingLevel.Error);
+            logger.AssertEqual("", LoggingLevel.Warning);
             Assert.IsTrue(Directory.Exists(Path.Combine(projectDirectoryPath, "obj", "nF2")));
             Assert.AreEqual(
 $@"{projectDirectoryPath}\obj\nF2\UnitTestLauncher.cs

@@ -1,0 +1,3 @@
+# The selection of a test to debug is very ad-hoc 
+# and should not be stored in the repository.
+SelectUnitTests.json

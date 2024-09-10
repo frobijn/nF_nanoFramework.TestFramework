@@ -331,7 +331,7 @@ namespace nanoFramework.TestFramework.Tooling
                     }
                 }
 
-                HashSet<string> testClassCategories = TestCategoriesProxy.Collect(allTestsCategories, assemblyAttributes.OfType<TestCategoriesProxy>());
+                HashSet<string> testClassCategories = TestCategoriesProxy.Collect(allTestsCategories, classAttributes.OfType<TestCategoriesProxy>());
                 bool testClassTestOnVirtualDevice = testAllOnVirtualDevice || classAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
                 (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testClassTestOnRealHardware =
                     TestOnRealHardwareProxy.Collect(testAllOnRealHardware, classAttributes.OfType<TestOnRealHardwareProxy>());
@@ -399,7 +399,7 @@ namespace nanoFramework.TestFramework.Tooling
                     if (setup is null && cleanup is null)
                     {
                         #region Create test cases from the test method
-                        HashSet<string> testCategories = TestCategoriesProxy.Collect(testClassCategories, assemblyAttributes.OfType<TestCategoriesProxy>());
+                        HashSet<string> testCategories = TestCategoriesProxy.Collect(testClassCategories, methodAttributes.OfType<TestCategoriesProxy>());
                         bool testOnVirtualDevice = testClassTestOnVirtualDevice || methodAttributes.OfType<TestOnVirtualDeviceProxy>().Any();
                         (HashSet<string> descriptions, List<TestOnRealHardwareProxy> attributes) testOnRealHardware =
                             TestOnRealHardwareProxy.Collect(testClassTestOnRealHardware, methodAttributes.OfType<TestOnRealHardwareProxy>());
@@ -431,7 +431,6 @@ namespace nanoFramework.TestFramework.Tooling
                         }
                         else
                         {
-                            var index = 0;
                             dataRowParameters.AddRange(from dataRow in methodAttributes.OfType<DataRowProxy>()
                                                        select (dataRow.Source, dataRowAttributeCount == 1
                                                                                     ? "" // Suppress the method parameters if there is only 1 data row

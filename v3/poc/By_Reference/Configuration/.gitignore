@@ -1,0 +1,9 @@
+# This file is generated in a build of TestProject.v3
+# and contains an absolute path
+vstest.runsettings
+
+# By default, this file should not be present:
+TestBoard_S3N32R8V_OV2640.bin
+
+# These files should be in the repository:
+!Copy*.*

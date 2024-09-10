@@ -848,7 +848,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     _hasErrors = true;
                 }
-                if (level >= Configuration.Logging)
+                if (level >= (Configuration?.Logging ?? LoggingLevel.Warning))
                 {
                     if (level >= LoggingLevel.Warning)
                     {
@@ -958,7 +958,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     _hasErrors = true;
                 }
-                if (level >= _parent.Configuration.Logging)
+                if (level >= (_parent?.Configuration?.Logging ?? LoggingLevel.Warning))
                 {
                     if (level >= LoggingLevel.Warning)
                     {
@@ -1314,16 +1314,20 @@ namespace nanoFramework.TestFramework.Tooling
                 application,
                 device.SerialPort,
                 configuration.RealHardwareTimeout,
-                (reportPrefix, parser, ctt, ct) => device.RunAssembliesAsync(
-                                                application.Assemblies,
-                                                configuration.Logging,
-                                                reportPrefix,
-                                                parser,
-                                                (context as ITestsExecutionLogger).Log,
-                                                ctt,
-                                                ct
-                                            )
-                                            .GetAwaiter().GetResult(),
+                (reportPrefix, parser, ctt, ct) =>
+                {
+                    Logger?.Invoke(LoggingLevel.Verbose, $"Running tests from '{Path.GetFileNameWithoutExtension(selection.AssemblyFilePath)}' on the {Constants.RealHardware_Description} connected to {device.SerialPort}...");
+                    device.RunAssembliesAsync(
+                        application.Assemblies,
+                        configuration.Logging,
+                        reportPrefix,
+                        parser,
+                        (context as ITestsExecutionLogger).Log,
+                        ctt,
+                        ct
+                    )
+                    .GetAwaiter().GetResult();
+                },
                 context
             );
             timeoutToken?.Dispose();
@@ -1435,7 +1439,7 @@ namespace nanoFramework.TestFramework.Tooling
                 {
                     _hasErrors = true;
                 }
-                if (level >= Configuration.Logging)
+                if (level >= (Configuration?.Logging ?? LoggingLevel.Warning))
                 {
                     if (level >= LoggingLevel.Warning)
                     {
@@ -1537,16 +1541,20 @@ namespace nanoFramework.TestFramework.Tooling
                 application,
                 null,
                 configuration.VirtualDeviceTimeout,
-                (reportPrefix, parser, ctt, ct) => virtualDevice.RunAssembliesAsync(
-                                                    application.Assemblies,
-                                                    configuration.PathToLocalCLRInstance,
-                                                    configuration.Logging,
-                                                    reportPrefix,
-                                                    parser,
-                                                    (_virtualDeviceExecution[selection] as ITestsExecutionLogger).Log,
-                                                    ctt() ?? ct
-                                                )
-                                                .GetAwaiter().GetResult(),
+                (reportPrefix, parser, ctt, ct) =>
+                {
+                    Logger?.Invoke(LoggingLevel.Verbose, $"Running tests from '{Path.GetFileNameWithoutExtension(selection.AssemblyFilePath)}' on the {Constants.VirtualDevice_Description}...");
+                    virtualDevice.RunAssembliesAsync(
+                        application.Assemblies,
+                        configuration.PathToLocalCLRInstance,
+                        configuration.Logging,
+                        reportPrefix,
+                        parser,
+                        (_virtualDeviceExecution[selection] as ITestsExecutionLogger).Log,
+                        ctt() ?? ct
+                    )
+                    .GetAwaiter().GetResult();
+                },
                 _virtualDeviceExecution[selection]
             );
         }

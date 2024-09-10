@@ -29,22 +29,25 @@
   Extra copy of nano.vs.runsettings to use by VSTest
   -->
   <ItemGroup>
-    <NF_TP_Runsettings Include="$(MSBuildThisFileDirectory)../vstest.runsettings" />
+    <NF_TP_Runsettings Include="$(MSBuildThisFileDirectory)..\Configuration\vstest.runsettings" />
   </ItemGroup>
   <!-- 
   Direct reference of TestFramework v3
   -->
   <Import Project="..\Support\TestProject.v3.props" />
   <ItemGroup>
+    <Compile Include="AssemblyAttributes.cs" />
     <Compile Include="DataRowTests.cs" />
+    <Compile Include="DeploymentConfiguration.cs" />
+    <Compile Include="CustomFrameworkAttributes.cs" />
     <Compile Include="Mock\MockObject.cs" />
+    <Compile Include="ParallelTest.cs" />
     <Compile Include="SkipFewMethods.cs" />
     <Compile Include="SkipTestClass.cs" />
-    <Compile Include="Test.cs" />
+    <Compile Include="TestOfTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="nano.runsettings" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

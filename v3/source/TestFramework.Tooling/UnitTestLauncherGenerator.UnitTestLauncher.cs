@@ -32,6 +32,7 @@ namespace nanoFramework.TestFramework.Tools
         /// about the execution of the unit tests</param>
         public static void Run(string reportPrefix)
         {
+            Console.WriteLine();
             new UnitTestLauncher(reportPrefix).RunUnitTests();
             Console.WriteLine($"{reportPrefix}:{Communication.AllTestsDone}");
         }
@@ -189,7 +190,14 @@ namespace nanoFramework.TestFramework.Tools
                 if (constructor is not null && _testClassInstance is null)
                 {
                     Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Instantiate}");
-                    _testClassInstance = constructor.Invoke(null);
+                    try
+                    {
+                        _testClassInstance = constructor.Invoke(null);
+                    }
+                    finally
+                    {
+                        Console.WriteLine();
+                    }
                 }
 
                 bool success = true;
@@ -208,7 +216,14 @@ namespace nanoFramework.TestFramework.Tools
                             else
                             {
                                 Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Setup}:{methodName}");
-                                setupMethod.Invoke(_testClassInstance, deploymentConfiguration);
+                                try
+                                {
+                                    setupMethod.Invoke(_testClassInstance, deploymentConfiguration);
+                                }
+                                finally
+                                {
+                                    Console.WriteLine();
+                                }
                             }
                         }
                     });
@@ -310,7 +325,14 @@ namespace nanoFramework.TestFramework.Tools
             {
                 try
                 {
-                    testMethod();
+                    try
+                    {
+                        testMethod();
+                    }
+                    finally
+                    {
+                        Console.WriteLine();
+                    }
                     Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Pass}");
                 }
                 catch (SkipTestException ex)
@@ -362,7 +384,14 @@ namespace nanoFramework.TestFramework.Tools
                             else
                             {
                                 Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Cleanup}:{methodName}");
-                                cleanUpMethod.Invoke(testClassInstance, s_noArguments);
+                                try
+                                {
+                                    cleanUpMethod.Invoke(testClassInstance, s_noArguments);
+                                }
+                                finally
+                                {
+                                    Console.WriteLine();
+                                }
                             }
                         }
                     });
@@ -372,7 +401,14 @@ namespace nanoFramework.TestFramework.Tools
                     if (dispose && (testClassInstance is IDisposable disposable))
                     {
                         Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.Dispose}");
-                        disposable.Dispose();
+                        try
+                        {
+                            disposable.Dispose();
+                        }
+                        finally
+                        {
+                            Console.WriteLine();
+                        }
                     }
                     Console.WriteLine($"{prefix}:{DateTime.UtcNow.Ticks - startTime}:{Communication.CleanUpComplete}");
                 }

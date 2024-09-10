@@ -64,7 +64,7 @@ namespace TestFramework.TestAdapter.Tests
         {
             // Setup
             TestResultCollection testResults = GetTestAssemblies("TestFramework.Tooling.Tests.Execution.v3");
-            string fqn = "TestFramework.Tooling.Execution.Tests.StaticTestClass.Method1";
+            string fqn = "TestFramework.Tooling.Execution.Tests.StaticTestClass.Method1(V)";
             testResults.FilterTerms["FullyQualifiedName"] = fqn;
             string name = "TestDeviceWithSomeFile";
             testResults.FilterTerms["Name"] = name;
@@ -92,7 +92,7 @@ namespace TestFramework.TestAdapter.Tests
                 {
                     expectedBy = "FullyQualifiedName";
                 }
-                else if (testCase.FullyQualifiedName.EndsWith($".{name}"))
+                else if (testCase.FullyQualifiedName.Substring(0, testCase.FullyQualifiedName.IndexOf('(')).EndsWith($".{name}"))
                 {
                     expectedBy = "Name";
                 }

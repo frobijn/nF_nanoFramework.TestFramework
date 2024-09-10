@@ -55,7 +55,7 @@ namespace TestFramework.Tooling.Tests
             #endregion
 
             #region Assert the test results
-            actual.Logger.AssertEqual("");
+            actual.Logger.AssertEqual("", LoggingLevel.Warning);
             actual.AssertAtLeastOneResultPerTestCase();
 
             // No test should have an outcome None => all tests should have been run (or skipped)

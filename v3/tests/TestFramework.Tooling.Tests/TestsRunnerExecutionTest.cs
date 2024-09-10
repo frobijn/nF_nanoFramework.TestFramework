@@ -42,7 +42,7 @@ namespace TestFramework.Tooling.Tests
             actual.Run();
 
             // Asserts
-            actual.Logger.AssertEqual("");
+            actual.Logger.AssertEqual("", LoggingLevel.Warning);
             actual.AssertAtLeastOneResultPerTestCase();
 
             // No test should have an outcome None => all tests should have been run

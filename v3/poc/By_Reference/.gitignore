@@ -1,6 +1,11 @@
-# This file is generated and contains an absolute path
-vstest.runsettings
+# Is already done in the .gitignore in the root of the repository,
+# but just to make it absolutely clear:
+# The nano.runsettings.user files are not part of the repository.
+nano.runsettings.user
 
 # This project should not be in the repository,
 # it is created by Copy TestProject.v2.AlmostMigratedTo.v3.bat
 TestProject.v2.AlmostMigratedTo.v3
+
+# Results of VSTest should not be in the repository
+*.trx

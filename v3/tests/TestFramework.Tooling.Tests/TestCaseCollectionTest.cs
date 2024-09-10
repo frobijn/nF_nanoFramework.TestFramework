@@ -161,12 +161,12 @@ cb7e8546af000da23a8a3247b9cb7ef1 'TestFramework.Tooling.Tests.NFUnitTest.TestWit
 771b68f14abb4f96e2bfc93e6cb81378 'TestFramework.Tooling.Tests.NFUnitTest.TestWithNewTestMethodsAttributes.MethodWithNewTestMethods(V)' MethodWithNewTestMethods 'MethodWithNewTestMethods [{Constants.VirtualDevice_Description}]'");
 
             AssertSourceLocationCategories(actual.TestCases,
-$@"da8179d6ea2e83a5b61ee50a44c17531 @{pathPrefix}TestClassVariants.cs(33,21) '@TEST', '@Hardware nanoDevice' DC()
-aa63fbb99e8b200516280d443e0d277d @{pathPrefix}TestClassVariants.cs(33,21) '@Virtual nanoDevice' DC()
-744bb7b504486ae1aa901a583c0b115e @{pathPrefix}TestClassVariants.cs(40,21) '@TEST', '@Hardware nanoDevice' DC()
-56bb901b20d9bd73b5853c78eac7cbf7 @{pathPrefix}TestClassVariants.cs(40,21) '@Virtual nanoDevice' DC()
-bfbff67071f41af4b42bd7e759fc6327 @{pathPrefix}TestClassVariants.cs(13,28) '@TEST', '@Hardware nanoDevice' DC()
-617ca895b9a042c97e1f054789ee5761 @{pathPrefix}TestClassVariants.cs(13,28) '@Virtual nanoDevice' DC()
+$@"da8179d6ea2e83a5b61ee50a44c17531 @{pathPrefix}TestClassVariants.cs(33,21) 'TestClass demonstration', '@TEST', '@Hardware nanoDevice' DC()
+aa63fbb99e8b200516280d443e0d277d @{pathPrefix}TestClassVariants.cs(33,21) 'TestClass demonstration', '@Virtual nanoDevice' DC()
+744bb7b504486ae1aa901a583c0b115e @{pathPrefix}TestClassVariants.cs(40,21) 'TestClass demonstration', '@TEST', '@Hardware nanoDevice' DC()
+56bb901b20d9bd73b5853c78eac7cbf7 @{pathPrefix}TestClassVariants.cs(40,21) 'TestClass demonstration', '@Virtual nanoDevice' DC()
+bfbff67071f41af4b42bd7e759fc6327 @{pathPrefix}TestClassVariants.cs(13,28) 'TestClass demonstration', '@TEST', '@Hardware nanoDevice' DC()
+617ca895b9a042c97e1f054789ee5761 @{pathPrefix}TestClassVariants.cs(13,28) 'TestClass demonstration', '@Virtual nanoDevice' DC()
 2e26e846f84aeef331bd2ff84b90dd67 @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@TEST', '@Hardware nanoDevice' DC()
 37c6ec5990f5a853218f76821a5c722a @{pathPrefix}TestAllCurrentAttributes.cs(13,21) '@Virtual nanoDevice' DC()
 4e33494c66bec3b773c137e84a71c350 @{pathPrefix}TestAllCurrentAttributes.cs(17,10) '@TEST', '@Hardware nanoDevice' DC()
@@ -181,10 +181,10 @@ d0a530fa5d890d3a69bd8f8d6f8e9dac @{pathPrefix}TestWithFrameworkExtensions.cs(19,
 fc3a8adf4c9e4f328f8291616b981637 @{pathPrefix}TestWithMethods.cs(16,21) '@Virtual nanoDevice' DC()
 03b81bed3e6ed7a91a6de5381588f5d2 @{pathPrefix}TestWithMethods.cs(21,21) '@TEST', '@Hardware nanoDevice' DC(Byte[] 'Make and model')
 ffb799c935dc7c2ef878c4e3c8962517 @{pathPrefix}TestWithMethods.cs(21,21) '@Virtual nanoDevice' DC(Byte[] 'Make and model')
-cb7e8546af000da23a8a3247b9cb7ef1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@TEST', '@Hardware nanoDevice' DC()
-11445655632a0d3c27a63b4c124c99ea @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) '@Virtual nanoDevice' DC()
-51cc42b00761fa799cef6fd617bc9b60 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@TEST', '@ESP32', '@Hardware nanoDevice' DC(Int32 'RGB LED pin', Int64 'Device ID')
-771b68f14abb4f96e2bfc93e6cb81378 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) '@Virtual nanoDevice' DC(Int32 'RGB LED pin', Int64 'Device ID')");
+cb7e8546af000da23a8a3247b9cb7ef1 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) 'Test class with v3 attributes', 'Example category', 'Other category', '@TEST', '@Hardware nanoDevice' DC()
+11445655632a0d3c27a63b4c124c99ea @{pathPrefix}TestWithNewTestMethodsAttributes.cs(15,21) 'Test class with v3 attributes', 'Example category', 'Other category', '@Virtual nanoDevice' DC()
+51cc42b00761fa799cef6fd617bc9b60 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) 'Test class with v3 attributes', '@TEST', '@ESP32', '@Hardware nanoDevice' DC(Int32 'RGB LED pin', Int64 'Device ID')
+771b68f14abb4f96e2bfc93e6cb81378 @{pathPrefix}TestWithNewTestMethodsAttributes.cs(21,21) 'Test class with v3 attributes', '@Virtual nanoDevice' DC(Int32 'RGB LED pin', Int64 'Device ID')");
 
             AssertRunInformation(actual.TestCases,
 $@"da8179d6ea2e83a5b61ee50a44c17531 RH=True VD=False GS=Setup() GC=Cleanup FQN=TestFramework.Tooling.Tests.NFUnitTest.NonStaticTestClass.Method1(H)
@@ -254,7 +254,7 @@ cb7e8546af000da23a8a3247b9cb7ef1 RH=True VD=False GS= GC= FQN=TestFramework.Tool
 $@"bd0ab951e7bd52eeb853d76fd2c91a89 'TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly(H)' UseEsp32NativeAssembly 'UseEsp32NativeAssembly'");
 
             AssertSourceLocationCategories(actual.TestCases,
-$@"bd0ab951e7bd52eeb853d76fd2c91a89 @{pathPrefix}HardwareSpecificTest.cs(18,21) '@ESP32', '{Constants.RealHardware_TestCategory}' DC()");
+$@"bd0ab951e7bd52eeb853d76fd2c91a89 @{pathPrefix}HardwareSpecificTest.cs(18,21) 'Hardware required', '@ESP32', '{Constants.RealHardware_TestCategory}' DC()");
 
             AssertRunInformation(actual.TestCases,
 $@"bd0ab951e7bd52eeb853d76fd2c91a89 RH=True VD=False GS= GC= FQN=TestFramework.Tooling.Hardware_esp32.Tests.HardwareSpecificTest.UseEsp32NativeAssembly(H)");

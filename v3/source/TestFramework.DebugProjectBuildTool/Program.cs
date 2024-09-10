@@ -29,11 +29,11 @@ namespace nanoFramework.TestFramework.DebugProjectBuildTool
 #endif
             string projectDirectoryPath = args.Length > 0 ? args[0] : null;
             string generatedSourceDirectoryPath = args.Length > 1 ? args[1] : null;
-            string outputDirectoryPath = args.Length > 2 ? args[2] : null;
+            string referencedAssemblyFilePaths = args.Length > 2 ? args[2] : null;
 
             bool invalid = string.IsNullOrWhiteSpace(projectDirectoryPath)
                 || generatedSourceDirectoryPath is null
-                || outputDirectoryPath is null;
+                || referencedAssemblyFilePaths is null;
 
             bool verbose = false;
             if (args.Length > 3)
@@ -63,14 +63,14 @@ namespace nanoFramework.TestFramework.DebugProjectBuildTool
 
             void logger(LoggingLevel level, string message)
             {
-                if (verbose || level >= LoggingLevel.Error)
+                if (verbose || level >= LoggingLevel.Warning)
                 {
                     Console.WriteLine(message);
                 }
             }
 
             var tool = new Tooling.Tools.DebugProjectBuildTool(projectDirectoryPath);
-            TestCaseCollection testCases = tool.LoadTestCases(outputDirectoryPath, logger);
+            TestCaseCollection testCases = tool.LoadTestCases(referencedAssemblyFilePaths.Split(';'), logger);
             if (!(testCases is null))
             {
                 tool.GenerateTestCasesSpecificationAndSchema(testCases, generatedSourceDirectoryPath);

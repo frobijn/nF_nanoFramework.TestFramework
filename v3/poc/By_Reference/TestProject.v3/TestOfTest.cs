@@ -1,18 +1,15 @@
-﻿//
-// Copyright (c) .NET Foundation and Contributors
-// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
-// See LICENSE file in the project root for full license information.
-//
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Threading;
 using nanoFramework.TestFramework;
 using NFUnitTest.Mock;
-using System;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace NFUnitTest
 {
     [TestClass]
+    [TestOnRealHardware(true)]
     public class TestOfTest
     {
         [Setup]
@@ -28,12 +25,6 @@ namespace NFUnitTest
         }
 
         [TestMethod]
-        [Trait("New")]
-        public void NewTest()
-        {
-        }
-
-        [TestMethod]
         public void TestAreEqual()
         {
             Console.WriteLine("Test will check that all the AreEqual are actually equal and that AreNotEqual fails");
@@ -46,10 +37,10 @@ namespace NFUnitTest
             var dateTimeB = new DateTime(2024, 4, 20);
             const float floatA = 42; const float floatB = 42;
             const int intA = 42; const int intB = 42;
-            var intArrayA = new[] { 1, 2, 3, 4, 5 };
-            var intArrayB = new[] { 1, 2, 3, 4, 5 };
+            int[] intArrayA = new[] { 1, 2, 3, 4, 5 };
+            int[] intArrayB = new[] { 1, 2, 3, 4, 5 };
             const long longA = 42; const long longB = 42;
-            var objA = new object(); var objB = objA;
+            object objA = new object(); object objB = objA;
             const sbyte sbyteA = 42; const sbyte sbyteB = 42;
             const short shortA = 42; const short shortB = 42;
             const string stringA = "42"; const string stringB = "42";
@@ -106,10 +97,10 @@ namespace NFUnitTest
             var dateTimeB = new DateTime(2024, 4, 21);
             const float floatA = 42; const float floatB = 43;
             const int intA = 42; const int intB = 43;
-            var intArrayA = new[] { 1, 2, 3, 4, 5 };
-            var intArrayB = new[] { 5, 4, 3, 2, 1 };
+            int[] intArrayA = new[] { 1, 2, 3, 4, 5 };
+            int[] intArrayB = new[] { 5, 4, 3, 2, 1 };
             const long longA = 42; const long longB = 43;
-            var objA = new object(); var objB = new object();
+            object objA = new object(); object objB = new object();
             const sbyte sbyteA = 42; const sbyte sbyteB = 43;
             const short shortA = 42; const short shortB = 43;
             const string stringA = "42"; const string stringB = "43";
@@ -157,7 +148,7 @@ namespace NFUnitTest
         public void TestInstanceOfType()
         {
             var mockObject = new MockObject();
-            var notMockObject = new object();
+            object notMockObject = new object();
 
             Assert.IsInstanceOfType(mockObject, typeof(MockObject));
             Assert.IsNotInstanceOfType(notMockObject, typeof(MockObject));
@@ -172,8 +163,8 @@ namespace NFUnitTest
             Console.WriteLine("Test null, not null");
 
             // Arrange
-            var nullObject = (object)null;
-            var notNullObject = new object();
+            object nullObject = (object)null;
+            object notNullObject = new object();
 
             // Assert
             Assert.IsNull(nullObject);
@@ -193,7 +184,7 @@ namespace NFUnitTest
             const string endsWithContains = "this text contains and end with contains";
             const string startsWithContains = "contains start this text";
             const string doesNotContain = "this is totally something else";
-            var empty = string.Empty;
+            string empty = string.Empty;
 
             // Assert
             Assert.Contains(contains, endsWithContains);
@@ -269,9 +260,19 @@ namespace NFUnitTest
 
     public class SomethingElse
     {
-        public void NothingReally(object value, [CallerArgumentExpression(nameof(value))] string parameter = null)
+        public void NothingReally()
         {
             Console.WriteLine("Only classes marked with [TestClass] will run tests.");
+        }
+    }
+
+    [TestClass]
+    internal class HiddenTests
+    {
+        [TestMethod]
+        public void NothingReally()
+        {
+            Console.WriteLine("Only *public* classes marked with [TestClass] will run tests.");
         }
     }
 }

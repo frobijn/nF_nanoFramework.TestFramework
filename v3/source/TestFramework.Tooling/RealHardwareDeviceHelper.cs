@@ -651,7 +651,16 @@ namespace nanoFramework.TestFramework.Tooling
             logger?.Invoke(LoggingLevel.Verbose, $"Deployment completed [{(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms since start].");
 
             // Also write this to the output, as verbose logging is not added to the tests result by default.
-            processOutput($"Device initialization and deployment completed in {(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms.\n");
+            processOutput($@"Device initialization and deployment completed in {(timeKeeper.ElapsedMilliseconds < 1 ? "< 1" : $"{timeKeeper.ElapsedMilliseconds}")} ms.
+Device: {_device.Description}
+Platform: {_device.Platform}
+Target name: {_device.TargetName}
+CLR version: {_device.CLRVersion}
+");
+            if (!(_device.SerialNumber is null))
+            {
+                processOutput($"Serial number: {_device.SerialNumber}\n");
+            }
 
             await Task.Yield();
 

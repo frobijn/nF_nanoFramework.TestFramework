@@ -34,7 +34,7 @@ namespace TestFramework.Tooling.Tests
             var waitForEndAccess = new CancellationTokenSource();
             var lockTask = Task.Run(() =>
             {
-                var granted = NanoCLRHelper.LockNanoCLR(nanoCLRFilePath,
+                bool granted = NanoCLRHelper.LockNanoCLR(nanoCLRFilePath,
                     () =>
                     {
                         waitForAccess.Cancel();
@@ -115,7 +115,7 @@ namespace TestFramework.Tooling.Tests
             var waitForEndAccess = new CancellationTokenSource();
             var lockTask = Task.Run(() =>
             {
-                var granted = NanoCLRHelper.LockNanoCLR(nanoCLRFilePath,
+                bool granted = NanoCLRHelper.LockNanoCLR(nanoCLRFilePath,
                     () =>
                     {
                         waitForAccess.Cancel();

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+    <nanoFrameworkAdapter>
+		<!-- 
+		This file is present to demonstrate the hierarchy of runsettings files.
+		It is read for all v3 tests, as each project has a nano.runsettings
+		that references this directory.
+		It could just as well have been omitted as it uses the default settings.
+		-->
+    </nanoFrameworkAdapter>
+</RunSettings>

@@ -7,6 +7,7 @@ using nanoFramework.TestFramework;
 namespace NFUnitTest
 {
     [TestClass]
+    [TestCategory("Asserts")]
     public class SkipTestClass
     {
         [Setup]
@@ -17,37 +18,37 @@ namespace NFUnitTest
         }
 
         [TestMethod]
-        public void TestMothdWhichShouldSkip()
+        public void TestMethodWhichShouldSkip()
         {
             // Method intentionally left empty.
         }
 
         [TestMethod]
-        public void TestMothdWhichShouldSkip2()
+        public void TestMethodWhichShouldSkip2()
         {
             // Method intentionally left empty.
         }
 
         [TestMethod]
-        public void TestMothdWhichShouldSkip3()
+        public void TestMethodWhichShouldSkip3()
         {
             // Method intentionally left empty.
         }
 
         [TestMethod]
-        public void TestMothdWhichShouldSkip4()
+        public void TestMethodWhichShouldSkip4()
         {
             // Method intentionally left empty.
         }
 
         [TestMethod]
-        public void TestMothdWhichShouldSkip5()
+        public void TestMethodWhichShouldSkip5()
         {
             // Method intentionally left empty.
         }
 
         [TestMethod]
-        public void TestMothdWhichShouldSkip6()
+        public void TestMethodWhichShouldSkip6()
         {
             // Method intentionally left empty.
         }

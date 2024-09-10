@@ -9,6 +9,7 @@ using static nanoFramework.Runtime.Native.SystemInfo;
 namespace NFUnitTest
 {
     [TestClass]
+    [TestCategory("Asserts")]
     public class SkipFewTest
     {
         [Setup]

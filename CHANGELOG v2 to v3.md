@@ -262,7 +262,7 @@ This section describes a selection of changes in the code that are not merely a 
 
 - New NuGet packages are introduced:
 
-    - `nanoFramework.TestFramework.DebugTestsProject` with the support for the new debug-unit-tests project
+    - `nanoFramework.TestFramework.DebugTestProject` with the support for the new debug-unit-tests project
     
     - `nanoFramework.TestFramework.Tooling` for the .NET Framework library of the same name, as this is required to unit test / debug more complex test framework extensions. It will also help people who want to create new/custom tools that work with unit tests.
     

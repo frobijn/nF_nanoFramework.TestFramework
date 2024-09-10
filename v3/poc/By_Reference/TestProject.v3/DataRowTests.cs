@@ -6,6 +6,7 @@ using nanoFramework.TestFramework;
 namespace NFUnitTest
 {
     [TestClass]
+    [TestCategory("Attributes")]
     public class TestOfDataRow
     {
         [TestMethod]

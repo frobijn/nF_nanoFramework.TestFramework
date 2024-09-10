@@ -32,7 +32,17 @@ namespace nanoFramework.TestFramework.TestAdapter
         private static readonly Dictionary<string, Func<TestCase, object>> s_testCaseProperties = new Dictionary<string, Func<TestCase, object>>()
         {
             { "FullyQualifiedName", (tc) => tc.FullyQualifiedName },
-            { "Name", (tc) => tc.FullyQualifiedName.Substring (tc.FullyQualifiedName.LastIndexOf ('.')+1) },
+            { "Name", (tc) =>
+                {
+                    int idx1 = tc.FullyQualifiedName.IndexOf ('(');
+                    if (idx1 == -1)
+                    {
+                        idx1 = tc.FullyQualifiedName.Length;
+                    }
+                    int idx2 = tc.FullyQualifiedName.LastIndexOf ('.', idx1) + 1;
+                    return tc.FullyQualifiedName.Substring (idx2, idx1-idx2);
+                }
+            },
             { "ClassName", (tc) => tc.FullyQualifiedName.Substring (0, tc.FullyQualifiedName.LastIndexOf ('.')) },
             { "DisplayName", (tc) => tc.DisplayName },
             { "TestCategory", (tc) => (from t in tc.Traits

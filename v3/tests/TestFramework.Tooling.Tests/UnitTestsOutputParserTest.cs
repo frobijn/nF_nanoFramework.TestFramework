@@ -32,34 +32,20 @@ namespace TestFramework.Tooling.Tests
         [DataRow(false)]
         public void ParseOutput_SingleTestMethod_Pass_StaticClass(bool communicateByNames)
         {
-            #region Create parser
-            var actualTestResults = new List<TestResult>();
-            var actual = new UnitTestsOutputParser(
-                TestSelection,
-                null,
-                ReportPrefix,
-                (result) => actualTestResults.AddRange(result)
-            );
-            #endregion
-
-            #region Send output
-            actual.AddOutput(
-    $@"
+            #region Output and expectations
+            string output = $@"
 Some information about the assemblies
+
 
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method1Name}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Some output from the test
+
 {ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method1Name}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
-");
-            actual.Flush();
-            #endregion
-
-            #region Assert
-            actualTestResults.AssertResults(TestSelection,
-$@"----------------------------------------
+";
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod(V)
 DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Test has not been run'
 Duration    : 0 ticks
@@ -153,7 +139,26 @@ Test has not been run.
     
 Some information about the assemblies
     
-----------------------------------------");
+----------------------------------------";
+            #endregion
+
+            #region Create parser
+            var actualTestResults = new List<TestResult>();
+            var actual = new UnitTestsOutputParser(
+                TestSelection,
+                null,
+                ReportPrefix,
+                (result) => actualTestResults.AddRange(result)
+            );
+            #endregion
+
+            #region Send output
+            actual.AddOutput(output);
+            actual.Flush();
+            #endregion
+
+            #region Assert
+            actualTestResults.AssertResults(TestSelection, expectedTestResults);
             #endregion
         }
 
@@ -169,28 +174,36 @@ Some information about the assemblies
             string output = $@"
 Some information about the assemblies
 
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 Message from the constructor
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:SetupMethod
 Message from the Setup method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:30000:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
 {ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Output from the test method
 
 More output from the test method
 
+
 {ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the first data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:10000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the second data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:20000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:CleanupMethod
 Message from the cleanup method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 Message from the Dispose method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:40000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 
@@ -401,30 +414,38 @@ Some information about the assemblies
             string output = $@"
 Some information about the assemblies
 
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 Message from the constructor
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup1
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup2
 Message from the Setup method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:30000:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
 {ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Output from the test method
 
 More output from the test method
 
+
 {ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the first data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:10000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the second data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:20000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup1
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup2
 Message from the cleanup method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 Message from the Dispose method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:40000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 
@@ -647,31 +668,39 @@ Some information about the assemblies
             string output1 = $@"
 Some information about the assemblies
 
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 Message from the constructor
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup1
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup2
 Message from the Setup method";
             string output2 = $@"
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:30000:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
 {ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Output from the test method
 
 More output from the test method
 
+
 {ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the first data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:10000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the second data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:20000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup1
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup2
 Message from the cleanup method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 Message from the Dispose method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:40000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 
@@ -870,8 +899,6 @@ Some information about the assemblies
             #endregion
         }
 
-
-
         /// <summary>
         /// Same test as <see cref="AllTestMethods_NonStaticClasses_Pass_SingleOutput"/>,
         /// but the tests took longer than allowed.
@@ -885,9 +912,11 @@ Some information about the assemblies
             string output = $@"
 Some information about the assemblies
 
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 Message from the constructor
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup1
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup2
 Message from the Setup method
@@ -897,18 +926,23 @@ Output from the test method
 
 More output from the test method
 
+
 {ReportPrefix}:M:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_TestMethodName}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the first data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#0:10000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 Test with data from the second data row attribute
+
 {ReportPrefix}:D:{TestClassWithSetupCleanup_FQN}.{TestClassWithSetupCleanup_DataRowMethodName}#1:20000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup1
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup2
 Message from the cleanup method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 Message from the Dispose method
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:40000:{AsString(UnitTestLauncher.Communication.CleanUpComplete, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 
@@ -1085,9 +1119,7 @@ Some information about the assemblies
         }
 
         [TestMethod]
-        [DataRow(true)]
-        [DataRow(false)]
-        public void ParseOutput_DeploymentError(bool communicateByNames)
+        public void ParseOutput_DeploymentError()
         {
             #region Output and expectations
             string output = $@"
@@ -1226,21 +1258,11 @@ Oops, something went wrong.
         [DataRow(false)]
         public void ParseOutput_SetupCleanupFails_StaticClass(bool communicateByNames)
         {
-            #region Create parser
-            var actualTestResults = new List<TestResult>();
-            var actual = new UnitTestsOutputParser(
-                TestSelection,
-                null,
-                ReportPrefix,
-                (result) => actualTestResults.AddRange(result)
-            );
-            #endregion
-
-            #region Send output
-            actual.AddOutput(
-$@"{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+            #region Output and expectations
+            string output = $@"{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.Setup, communicateByNames)}:Setup
 Exception in setup!
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:30000:{AsString(UnitTestLauncher.Communication.SetupFail, communicateByNames)}:AssertException
 
 No man's land
@@ -1253,6 +1275,7 @@ No man's land
 {ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}:70000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:Cleanup
 Exception in cleanup!
+
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:100000:{AsString(UnitTestLauncher.Communication.CleanupFail, communicateByNames)}:Exception
 
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
@@ -1262,17 +1285,13 @@ Exception in cleanup!
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:50000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Cleanup, communicateByNames)}:MethodCleanup
 Exception in cleanup!
+
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.CleanupFail, communicateByNames)}:Exception
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
-");
-            actual.Flush();
-            #endregion
-
-            #region Assert
-            actualTestResults.AssertResults(TestSelection,
-$@"----------------------------------------
+";
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod(V)
 DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
@@ -1369,7 +1388,26 @@ Setup completed after 1 ms
 Test passed after 5 ms
 Exception in cleanup!
 Cleanup for the test failed after 1 ms: Exception
-----------------------------------------");
+----------------------------------------";
+            #endregion
+
+            #region Create parser
+            var actualTestResults = new List<TestResult>();
+            var actual = new UnitTestsOutputParser(
+                TestSelection,
+                null,
+                ReportPrefix,
+                (result) => actualTestResults.AddRange(result)
+            );
+            #endregion
+
+            #region Send output
+            actual.AddOutput(output);
+            actual.Flush();
+            #endregion
+
+            #region Assert
+            actualTestResults.AssertResults(TestSelection, expectedTestResults);
             #endregion
         }
 
@@ -1382,21 +1420,11 @@ Cleanup for the test failed after 1 ms: Exception
         [DataRow(false)]
         public void ParseOutput_SetupCleanupFails_NonStaticClass(bool communicateByNames)
         {
-            #region Create parser
-            var actualTestResults = new List<TestResult>();
-            var actual = new UnitTestsOutputParser(
-                TestSelection,
-                null,
-                ReportPrefix,
-                (result) => actualTestResults.AddRange(result)
-            );
-            #endregion
-
-            #region Send output
-            actual.AddOutput(
-$@"{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
+            #region Output and expectations
+            string output = $@"{ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 Exception in constructor!
+
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:10000:{AsString(UnitTestLauncher.Communication.SetupFail, communicateByNames)}:AssertException
 
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
@@ -1408,22 +1436,19 @@ Exception in constructor!
 {ReportPrefix}:M:{TestClassTwoMethods_FQN}.{TestClassTwoMethods_Method2Name}:70000:{AsString(UnitTestLauncher.Communication.Pass, communicateByNames)}
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.Dispose, communicateByNames)}
 Exception in Dispose!
+
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.CleanupFail, communicateByNames)}:Exception
 
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 Exception in constructor!
+
 {ReportPrefix}:M:{TestWithFrameworkExtensions_FQN}.{TestWithFrameworkExtensions_TestOnDeviceWithSomeFileName}:10000:{AsString(UnitTestLauncher.Communication.SetupFail, communicateByNames)}:Exception
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
-");
-            actual.Flush();
-            #endregion
-
-            #region Assert
-            actualTestResults.AssertResults(TestSelection,
-$@"----------------------------------------
+";
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod(V)
 DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 0 ticks
@@ -1513,7 +1538,26 @@ ErrorMessage: 'Setup failed'
 Messages    :
 Exception in constructor!
 Setup for the test failed after 1 ms: Exception
-----------------------------------------");
+----------------------------------------";
+            #endregion
+
+            #region Create parser
+            var actualTestResults = new List<TestResult>();
+            var actual = new UnitTestsOutputParser(
+                TestSelection,
+                null,
+                ReportPrefix,
+                (result) => actualTestResults.AddRange(result)
+            );
+            #endregion
+
+            #region Send output
+            actual.AddOutput(output);
+            actual.Flush();
+            #endregion
+
+            #region Assert
+            actualTestResults.AssertResults(TestSelection, expectedTestResults);
             #endregion
         }
 
@@ -1526,19 +1570,9 @@ Setup for the test failed after 1 ms: Exception
         [DataRow(false)]
         public void ParseOutput_TestsFail(bool communicateByNames)
         {
-            #region Create parser
-            var actualTestResults = new List<TestResult>();
-            var actual = new UnitTestsOutputParser(
-                TestSelection,
-                null,
-                ReportPrefix,
-                (result) => actualTestResults.AddRange(result)
-            );
-            #endregion
+            #region Output and expectations
+            string output = $@"
 
-            #region Send output
-            actual.AddOutput(
-$@"
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
@@ -1575,13 +1609,8 @@ Exception!
 {ReportPrefix}:C:{TestWithFrameworkExtensions_FQN}:0:{AsString(UnitTestLauncher.Communication.Done, communicateByNames)}
 
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
-");
-            actual.Flush();
-            #endregion
-
-            #region Assert
-            actualTestResults.AssertResults(TestSelection,
-$@"----------------------------------------
+";
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod(V)
 DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Setup failed'
 Duration    : 50000 ticks
@@ -1684,7 +1713,26 @@ Cleanup completed after 1 ms
 
 *** Deployment ***
 
-----------------------------------------");
+----------------------------------------";
+            #endregion
+
+            #region Create parser
+            var actualTestResults = new List<TestResult>();
+            var actual = new UnitTestsOutputParser(
+                TestSelection,
+                null,
+                ReportPrefix,
+                (result) => actualTestResults.AddRange(result)
+            );
+            #endregion
+
+            #region Send output
+            actual.AddOutput(output);
+            actual.Flush();
+            #endregion
+
+            #region Assert
+            actualTestResults.AssertResults(TestSelection, expectedTestResults);
             #endregion
         }
 
@@ -1697,19 +1745,9 @@ Cleanup completed after 1 ms
         [DataRow(false)]
         public void ParseOutput_ClassOrMethodNotFound(bool communicateByNames)
         {
-            #region Create parser
-            var actualTestResults = new List<TestResult>();
-            var actual = new UnitTestsOutputParser(
-                TestSelection,
-                null,
-                ReportPrefix,
-                (result) => actualTestResults.AddRange(result)
-            );
-            #endregion
+            #region Output and expectations
+            string output = $@"
 
-            #region Send output
-            actual.AddOutput(
-$@"
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Start, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:0:{AsString(UnitTestLauncher.Communication.Instantiate, communicateByNames)}
 {ReportPrefix}:C:{TestClassWithSetupCleanup_FQN}:30000:{AsString(UnitTestLauncher.Communication.SetupComplete, communicateByNames)}
@@ -1735,13 +1773,8 @@ $@"
 {ReportPrefix}:C:{TestClassTwoMethods_FQN}:0:{AsString(UnitTestLauncher.Communication.MethodError, communicateByNames)}:Setup method not found
 
 {ReportPrefix}:{AsString(UnitTestLauncher.Communication.AllTestsDone, communicateByNames)}
-");
-            actual.Flush();
-            #endregion
-
-            #region Assert
-            actualTestResults.AssertResults(TestSelection,
-$@"----------------------------------------
+";
+            string expectedTestResults = $@"----------------------------------------
 Test        : TestFramework.Tooling.Tests.NFUnitTest.TestAllCurrentAttributes.TestMethod(V)
 DisplayName : 'TestMethod [{Constants.VirtualDevice_Description}] - Method not found'
 Duration    : 0 ticks
@@ -1846,7 +1879,26 @@ Test has not been run.
 
 *** Deployment ***
 
-----------------------------------------");
+----------------------------------------";
+            #endregion
+
+            #region Create parser
+            var actualTestResults = new List<TestResult>();
+            var actual = new UnitTestsOutputParser(
+                TestSelection,
+                null,
+                ReportPrefix,
+                (result) => actualTestResults.AddRange(result)
+            );
+            #endregion
+
+            #region Send output
+            actual.AddOutput(output);
+            actual.Flush();
+            #endregion
+
+            #region Assert
+            actualTestResults.AssertResults(TestSelection, expectedTestResults);
             #endregion
         }
     }
