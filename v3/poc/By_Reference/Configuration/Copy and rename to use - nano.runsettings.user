@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+    <nanoFrameworkAdapter>
+		<AllowSerialPorts><!-- Your serial ports here: -->COM3;COM9</AllowSerialPorts>
+        <DeploymentConfiguration>
+			<SerialPort><!-- Your serial port here: -->COM9</SerialPort>
+			<File>ExampleDeploymentConfiguration.json</File>
+		</DeploymentConfiguration>
+    </nanoFrameworkAdapter>
+</RunSettings>

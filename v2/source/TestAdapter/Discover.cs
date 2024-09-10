@@ -1,20 +1,17 @@
-﻿//
-// Copyright (c) .NET Foundation and Contributors
-// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
-// See LICENSE file in the project root for full license information.
-//
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using nanoFramework.TestAdapter;
-using nanoFramework.TestFramework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using nanoFramework.TestAdapter;
+using nanoFramework.TestFramework;
 
 namespace nanoFramework.TestPlatform.TestAdapter
 {
@@ -22,7 +19,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
     /// A Test Discoverer class
     /// </summary>
     [DefaultExecutorUri(TestsConstants.NanoExecutor)]
-    [FileExtension(".exe")]
+    // [FileExtension(".exe")] // It is not possible to create .exe files with tests
     [FileExtension(".dll")]
     public class TestDiscoverer : ITestDiscoverer
     {
@@ -115,6 +112,7 @@ namespace nanoFramework.TestPlatform.TestAdapter
             }
 
             var allCsFiles = GetAllCsFiles(nfprojFile);
+            bool? v3Assembly = null;
 
             // developer note: we have to use LoadFile() and not Load() which loads the assembly into the caller domain
             Assembly test = Assembly.LoadFile(sourceFile);
@@ -131,6 +129,15 @@ namespace nanoFramework.TestPlatform.TestAdapter
 
                 foreach (var testClassAttrib in testClasses)
                 {
+                    if (!v3Assembly.HasValue)
+                    {
+                        v3Assembly = testClassAttrib.GetType().Assembly.GetType($"{typeof(TestClassAttribute).Namespace}.ITestDevice") != null;
+                        if (v3Assembly == true)
+                        {
+                            break;
+                        }
+                    }
+
                     var methods = typeCandidate.GetMethods();
 
                     // First we look at Setup
@@ -158,6 +165,11 @@ namespace nanoFramework.TestPlatform.TestAdapter
                             collectionOfTestCases.Add(testCase);
                         }
                     }
+                }
+
+                if (v3Assembly == true)
+                {
+                    break;
                 }
             }
 

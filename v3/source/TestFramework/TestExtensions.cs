@@ -35,8 +35,8 @@ namespace nanoFramework.TestFramework
             {
                 object obja = a.GetValue(i);
                 object objb = b.GetValue(i);
-                var typea = obja.GetType();
-                var typeb = objb.GetType();
+                Type typea = obja.GetType();
+                Type typeb = objb.GetType();
                 if (typea != typeb)
                 {
                     return false;

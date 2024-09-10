@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using TestFrameworkShared;
 
 namespace nanoFramework.TestFramework
 {

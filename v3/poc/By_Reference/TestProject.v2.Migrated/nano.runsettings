@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+    <nanoFrameworkAdapter>
+		<GlobalSettings>../Configuration</GlobalSettings>
+        <AllowRealHardware>false</AllowRealHardware>
+        <Logging>None</Logging>
+    </nanoFrameworkAdapter>
+</RunSettings>

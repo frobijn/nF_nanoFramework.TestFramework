@@ -1,13 +1,9 @@
-﻿//
-// Copyright (c) .NET Foundation and Contributors
-// Portions Copyright (c) Microsoft Corporation.  All rights reserved.
-// See LICENSE file in the project root for full license information.
-//
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using TestFrameworkShared;
 
 namespace nanoFramework.TestFramework
 {
@@ -18,7 +14,7 @@ namespace nanoFramework.TestFramework
     {
         private const string ObjectAsString = "(object)";
         private const string NullAsString = "(null)";
-        
+
         /// <summary>
         /// Tests whether the specified objects refer to different objects and throws an exception if the two inputs refer to the same object.
         /// </summary>
@@ -53,7 +49,7 @@ namespace nanoFramework.TestFramework
             if (expected is ValueType || actual is ValueType)
             {
                 HandleFail("Assert.AreSame", $"Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {ReplaceNulls(message)}");
-                
+
             }
 
             HandleFail("Assert.AreSame", ReplaceNulls(message));
@@ -160,9 +156,9 @@ namespace nanoFramework.TestFramework
             }
 
             // ReSharper disable once MergeConditionalExpression
-            #pragma warning disable IDE0031 // IDE keeps suggesting I change this to value?.GetType() but since we don't have Nullable<T> this won't work in all cases.
-            var actual = value is null ? null : value.GetType();
-            #pragma warning restore IDE0031
+#pragma warning disable IDE0031 // IDE keeps suggesting I change this to value?.GetType() but since we don't have Nullable<T> this won't work in all cases.
+            Type actual = value is null ? null : value.GetType();
+#pragma warning restore IDE0031
 
             HandleFail("Assert.IsInstanceOfType", $"Expected type:<{expected}>. Actual type:<{ReplaceNulls(actual)}>. {ReplaceNulls(message)}");
         }
@@ -232,10 +228,62 @@ namespace nanoFramework.TestFramework
             }
         }
 
+        /// <summary>
+        /// Skip the test. A test should be skipped if the conditions to consider running the test are not met,
+        /// e.g., because the device the test is executed on does not support a feature required for the test.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <remarks>
+        /// Use <see cref="SetupFailed(string, Exception)"/> if the setup of a test fails, either in the
+        /// setup method or at the start of the test.
+        /// </remarks>
         [DoesNotReturn]
         public static void SkipTest(string message = null)
         {
             throw new SkipTestException(message);
+        }
+
+
+        /// <summary>
+        /// Use this method if the initialisation of a test has failed before the test proper could be started.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
+        /// <remarks>
+        /// Use <see cref="CleanupFailed"/> instead if the failure is detected after the test proper,
+        /// if the failure occurs while cleaning up.
+        /// </remarks>
+        [DoesNotReturn]
+        public static void SetupFailed(string message = null, Exception innerException = null)
+        {
+            throw new SetupFailedException(message, innerException);
+        }
+
+        /// <summary>
+        /// Mark a test as failed. Use this method if there is no other <see cref="Assert"/> method
+        /// that can be used to easily verify the test results.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
+        /// <remarks>
+        /// Use <see cref="CleanupFailed"/> instead if the failure is detected after the test proper,
+        /// if the failure occurs while cleaning up.
+        /// </remarks>
+        [DoesNotReturn]
+        public static void Fail(string message = null, Exception innerException = null)
+        {
+            throw new AssertFailedException(message, innerException);
+        }
+
+        /// <summary>
+        /// Indicate that a test has passed but an error occurred when cleaning up after the test.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
+        [DoesNotReturn]
+        public static void CleanupFailed(string message = null, Exception innerException = null)
+        {
+            throw new CleanupFailedException(message, innerException);
         }
 
         /// <summary>
@@ -283,7 +331,13 @@ namespace nanoFramework.TestFramework
                 {
                     return;
                 }
-                
+                if (!exception.IsSubclassOf(typeof(TestFrameworkException))
+                    && ex is TestFrameworkException)
+                {
+                    // The user is not testing for a framework exception, so if a framework exception occurs it must be passed on
+                    throw;
+                }
+
                 HandleFail("Assert.ThrowsException", $"Threw exception {ex.GetType().Name}, but exception {exception.Name} was expected. {ReplaceNulls(message)}\r\nException Message: {ex.Message}");
             }
 
@@ -293,13 +347,13 @@ namespace nanoFramework.TestFramework
         [DoesNotReturn]
         internal static void HandleFail(string assertion, string message)
         {
-            var safeMessage = string.Empty;
+            string safeMessage = string.Empty;
 
             if (!string.IsNullOrEmpty(message))
             {
                 safeMessage = ReplaceNulls(message);
             }
-            
+
             throw new AssertFailedException($"{assertion} failed. {safeMessage}");
         }
 
@@ -333,9 +387,9 @@ namespace nanoFramework.TestFramework
                 return input;
             }
 
-            var replacedString = string.Empty;
+            string replacedString = string.Empty;
 
-            for (var i = 0; i < input.Length; i++)
+            for (int i = 0; i < input.Length; i++)
             {
                 if (input[i] == '\0')
                 {

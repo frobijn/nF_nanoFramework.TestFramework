@@ -1,0 +1,8 @@
+﻿{
+    "DisplayName": "Development kit #1",
+    "Configuration": {
+        "RGB LED I/O port": 48,
+        "SSID name": "DevRouter",
+        "DevBoard configuration": { "File": "TestBoard_S3N32R8V_OV2640.bin" }
+    }
+}

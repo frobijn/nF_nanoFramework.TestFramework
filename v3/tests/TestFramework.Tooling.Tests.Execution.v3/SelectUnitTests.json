@@ -1,0 +1,7 @@
+{
+    "TestCases": {
+        "TestFramework.Tooling.Execution.Tests": {
+            "TestWithMethods": "*"
+        }
+    }
+}
