@@ -57,9 +57,6 @@
     <Compile Include="../../source/TestFramework/Constants.cs">
       <Link>TestFramework/Constants.cs</Link>
     </Compile>
-    <Compile Include="../../source/TestFramework/IAssemblyAttributes.cs">
-      <Link>TestFramework/IAssemblyAttributes.cs</Link>
-    </Compile>
     <Compile Include="../../source/TestFramework/ICleanup.cs">
       <Link>TestFramework/ICleanup.cs</Link>
     </Compile>
@@ -71,6 +68,9 @@
     </Compile>
     <Compile Include="../../source/TestFramework/ISetup.cs">
       <Link>TestFramework/ISetup.cs</Link>
+    </Compile>
+    <Compile Include="../../source/TestFramework/ITestAttributes.cs">
+      <Link>TestFramework/ITestAssembly.cs</Link>
     </Compile>
     <Compile Include="../../source/TestFramework/ITestClass.cs">
       <Link>TestFramework/ITestClass.cs</Link>

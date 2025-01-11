@@ -27,7 +27,6 @@
      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
      <PackageReference Include="nanoFramework.Tools.Debugger.Net" Version="2.4.42" />
      <PackageReference Include="nanoFramework.Tools.MetadataProcessor.CLI" Version="3.0.51" />
-     <!-- <PackageReference Include="nanoFramework.Tools.MetadataProcessor" Version="1.12.1" GeneratePathProperty="true" /> -->
      <PackageReference Include="Nerdbank.GitVersioning">
       <Version>3.6.143</Version>
       <PrivateAssets>all</PrivateAssets>

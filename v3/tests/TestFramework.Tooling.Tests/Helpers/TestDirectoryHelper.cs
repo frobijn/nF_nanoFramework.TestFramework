@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestFramework.Tooling.Tests.Helpers
 {
-    public static class TestDirectoryHelper
+    internal static class TestDirectoryHelper
     {
         public static string GetTestDirectory(TestContext context)
         {
